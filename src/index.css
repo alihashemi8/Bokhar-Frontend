@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* انیمیشن ساده slide-up برای استفاده اختیاری */
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+  animation: slideUp 280ms cubic-bezier(.2,.9,.2,1) both;
+}
+
+/* برخی برداشت‌های ظریف برای glass feel (اختیاری) */
+:root {
+  --glass-bg: rgba(255,255,255,0.06);
+}
