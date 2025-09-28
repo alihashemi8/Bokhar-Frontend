@@ -1,69 +1,38 @@
 import { useState } from "react";
-import Card from "../components/Card";
 import CategoryTabs from "../components/CategoryTabs";
 
-// کارت‌ها با پارامترهای مشترک و خاص
-const cards = [
-  {
-    id: 1,
-    image: "/images/curtain.png",
-    title: "پرده",
-    basePrice: 20000,
-    category: "خانه و خواب",
-    options: [
-      { key: "iron", label: "اتو", price: 5000, type: "checkbox" },
-      { key: "stain", label: "لکه‌گیری", price: 10000, type: "checkbox" },
-      {
-        key: "length",
-        label: "متراژ",
-        type: "select",
-        choices: [
-          { value: "1m", label: "1 متر", price: 10000 },
-          { value: "2m", label: "2 متر", price: 15000 },
-          { value: "3m", label: "3 متر", price: 30000 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    image: "/images/pants.png",
-    title: "شلوار",
-    basePrice: 30000,
-    category: "پیراهن و شلوار",
-    options: [
-      { key: "iron", label: "اتو", price: 5000, type: "checkbox" },
-      {
-        key: "size",
-        label: "سایز",
-        type: "select",
-        choices: [
-          { value: "S", label: "S", price: 0 },
-          { value: "M", label: "M", price: 5000 },
-          { value: "L", label: "L", price: 10000 },
-        ],
-      },
-      {
-        key: "material",
-        label: "جنس",
-        type: "select",
-        choices: [
-          { value: "cotton", label: "کتان", price: 0 },
-          { value: "wool", label: "پشمی", price: 8000 },
-        ],
-      },
-    ],
-  },
-];
+// کامپوننت‌های هر دسته
+import ShirtsPants from "../components/categories/ShirtsPants";
+import Men from "../components/categories/Men";
+import Women from "../components/categories/Women";
+import HomeAndBed from "../components/categories/HomeAndBed";
+import Bags from "../components/categories/Bags";
+import Shoes from "../components/categories/Shoes";
+import WarmClothes from "../components/categories/WarmClothes";
+import Sports from "../components/categories/Sports";
+import Others from "../components/categories/Others";
+import Kids from "../components/categories/Kids";
+
+// اتصال نام دسته به کامپوننت
+const categoryComponents = {
+  "پیراهن": ShirtsPants,
+  "شلوار": ShirtsPants,
+  "مردانه": Men,
+  "زنانه": Women,
+  "بچگانه": Kids,
+  "خانه و خواب": HomeAndBed,
+  "کیف": Bags,
+  "کفش": Shoes,
+  "لباس گرم": WarmClothes,
+  "ورزشی": Sports,
+  "سایر": Others,
+};
 
 export default function Landing() {
-  const [activeCategory, setActiveCategory] = useState("همه");
+  const [activeCategory, setActiveCategory] = useState("پیراهن"); // دسته پیش‌فرض
 
-  // فیلتر کارت‌ها بر اساس دسته‌بندی
-  const filteredCards =
-    activeCategory === "همه"
-      ? cards
-      : cards.filter((card) => card.category === activeCategory);
+  // گرفتن کامپوننت فعلی
+  const ActiveComponent = categoryComponents[activeCategory] || null;
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -77,14 +46,9 @@ export default function Landing() {
       {/* تب دسته‌بندی */}
       <CategoryTabs onCategoryChange={setActiveCategory} />
 
-      {/* کارت‌ها */}
-      <section
-        dir="rtl"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-24 p-6"
-      >
-        {filteredCards.map((card) => (
-          <Card key={card.id} {...card} />
-        ))}
+      {/* رندر کامپوننت دسته فعال */}
+      <section dir="rtl" className="p-6">
+        {ActiveComponent ? <ActiveComponent /> : <p>دسته‌ای انتخاب نشده</p>}
       </section>
     </div>
   );

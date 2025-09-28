@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Card({ image, title, basePrice, options }) {
   const [selectedOptions, setSelectedOptions] = useState(() => {
@@ -13,55 +13,43 @@ export default function Card({ image, title, basePrice, options }) {
 
   const [added, setAdded] = useState(false);
 
+  // مدیریت تغییر چک‌باکس
   const toggleOption = (key) => {
     setSelectedOptions((prev) => {
       const newState = { ...prev };
-      if (prev[key]) {
-        delete newState[key];
-      } else {
-        newState[key] = true;
-      }
+      if (prev[key]) delete newState[key];
+      else newState[key] = true;
 
-      if (key === "wash") {
-        if (newState["wash"]) {
-          newState["iron"] = true;
-        }
+      // مثال: اگر wash فعال شد، iron هم فعال شود
+      if (key === "wash" && newState["wash"]) {
+        newState["iron"] = true;
       }
-
       return newState;
     });
   };
 
+  // مدیریت تغییر select
   const handleSelectChange = (key, value) => {
     setSelectedOptions((prev) => ({ ...prev, [key]: value }));
   };
 
+  // محاسبه قیمت کل
   const totalPrice =
     basePrice +
     options.reduce((sum, opt) => {
-      if (opt.type === "checkbox" && selectedOptions[opt.key]) {
-        return sum + opt.price;
-      }
+      if (opt.type === "checkbox" && selectedOptions[opt.key]) return sum + opt.price;
       if (opt.type === "select" && selectedOptions[opt.key]) {
-        const choice = opt.choices.find(
-          (c) => c.value === selectedOptions[opt.key]
-        );
+        const choice = opt.choices.find((c) => c.value === selectedOptions[opt.key]);
         return sum + (choice?.price || 0);
       }
       return sum;
     }, 0);
 
-  const addToCart = () => setAdded((prev) => !prev);
-
   return (
-    <div className="bg-gray-200 dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition flex flex-col">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition flex flex-col overflow-hidden">
       {/* تصویر */}
-      <div className="w-full h-56 flex items-center justify-center bg-gray-300 dark:bg-gray-700">
-        <img
-          src={image}
-          alt={title}
-          className="max-h-full max-w-full object-contain p-2"
-        />
+      <div className="w-full h-56 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+        <img src={image} alt={title} className="max-h-full max-w-full object-contain p-2" />
       </div>
 
       {/* محتوا */}
@@ -69,14 +57,11 @@ export default function Card({ image, title, basePrice, options }) {
         <h3 className="text-lg font-bold mb-4 text-center">{title}</h3>
 
         {/* چک‌باکس‌ها */}
-        <div className="flex flex-col items-start gap-2 mb-4 flex-1">
+        <div className="flex flex-col gap-2 mb-4">
           {options
             .filter((opt) => opt.type === "checkbox")
             .map((opt) => (
-              <label
-                key={opt.key}
-                className="flex items-center gap-2 cursor-pointer text-sm"
-              >
+              <label key={opt.key} className="flex items-center gap-2 cursor-pointer text-sm">
                 <input
                   type="checkbox"
                   checked={!!selectedOptions[opt.key]}
@@ -93,7 +78,7 @@ export default function Card({ image, title, basePrice, options }) {
           {options
             .filter((opt) => opt.type === "select")
             .map((opt) => (
-              <div key={opt.key} className="flex flex-col items-start">
+              <div key={opt.key} className="flex flex-col">
                 <label className="text-sm mb-1">{opt.label}</label>
                 <select
                   value={selectedOptions[opt.key]}
@@ -102,10 +87,7 @@ export default function Card({ image, title, basePrice, options }) {
                 >
                   {opt.choices.map((choice) => (
                     <option key={choice.value} value={choice.value}>
-                      {choice.label}{" "}
-                      {choice.price > 0
-                        ? `(+${choice.price.toLocaleString()})`
-                        : ""}
+                      {choice.label} {choice.price > 0 ? `(+${choice.price.toLocaleString()})` : ""}
                     </option>
                   ))}
                 </select>
@@ -113,15 +95,16 @@ export default function Card({ image, title, basePrice, options }) {
             ))}
         </div>
 
-        {/* footer ثابت */}
-        <div className="mt-auto">
-          <p className="text-lg font-semibold text-center text-amber-500 mb-2">
+        {/* قیمت و دکمه */}
+        <div className="mt-auto flex flex-col gap-2">
+          <p className="text-lg font-semibold text-center text-amber-500">
             {totalPrice.toLocaleString()} تومان
           </p>
           <button
-            onClick={addToCart}
-            className={`w-full font-medium py-2 rounded-lg transition
-            ${added ? "bg-amber-500 text-white" : "bg-gray-500 text-white hover:bg-gray-600"}`}
+            onClick={() => setAdded((prev) => !prev)}
+            className={`w-full py-2 rounded-lg font-medium transition ${
+              added ? "bg-amber-500 text-white" : "bg-gray-500 text-white hover:bg-gray-600"
+            }`}
           >
             {added ? "افزوده شد" : "افزودن به سبد"}
           </button>
