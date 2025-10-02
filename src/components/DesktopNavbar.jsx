@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User, ShoppingCart, MessageSquare } from "lucide-react";
 import DarkMode from "./DarkMode";
-import AuthModal from "./auth/AuthModal";
+import AuthModal from "./AuthModal";
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
@@ -15,7 +15,10 @@ export default function DesktopNavbar() {
                    text-white px-6 py-3 shadow-lg z-50"
       >
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 mx-1 cursor-pointer hover:text-amber-300 transition">
+          <div
+            onClick={() => setOpenModal(true)}
+            className="flex items-center gap-2 mx-1 cursor-pointer hover:text-amber-300 transition"
+          >
             <User size={22} />
             <span>پروفایل</span>
           </div>
@@ -56,7 +59,8 @@ export default function DesktopNavbar() {
         </div>
       </nav>
 
-      <AuthModal open={openModal} onClose={() => setOpenModal(false)} />
+      {/* اینجا باید isOpen باشه */}
+      <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );
 }

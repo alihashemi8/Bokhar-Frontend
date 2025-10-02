@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
-import AuthModal from "./auth/AuthModal";
+import AuthModal from "./AuthModal";
 
 export default function MobileNavbar() {
   const [dark, setDark] = useState(false);
@@ -50,7 +50,9 @@ export default function MobileNavbar() {
             src="/path/to/logo.png"
             alt="Logo"
             className={`w-8 h-8 rounded-full transition-colors duration-500
-                       ${dark ? "filter brightness-75" : "filter brightness-100"}`}
+                       ${
+                         dark ? "filter brightness-75" : "filter brightness-100"
+                       }`}
           />
         </div>
 
@@ -58,7 +60,8 @@ export default function MobileNavbar() {
         <NavItem icon={<Home size={22} />} label="خانه" />
       </nav>
 
-      <AuthModal open={openModal} onClose={() => setOpenModal(false)} />
+      {/* اینجا هم باید isOpen باشه */}
+      <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );
 }

@@ -2,7 +2,7 @@ import { HashRouter as Router, Routes, Route } from "react-router-dom";
 
 import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
-import AuthModal from "./components/auth/AuthModal";
+import AuthModal from "./components/AuthModal";
 import Landing from "./pages/Landing";
 import Order from "./pages/Order";
 import Status from "./pages/Status";
