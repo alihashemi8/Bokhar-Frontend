@@ -2,9 +2,13 @@ import { useState } from "react";
 import { User, ShoppingCart, MessageSquare } from "lucide-react";
 import DarkMode from "./DarkMode";
 import AuthModal from "./AuthModal";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext"; // اضافه شد
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
+  const navigate = useNavigate();
+  const { totalItems } = useCart(); // تعداد آیتم‌های سبد
 
   return (
     <>
@@ -36,12 +40,17 @@ export default function DesktopNavbar() {
             <span>پیام‌ها</span>
           </div>
 
-          {/* سبد خرید */}
+          {/* سبد خرید با badge */}
           <div
-            onClick={() => setOpenModal(true)}
-            className="flex items-center gap-2 mx-5 cursor-pointer hover:text-amber-300 transition"
+            onClick={() => navigate("/order")}
+            className="relative flex items-center gap-2 mx-5 cursor-pointer hover:text-amber-300 transition"
           >
             <ShoppingCart size={22} />
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                {totalItems}
+              </span>
+            )}
             <span>سبد خرید</span>
           </div>
 
@@ -49,7 +58,6 @@ export default function DesktopNavbar() {
             <DarkMode />
           </div>
 
-          {/* دکمه ورود */}
           <div
             onClick={() => setOpenModal(true)}
             className="text-gray-100 gap-2 mx-5 rounded-xl cursor-pointer hover:text-amber-300 transition"
@@ -59,7 +67,6 @@ export default function DesktopNavbar() {
         </div>
       </nav>
 
-      {/* اینجا باید isOpen باشه */}
       <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );

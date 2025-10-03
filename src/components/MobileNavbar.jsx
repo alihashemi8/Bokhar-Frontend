@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
 import AuthModal from "./AuthModal";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext"; // اضافه شد
 
 export default function MobileNavbar() {
   const [dark, setDark] = useState(false);
   const [openModal, setOpenModal] = useState(false);
+  const { totalItems } = useCart(); // تعداد آیتم‌های سبد
+  const navigate = useNavigate();
 
   const toggleDarkMode = () => {
     setDark((prev) => !prev);
@@ -33,12 +37,20 @@ export default function MobileNavbar() {
         />
 
         <NavItem
-          icon={<ShoppingCart size={22} />}
+          icon={
+            <div className="relative">
+              <ShoppingCart size={22} />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </div>
+          }
           label="سبد"
-          onClick={() => setOpenModal(true)}
+          onClick={() => navigate("/order")}
         />
 
-        {/* لوگو وسط با انیمیشن */}
         <div
           onClick={toggleDarkMode}
           className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md cursor-pointer
@@ -50,9 +62,7 @@ export default function MobileNavbar() {
             src="/path/to/logo.png"
             alt="Logo"
             className={`w-8 h-8 rounded-full transition-colors duration-500
-                       ${
-                         dark ? "filter brightness-75" : "filter brightness-100"
-                       }`}
+                       ${dark ? "filter brightness-75" : "filter brightness-100"}`}
           />
         </div>
 
@@ -60,7 +70,6 @@ export default function MobileNavbar() {
         <NavItem icon={<Home size={22} />} label="خانه" />
       </nav>
 
-      {/* اینجا هم باید isOpen باشه */}
       <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );
