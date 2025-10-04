@@ -2,24 +2,19 @@ import { useState, useEffect } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
 import AuthModal from "./AuthModal";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext"; // اضافه شد
+import { useCart } from "../context/CartContext";
 
 export default function MobileNavbar() {
   const [dark, setDark] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const { totalItems } = useCart(); // تعداد آیتم‌های سبد
+  const { totalItems } = useCart();
   const navigate = useNavigate();
 
-  const toggleDarkMode = () => {
-    setDark((prev) => !prev);
-  };
+  const toggleDarkMode = () => setDark((prev) => !prev);
 
   useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (dark) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   }, [dark]);
 
   return (
@@ -30,12 +25,14 @@ export default function MobileNavbar() {
                    w-[92%] max-w-lg flex justify-between items-center
                    bg-white/10 backdrop-blur-lg rounded-2xl px-4 py-2 shadow-lg z-50 transition-all duration-300"
       >
+        {/* پروفایل */}
         <NavItem
           icon={<User size={22} />}
           label="پروفایل"
           onClick={() => setOpenModal(true)}
         />
 
+        {/* سبد خرید */}
         <NavItem
           icon={
             <div className="relative">
@@ -51,6 +48,7 @@ export default function MobileNavbar() {
           onClick={() => navigate("/order")}
         />
 
+        {/* لوگو / تغییر حالت تیره */}
         <div
           onClick={toggleDarkMode}
           className={`flex items-center justify-center w-12 h-12 rounded-full shadow-md cursor-pointer
@@ -66,8 +64,25 @@ export default function MobileNavbar() {
           />
         </div>
 
-        <NavItem icon={<MessageSquare size={22} />} label="پیام‌ها" />
-        <NavItem icon={<Home size={22} />} label="خانه" />
+        {/* پیام‌ها */}
+        <NavItem
+          icon={<MessageSquare size={22} />}
+          label="پیام‌ها"
+          onClick={() => navigate("/messages")}
+        />
+
+        {/* خانه */}
+        <NavItem
+          icon={<Home size={22} />}
+          label="خانه"
+          onClick={() => {
+            if (window.location.hash === "#/") {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              navigate("/");
+            }
+          }}
+        />
       </nav>
 
       <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />

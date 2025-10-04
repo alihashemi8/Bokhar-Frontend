@@ -62,26 +62,25 @@ export default function Order() {
             </thead>
             <tbody>
               {cartItems.length ? (
-                cartItems.map((item) => (
+                cartItems.map((item, idx) => (
                   <tr
-                    key={item.id}
+                    key={idx}
                     className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
                   >
                     <td className="py-3 px-4 font-medium flex items-center gap-2">
-
                       {item.name}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => decreaseQty(item.id)}
+                          onClick={() => decreaseQty(item)}
                           className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400"
                         >
                           -
                         </button>
                         {item.qty}
                         <button
-                          onClick={() => increaseQty(item.id)}
+                          onClick={() => increaseQty(item)}
                           className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400"
                         >
                           +
@@ -91,7 +90,7 @@ export default function Order() {
                     <td className="py-3 px-4 text-center">
                       <div className="flex flex-col gap-1">
                         {Object.entries(item.options)
-                          .filter(([key, value]) => typeof value === "boolean" && value)
+                          .filter(([_, value]) => typeof value === "boolean" && value)
                           .map(([key]) => (
                             <span
                               key={key}
@@ -105,7 +104,7 @@ export default function Order() {
                     <td className="py-3 px-4 text-center">
                       <div className="flex flex-col gap-1">
                         {Object.entries(item.options)
-                          .filter(([key, value]) => typeof value === "string")
+                          .filter(([_, value]) => typeof value === "string")
                           .map(([key, value]) => (
                             <span
                               key={key}
@@ -116,15 +115,13 @@ export default function Order() {
                           ))}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      {item.totalPrice.toLocaleString()}
-                    </td>
+                    <td className="py-3 px-4 text-right">{item.totalPrice.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">
                       {(item.totalPrice * item.qty).toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item)}
                         className="text-red-500 hover:text-red-700"
                       >
                         <FiTrash2 size={20} />
@@ -172,9 +169,9 @@ export default function Order() {
         {/* موبایل → کارت‌ها کامل */}
         <div className="grid grid-cols-1 gap-4 md:hidden">
           {cartItems.length ? (
-            cartItems.map((item) => (
+            cartItems.map((item, idx) => (
               <div
-                key={item.id}
+                key={idx}
                 className="bg-gray-100 dark:bg-gray-700 p-4 rounded-xl shadow flex flex-col gap-3"
               >
                 {/*  نام */}
@@ -183,7 +180,7 @@ export default function Order() {
                     <p className="font-bold text-lg">{item.name}</p>
                   </div>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item)}
                     className="text-red-500 hover:text-red-700"
                   >
                     <FiTrash2 size={20} />
@@ -222,14 +219,14 @@ export default function Order() {
                   <span>تعداد:</span>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => decreaseQty(item.id)}
+                      onClick={() => decreaseQty(item)}
                       className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400"
                     >
                       -
                     </button>
                     <span>{item.qty}</span>
                     <button
-                      onClick={() => increaseQty(item.id)}
+                      onClick={() => increaseQty(item)}
                       className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400"
                     >
                       +

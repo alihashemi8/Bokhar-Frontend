@@ -2,49 +2,75 @@ import { createContext, useContext, useState } from "react";
 
 const CartContext = createContext();
 
+export const useCart = () => useContext(CartContext);
+
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
 
+  // افزودن به سبد
   const addToCart = (item) => {
-    setCartItems((prev) => {
-      const exists = prev.find(i => i.id === item.id && JSON.stringify(i.options) === JSON.stringify(item.options));
-      if (exists) {
-        return prev.map(i =>
-          i.id === item.id && JSON.stringify(i.options) === JSON.stringify(item.options)
-            ? { ...i, qty: i.qty + item.qty }
-            : i
-        );
-      } else {
-        return [...prev, { ...item, qty: item.qty }];
-      }
-    });
-  };
-
-  const increaseQty = (id) => {
-    setCartItems(prev =>
-      prev.map(item => item.id === id ? { ...item, qty: item.qty + 1 } : item)
+    const index = cartItems.findIndex(
+      i => i.id === item.id && JSON.stringify(i.options) === JSON.stringify(item.options)
     );
+
+    if (index > -1) {
+      setCartItems(prev =>
+        prev.map((i, idx) =>
+          idx === index ? { ...i, qty: i.qty + item.qty } : i
+        )
+      );
+    } else {
+      setCartItems(prev => [...prev, item]);
+    }
   };
 
-  const decreaseQty = (id) => {
+  // افزایش تعداد
+  const increaseQty = (item) => {
     setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, qty: Math.max(1, item.qty - 1) } : item
+      prev.map(i =>
+        i.id === item.id && JSON.stringify(i.options) === JSON.stringify(item.options)
+          ? { ...i, qty: i.qty + 1 }
+          : i
       )
     );
   };
 
-  const removeFromCart = (id) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+  // کاهش تعداد
+  const decreaseQty = (item) => {
+    setCartItems(prev =>
+      prev
+        .map(i =>
+          i.id === item.id && JSON.stringify(i.options) === JSON.stringify(item.options)
+            ? { ...i, qty: i.qty - 1 }
+            : i
+        )
+        .filter(i => i.qty > 0)
+    );
+  };
+
+  // حذف آیتم
+  const removeFromCart = (item) => {
+    setCartItems(prev =>
+      prev.filter(
+        i => i.id !== item.id || JSON.stringify(i.options) !== JSON.stringify(item.options)
+      )
+    );
   };
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, increaseQty, decreaseQty, removeFromCart, totalItems }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        increaseQty,
+        decreaseQty,
+        removeFromCart,
+        totalItems
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 }
-
-export const useCart = () => useContext(CartContext);
