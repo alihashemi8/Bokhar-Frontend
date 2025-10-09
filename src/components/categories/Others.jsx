@@ -13,6 +13,11 @@ export default function Others() {
         { key: "wash", label: "شستشو", price: 7000, type: "checkbox" },
         { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
       ],
+      dropdowns: {
+        material: ["نخی", "پشمی", "ابریشمی"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["سفید", "مشکی", "رنگی"],
+      },
     },
     {
       id: 3,
@@ -21,6 +26,11 @@ export default function Others() {
       basePrice: 10000,
       category: "سایر",
       options: [{ key: "wash", label: "شستشو", price: 3000, type: "checkbox" }],
+      dropdowns: {
+        material: ["کتان", "پلاستیکی", "پارچه‌ای"],
+        size: ["کودک", "متوسط", "بزرگسال"],
+        color: ["سفید", "آبی", "قرمز"],
+      },
     },
     {
       id: 4,
@@ -32,6 +42,11 @@ export default function Others() {
         { key: "wash", label: "شستشو", price: 8000, type: "checkbox" },
         { key: "dry", label: "خشکشویی", price: 12000, type: "checkbox" },
       ],
+      dropdowns: {
+        material: ["نخی", "پشمی", "پلی‌استر"],
+        size: ["S", "M", "L", "XL"],
+        color: ["سفید", "آبی", "سبز"],
+      },
     },
     {
       id: 5,
@@ -40,6 +55,11 @@ export default function Others() {
       basePrice: 15000,
       category: "سایر",
       options: [{ key: "wash", label: "شستشو", price: 4000, type: "checkbox" }],
+      dropdowns: {
+        material: ["چرمی", "نخی", "پلاستیکی"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["سفید", "مشکی", "قرمز"],
+      },
     },
     {
       id: 6,
@@ -50,6 +70,11 @@ export default function Others() {
       options: [
         { key: "wash", label: "شستشو کامل", price: 7000, type: "checkbox" },
       ],
+      dropdowns: {
+        material: ["مخملی", "پارچه‌ای"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["قهوه‌ای", "سبز", "آبی"],
+      },
     },
     {
       id: 7,
@@ -58,6 +83,11 @@ export default function Others() {
       basePrice: 10000,
       category: "سایر",
       options: [{ key: "wash", label: "شستشو", price: 3000, type: "checkbox" }],
+      dropdowns: {
+        material: ["ساتن", "نایلون"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["قرمز", "سفید", "سبز"],
+      },
     },
     {
       id: 8,
@@ -66,6 +96,11 @@ export default function Others() {
       basePrice: 8000,
       category: "سایر",
       options: [{ key: "wash", label: "شستشو", price: 2000, type: "checkbox" }],
+      dropdowns: {
+        material: ["نخی", "پشمی"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["مشکی", "خاکستری", "کرم"],
+      },
     },
     {
       id: 9,
@@ -76,6 +111,11 @@ export default function Others() {
       options: [
         { key: "wash", label: "شستشو کامل", price: 5000, type: "checkbox" },
       ],
+      dropdowns: {
+        material: ["مخملی", "پشمی", "نخی"],
+        size: ["کوچک", "متوسط", "بزرگ"],
+        color: ["آبی", "سبز", "قهوه‌ای"],
+      },
     },
   ];
 

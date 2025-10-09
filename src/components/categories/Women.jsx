@@ -1,3 +1,4 @@
+import React from "react";
 import Card from "../Card";
 
 const womenData = [
@@ -7,7 +8,11 @@ const womenData = [
     title: "شال",
     basePrice: 15000,
     category: "زنانه",
-    options: ["شستشو", "اتو", "خشکشویی"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+    ],
   },
   {
     id: 2,
@@ -15,7 +20,11 @@ const womenData = [
     title: "لباس زنانه",
     basePrice: 30000,
     category: "زنانه",
-    options: ["شستشو", "اتو", "خشکشویی"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+    ],
   },
   {
     id: 3,
@@ -23,7 +32,11 @@ const womenData = [
     title: "مانتو",
     basePrice: 35000,
     category: "زنانه",
-    options: ["خشکشویی", "اتو", "لکه‌گیری"],
+    options: [
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "stain", label: "لکه‌گیری", price: 8000, type: "checkbox" },
+    ],
   },
   {
     id: 4,
@@ -31,7 +44,11 @@ const womenData = [
     title: "پالتو",
     basePrice: 45000,
     category: "زنانه",
-    options: ["خشکشویی", "اتو", "لکه‌گیری"],
+    options: [
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "stain", label: "لکه‌گیری", price: 8000, type: "checkbox" },
+    ],
   },
   {
     id: 5,
@@ -39,7 +56,10 @@ const womenData = [
     title: "تاپ زنانه",
     basePrice: 20000,
     category: "زنانه",
-    options: ["شستشو", "اتو"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 6,
@@ -47,7 +67,11 @@ const womenData = [
     title: "مانتو پاییزی",
     basePrice: 40000,
     category: "زنانه",
-    options: ["خشکشویی", "اتو", "لکه‌گیری"],
+    options: [
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "stain", label: "لکه‌گیری", price: 8000, type: "checkbox" },
+    ],
   },
   {
     id: 7,
@@ -55,7 +79,10 @@ const womenData = [
     title: "چادر",
     basePrice: 25000,
     category: "زنانه",
-    options: ["شستشو", "اتو"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 8,
@@ -63,7 +90,10 @@ const womenData = [
     title: "دامن",
     basePrice: 22000,
     category: "زنانه",
-    options: ["شستشو", "اتو"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 9,
@@ -71,7 +101,11 @@ const womenData = [
     title: "لباس شب",
     basePrice: 60000,
     category: "زنانه",
-    options: ["خشکشویی ویژه", "اتو", "لکه‌گیری"],
+    options: [
+      { key: "dry", label: "خشکشویی ویژه", price: 15000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "stain", label: "لکه‌گیری", price: 8000, type: "checkbox" },
+    ],
   },
   {
     id: 10,
@@ -79,7 +113,10 @@ const womenData = [
     title: "روسری",
     basePrice: 15000,
     category: "زنانه",
-    options: ["شستشو", "اتو"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 11,
@@ -87,7 +124,11 @@ const womenData = [
     title: "بلوز",
     basePrice: 25000,
     category: "زنانه",
-    options: ["شستشو", "اتو", "خشکشویی"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+    ],
   },
   {
     id: 12,
@@ -95,7 +136,10 @@ const womenData = [
     title: "اورال",
     basePrice: 40000,
     category: "زنانه",
-    options: ["خشکشویی", "اتو"],
+    options: [
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 13,
@@ -103,7 +147,11 @@ const womenData = [
     title: "سارافون",
     basePrice: 30000,
     category: "زنانه",
-    options: ["شستشو", "اتو", "خشکشویی"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "dry", label: "خشکشویی", price: 10000, type: "checkbox" },
+    ],
   },
   {
     id: 14,
@@ -111,7 +159,10 @@ const womenData = [
     title: "دامن بلند",
     basePrice: 28000,
     category: "زنانه",
-    options: ["شستشو", "اتو"],
+    options: [
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+    ],
   },
   {
     id: 15,
@@ -119,7 +170,11 @@ const womenData = [
     title: "دامن پلیسه",
     basePrice: 32000,
     category: "زنانه",
-    options: ["شستشو ویژه", "اتو", "خشکشویی"],
+    options: [
+      { key: "dry", label: "خشکشویی ویژه", price: 15000, type: "checkbox" },
+      { key: "iron", label: "اتو", price: 3000, type: "checkbox" },
+      { key: "wash", label: "شستشو", price: 5000, type: "checkbox" },
+    ],
   },
   {
     id: 16,
@@ -127,7 +182,11 @@ const womenData = [
     title: "لباس عروس",
     basePrice: 120000,
     category: "زنانه",
-    options: ["خشکشویی ویژه", "اتو دستی", "بسته‌بندی"],
+    options: [
+      { key: "dry", label: "خشکشویی ویژه", price: 20000, type: "checkbox" },
+      { key: "iron", label: "اتو دستی", price: 5000, type: "checkbox" },
+      { key: "pack", label: "بسته‌بندی", price: 5000, type: "checkbox" },
+    ],
   },
   {
     id: 17,
@@ -135,7 +194,10 @@ const womenData = [
     title: "جوراب شلواری",
     basePrice: 10000,
     category: "زنانه",
-    options: ["شستشو ملایم", "خشکشویی"],
+    options: [
+      { key: "wash", label: "شستشو ملایم", price: 3000, type: "checkbox" },
+      { key: "dry", label: "خشکشویی", price: 5000, type: "checkbox" },
+    ],
   },
 ];
 

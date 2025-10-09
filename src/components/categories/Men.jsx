@@ -50,9 +50,7 @@ const menData = [
     title: "پوشت",
     basePrice: 8000,
     category: "مردانه",
-    options: [
-      { key: "wash", label: "شستشو", type: "checkbox", price: 3000 },
-    ],
+    options: [{ key: "wash", label: "شستشو", type: "checkbox", price: 3000 }],
   },
   {
     id: 7,
@@ -81,9 +79,7 @@ const menData = [
     title: "دستمال گردن",
     basePrice: 15000,
     category: "مردانه",
-    options: [
-      { key: "wash", label: "شستشو", type: "checkbox", price: 7000 },
-    ],
+    options: [{ key: "wash", label: "شستشو", type: "checkbox", price: 7000 }],
   },
   {
     id: 10,
@@ -135,7 +131,7 @@ export default function Men() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
       {menData.map((item) => (
-        <Card key={item.id} {...item} />
+        <Card key={item.id} {...item} qty={1} />
       ))}
     </div>
   );
