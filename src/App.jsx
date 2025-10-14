@@ -5,7 +5,7 @@ import MobileNavbar from "./components/MobileNavbar";
 import AuthModal from "./components/AuthModal";
 import Landing from "./pages/Landing";
 import Order from "./pages/Order";
-import Status from "./pages/Status";
+import Notifications from "./pages/Notifications";
 import CustomerProfile from "./pages/CustomerProfile";
 import { useState } from "react";
 
@@ -27,7 +27,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/order" element={<Order />} />
-        <Route path="/status" element={<Status />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/customer-profile" element={<CustomerProfile />} />
       </Routes>
     </Router>

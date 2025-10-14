@@ -41,9 +41,9 @@ export default function Order() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6 md:p-10">
-      <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 sm:p-10 flex flex-col gap-8">
+      <div className="max-w-6xl mb-12 mt-10 mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 sm:p-10 flex flex-col gap-8">
         {/* عنوان */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center">
+        <h1 className="text-3xl sm:text-4xl font-extraboldt-center">
           فاکتور خرید شما
         </h1>
 
