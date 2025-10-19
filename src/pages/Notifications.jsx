@@ -55,10 +55,11 @@ export default function Notifications() {
   const unreadCount = reminders.filter((r) => !r.read).length;
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-200 mt-20">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-lg p-5 md:p-6 transition-all duration-300 border border-gray-200 dark:border-gray-800">
+    <div className="p-3 sm:p-4 md:p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-200 mt-16 sm:mt-20">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 md:p-6 transition-all duration-300 border border-gray-200 dark:border-gray-800">
+        
         {/* Tabs */}
-        <div className="flex justify-center items-center gap-3 mb-5">
+        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-5">
           <PillButton
             active={activeTab === "reminders"}
             onClick={() => setActiveTab("reminders")}
@@ -105,12 +106,12 @@ export default function Notifications() {
   );
 }
 
-// ---- PillButton داخلی ----
+// ---- PillButton ----
 function PillButton({ active, onClick, icon, label, badge }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 flex justify-center items-center gap-2 px-2 py-2 rounded-full border transition-all focus:outline-none
+      className={`flex-1 min-w-[100px] sm:min-w-[120px] flex justify-center items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border transition-all focus:outline-none text-sm sm:text-base
         ${
           active
             ? "bg-purple-600/70 text-white border-transparent shadow-md"

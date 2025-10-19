@@ -68,7 +68,7 @@ export default function MobileNavbar() {
         <NavItem
           icon={<MessageSquare size={22} />}
           label="پیام‌ها"
-          onClick={() => navigate("/messages")}
+          onClick={() => navigate("/notifications")}
         />
 
         {/* خانه */}
