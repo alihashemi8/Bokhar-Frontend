@@ -1,14 +1,16 @@
-import { useState } from "react";
-import { User, ShoppingCart, MessageSquare, Home } from "lucide-react"; // ← آیکن Home اضافه شد
+import { useState, useContext } from "react";
+import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
 import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { AuthContext } from "../context/AuthContext";
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
   const { totalItems } = useCart();
+  const { user } = useContext(AuthContext);
 
   return (
     <>
@@ -18,43 +20,23 @@ export default function DesktopNavbar() {
                    backdrop-blur-md bg-purple-600/70 border-b border-white/20
                    text-white px-6 py-3 shadow-lg z-50"
       >
-        {/* بخش راست */}
-        <div className="flex items-center gap-4">
-          {/* دکمه خانه */}
+        {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
+        <div className="flex items-center gap-6">
+
+          {/* لوگو */}
           <div
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 mx-4 cursor-pointer hover:text-amber-300 transition"
+            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
           >
-            <Home size={22} />
-            <span>خانه</span>
+            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
+              Logo
+            </span>
           </div>
 
-          {/* دکمه پروفایل */}
-          <div
-            onClick={() => setOpenModal(true)}
-            className="flex items-center gap-2 mx-8 cursor-pointer hover:text-amber-300 transition"
-          >
-            <User size={22} />
-            <span>پروفایل</span>
-          </div>
-        </div>
-
-        {/* لوگو */}
-        <div
-          onClick={() => navigate("/")}
-          className="text-center font-bold text-2xl tracking-wide select-none cursor-pointer"
-        >
-          <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
-            Logo
-          </span>
-        </div>
-
-        {/* بخش چپ */}
-        <div className="flex items-center gap-6">
           {/* پیام‌ها */}
           <div
             onClick={() => navigate("/Notifications")}
-            className="flex items-center gap-2 mx-15 cursor-pointer hover:text-amber-300 transition"
+            className="flex items-center gap-2 px-6 cursor-pointer hover:text-amber-300 transition"
           >
             <MessageSquare size={22} />
             <span>پیام‌ها</span>
@@ -63,34 +45,47 @@ export default function DesktopNavbar() {
           {/* سبد خرید */}
           <div
             onClick={() => navigate("/order")}
-            className="relative flex items-center gap-2 mx-5 cursor-pointer hover:text-amber-300 transition"
+            className="relative flex items-center gap-2 px-6 cursor-pointer hover:text-amber-300 transition"
           >
             <ShoppingCart size={22} />
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-3 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                 {totalItems}
               </span>
             )}
             <span>سبد خرید</span>
           </div>
+        </div>
 
+        {/* بخش چپ: حالت تاریک و پروفایل/ورود */}
+        <div className="flex items-center gap-6">
           {/* حالت تاریک */}
-          <div className="hidden md:flex items-center gap-4 mx-5">
+          <div className="hidden md:flex items-center gap-4">
             <DarkMode />
           </div>
 
-          {/* ورود / ثبت نام */}
-          <div
-            onClick={() => setOpenModal(true)}
-            className="text-gray-100 gap-2 mx-5 rounded-xl cursor-pointer hover:text-amber-300 transition"
-          >
-            ورود / ثبت نام
-          </div>
+          {/* پروفایل یا ورود/ثبت‌نام */}
+          {user ? (
+            <div
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
+            >
+              <User size={22} />
+              <span>{user.name || "پروفایل"}</span>
+            </div>
+          ) : (
+            <div
+              onClick={() => setOpenModal(true)}
+              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+            >
+              ورود / ثبت نام
+            </div>
+          )}
         </div>
       </nav>
 
       {/* مودال ورود */}
-      <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
+      <AuthModal isOpen={!user && openModal} onClose={() => setOpenModal(false)} />
     </>
   );
 }
