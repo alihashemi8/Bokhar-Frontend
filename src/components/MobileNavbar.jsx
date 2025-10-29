@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
-import AuthModal from "./AuthModal";
+import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -60,7 +60,9 @@ export default function MobileNavbar() {
             src="/path/to/logo.png"
             alt="Logo"
             className={`w-8 h-8 rounded-full transition-colors duration-500
-                       ${dark ? "filter brightness-75" : "filter brightness-100"}`}
+                       ${
+                         dark ? "filter brightness-75" : "filter brightness-100"
+                       }`}
           />
         </div>
 

@@ -1,37 +1,43 @@
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import { AuthProvider } from "./context/AuthContext";
+import PrivateRoute from "./components/PrivateRoute";
 
 import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
-import AuthModal from "./components/AuthModal";
+import AuthModal from "./components/auth/AuthModal";
 import Landing from "./pages/Landing";
 import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
-import CustomerProfile from "./pages/CustomerProfile";
-import { useState } from "react";
+import CustomerDashboard from "./pages/CustomerDashboard";
 
 export default function App() {
-  const [openModal, setOpenModal] = useState(false); // حالت مودال
+  const [openModal, setOpenModal] = useState(false);
 
   return (
-    <Router>
-      {/* Navbar دسکتاپ */}
-      <DesktopNavbar openModal={openModal} setOpenModal={setOpenModal} />
+    <AuthProvider>
+      <Router>
+        {/* Navbar دسکتاپ */}
+        <DesktopNavbar openModal={openModal} setOpenModal={setOpenModal} />
 
-      {/* Navbar موبایل */}
-      <MobileNavbar openModal={openModal} setOpenModal={setOpenModal} />
+        {/* Navbar موبایل */}
+        <MobileNavbar openModal={openModal} setOpenModal={setOpenModal} />
 
-      {/* مودال در سطح بالاتر */}
-      <AuthModal open={openModal} onClose={() => setOpenModal(false)} />
+        {/* مودال در سطح بالا */}
+        <AuthModal open={openModal} onClose={() => setOpenModal(false)} />
 
-      {/* فاصله محتوای صفحات از Navbar دسکتاپ */}
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/order" element={<Order />} />
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/customer-profile" element={<CustomerProfile />} />
-        <Route path="/admin-dashboard" element ={<AdminDashboard/>} />
-      </Routes>
-    </Router>
+        {/* مسیرهای برنامه */}
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/order" element={<Order />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+          {/* مسیر محافظت‌شده برای داشبورد مشتری */}
+          <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

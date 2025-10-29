@@ -1,29 +1,26 @@
-// frontend/src/api.js
-export async function apiPost(endpoint, data) {
+export const apiPost = async (url, data) => {
   try {
-    const res = await fetch(`http://127.0.0.1:8000${endpoint}`, {
+    console.log("🚀 Making request to:", url, data);
+    const res = await fetch(`http://127.0.0.1:8000/api${url}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include", // 👈 برای ارسال کوکی
       body: JSON.stringify(data),
     });
 
+    const resData = await res.json();
+
     if (!res.ok) {
-      throw new Error("خطا در درخواست");
+      console.error("❌ Error from:", url, res.status, resData);
+      throw new Error(resData.message || "خطای سرور");
     }
 
-    return await res.json();
+    console.log("✅ Response from:", url, resData);
+    return resData;
   } catch (err) {
-    console.error(err);
+    console.error("❌ Fetch error:", err);
     throw err;
   }
-}
-async function verifyOtp(phone, otp, fullName, email) {
-  return await apiPost("/verify-otp/", {
-    phone: phone,
-    otp: otp,
-    full_name: fullName,
-    email: email
-  });
-}
+};

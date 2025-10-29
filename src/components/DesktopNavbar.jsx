@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react"; // ← آیکن Home اضافه شد
 import DarkMode from "./DarkMode";
-import AuthModal from "./AuthModal";
+import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -52,9 +52,10 @@ export default function DesktopNavbar() {
         {/* بخش چپ */}
         <div className="flex items-center gap-6">
           {/* پیام‌ها */}
-          <div 
-          onClick={() => navigate("/Notifications")}
-          className="flex items-center gap-2 mx-15 cursor-pointer hover:text-amber-300 transition">
+          <div
+            onClick={() => navigate("/Notifications")}
+            className="flex items-center gap-2 mx-15 cursor-pointer hover:text-amber-300 transition"
+          >
             <MessageSquare size={22} />
             <span>پیام‌ها</span>
           </div>
