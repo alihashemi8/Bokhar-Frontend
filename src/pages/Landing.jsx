@@ -39,7 +39,7 @@ export default function Landing() {
   // تابع هندل سرچ
   const handleSearch = () => {
     console.log("جستجو برای:", searchQuery);
-    // اینجا بعدا می‌تونی لاجیک فیلتر کردن دیتا رو بذاری
+
   };
 
   return (

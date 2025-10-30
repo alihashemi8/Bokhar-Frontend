@@ -38,8 +38,8 @@ export default function MobileNavbar() {
             </div>
           }
           label="سبد"
-          onClick={() => navigate("/order")}
-          active={location.pathname === "/order"}
+          onClick={() => navigate("/map")}
+          active={location.pathname === "/map"}
         />
 
 

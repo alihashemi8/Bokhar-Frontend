@@ -55,7 +55,7 @@ export default function Notifications() {
   const unreadCount = reminders.filter((r) => !r.read).length;
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-200 mt-16 sm:mt-20">
+    <div className="p-3 sm:p-4 md:p-6 max-w-3xl mx-auto text-gray-800 dark:text-gray-200 mt-16 sm:mt-15">
       <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-5 md:p-6 transition-all duration-300 border border-gray-200 dark:border-gray-800">
         
         {/* Tabs */}

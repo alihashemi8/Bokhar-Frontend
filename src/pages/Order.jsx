@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import Factor from "../components/Factor";
 import Pay from "../components/Payment";
-import MapSelector from "../components/MapSelector"; // نسخه حرفه‌ای UX/UI
+import MapSelector from "./MapSelector"; // نسخه حرفه‌ای UX/UI
 
 export default function Order() {
   const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
@@ -54,12 +54,6 @@ export default function Order() {
           decreaseQty={decreaseQty}
           removeFromCart={removeFromCart}
         />
-
-        {/* انتخاب آدرس روی نقشه */}
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">انتخاب آدرس روی نقشه</h2>
-          <MapSelector onLocationSelect={handleLocation} />
-        </div>
 
         {/* پرداخت و کد تخفیف */}
         <Pay
