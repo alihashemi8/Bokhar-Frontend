@@ -10,7 +10,7 @@ export default function Pay({
   return (
     <>
       {/* دسکتاپ → کد تخفیف و پرداخت */}
-      <div className="hidden md:flex justify-end gap-4 mt-6">
+      <div dir="ltr" className="hidden md:flex justify-end gap-4 mt-6 ">
         <input
           type="text"
           placeholder="کد تخفیف خود را وارد کنید"
