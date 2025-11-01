@@ -41,6 +41,6 @@ export default function App() {
           </Routes>
         </Router>
       </div>
-    </AuthProvider>
+ </AuthProvider>
   );
 }

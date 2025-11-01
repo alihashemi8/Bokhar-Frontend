@@ -45,9 +45,9 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       <section className="p-8 text-center">
-        <h1 className="text-3xl font-bold md:mt-10">به سایت ما خوش آمدید ✨</h1>
+        <h1 className="text-3xl font-bold md:mt-10">به سایت ما خوش آمدید </h1>
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-          اینجا می‌تونی سرویس خشکشویی آنلاین رو تست کنی 🚀
+          اینجا می‌تونی سرویس خشکشویی آنلاین رو تست کنی 
         </p>
       </section>
 

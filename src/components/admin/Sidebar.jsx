@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FiLogOut,
   FiHome,
@@ -5,80 +6,92 @@ import {
   FiPackage,
   FiTag,
   FiBarChart,
+  FiGrid,
+  FiLayout,
+  FiMenu,
 } from "react-icons/fi";
 
-export default function Sidebar({
-  isSidebarOpen,
-  setIsSidebarOpen,
-  activeMenu,
-  setActiveMenu,
-}) {
-  const menuItems = [
+export default function Sidebar({ activeMenu, setActiveMenu }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const allMenuItems = [
+    { label: "داشبورد", icon: <FiLayout />, key: "dashboard" },
     { label: "سفارش‌ها", icon: <FiHome />, key: "orders" },
     { label: "مشتریان", icon: <FiUsers />, key: "customers" },
     { label: "خدمات", icon: <FiPackage />, key: "services" },
+    { label: "دسته‌بندی‌ها", icon: <FiGrid />, key: "categories" },
     { label: "تخفیف‌ها", icon: <FiTag />, key: "discounts" },
     { label: "گزارش‌ها", icon: <FiBarChart />, key: "reports" },
   ];
 
   return (
-    <div
-      dir="rtl"
-      className="flex h-screen bg-gray-100 relative overflow-hidden"
-    >
-      {/* پس‌زمینه تار هنگام باز بودن منو */}
+    <div dir="rtl" className="relative h-screen flex">
+      {/* دکمه همبرگر موبایل */}
+      <button
+        className="md:hidden fixed top-4 right-4 z-50 bg-blue-900 text-white p-2 rounded-lg shadow-lg"
+        onClick={() => setIsSidebarOpen(true)}
+      >
+        <FiMenu size={24} />
+      </button>
+
+      {/* Overlay موبایل */}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-          aria-hidden="true"
-        ></div>
+        />
       )}
 
       {/* Sidebar */}
-      <aside
-        className={`fixed top-0 right-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-all duration-500 ease-in-out z-50
-          ${
-            isSidebarOpen
-              ? "translate-x-0 opacity-100"
-              : "translate-x-full opacity-0"
-          }
-          md:top-16 md:translate-x-0 md:opacity-100 md:static md:block`}
-        aria-label="Main sidebar"
+<aside
+  className={`
+    fixed right-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 z-50
+    ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}
+    md:translate-x-0  md:mt-15.5 
+  `}
+  style={{
+    top: 0,       // موبایل از بالا
+    height: "100vh", // موبایل کل صفحه
+  }}
+>
+  <div className="flex flex-col h-auto">
+    <h1 className="text-2xl font-bold p-4 border-b text-blue-700 dark:text-blue-400">
+      پنل مدیریت
+    </h1>
+
+    <nav className="flex-1 overflow-y-auto text-gray-800 dark:text-gray-200 px-4 py-2">
+      {allMenuItems.map((item) => (
+        <button
+          key={item.key}
+          onClick={() => {
+            setActiveMenu(item.key);
+            setIsSidebarOpen(false);
+          }}
+          className={`
+            flex items-center gap-2 w-full px-3 py-4 rounded text-right transition-all duration-200
+            ${activeMenu === item.key
+              ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
+              : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+            }
+            md:py-4 md:gap-3 md:mb-3
+          `}
+        >
+          {item.icon} {item.label}
+        </button>
+      ))}
+    </nav>
+
+    <div className="border-t p-4 md:sticky md:bottom-0 md:bg-white dark:md:bg-gray-800">
+      <button
+        className="flex items-center gap-2 w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700 
+                   text-red-600 dark:text-red-400 font-semibold p-2 rounded transition-all duration-200"
       >
-        <h1 className="text-2xl font-bold p-4 border-b text-blue-700 dark:text-blue-400">
-          پنل مدیریت
-        </h1>
+        <FiLogOut /> خروج
+      </button>
+    </div>
+  </div>
+</aside>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto text-gray-800 dark:text-gray-200">
-          {menuItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => {
-                setActiveMenu(item.key);
-                setIsSidebarOpen(false);
-              }}
-              className={`flex items-center gap-2 w-full p-2 rounded text-right ${
-                activeMenu === item.key
-                  ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-              }`}
-            >
-              {item.icon} {item.label}
-            </button>
-          ))}
-        </nav>
-
-        {/* دکمه خروج */}
-        <div className="border-t p-4 md:sticky md:bottom-0 md:bg-white dark:md:bg-gray-800">
-          <button
-            className="flex items-center gap-2 w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 font-semibold p-2 rounded"
-            aria-label="Logout"
-          >
-            <FiLogOut /> خروج
-          </button>
-        </div>
-      </aside>
     </div>
   );
 }

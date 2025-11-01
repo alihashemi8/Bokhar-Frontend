@@ -1,3 +1,7 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Tag, ShieldCheck, CreditCard, CheckCircle, XCircle, Loader2 } from "lucide-react";
+
 export default function Pay({
   subtotal,
   total,
@@ -7,70 +11,145 @@ export default function Pay({
   applyDiscount,
   handlePayment,
 }) {
+  const [loading, setLoading] = useState(false);
+  const [discountStatus, setDiscountStatus] = useState(null); // success | error | null
+
+  const onApplyDiscount = async () => {
+    const ok = await applyDiscount();
+    setDiscountStatus(ok ? "success" : "error");
+    setTimeout(() => setDiscountStatus(null), 2500);
+  };
+
+  const onPay = async () => {
+    setLoading(true);
+    await handlePayment();
+    setLoading(false);
+  };
+
   return (
-    <>
-      {/* دسکتاپ → کد تخفیف و پرداخت */}
-      <div dir="ltr" className="hidden md:flex justify-end gap-4 mt-6 ">
-        <input
-          type="text"
-          placeholder="کد تخفیف خود را وارد کنید"
-          value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value)}
-          className="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white transition w-1/3"
-        />
-        <button
-          onClick={applyDiscount}
-          className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold rounded-full transition shadow"
-        >
-          اعمال کد تخفیف
-        </button>
-        <button
-          onClick={handlePayment}
-          className="px-6 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-bold rounded-full transition shadow"
-        >
-          پرداخت
-        </button>
-      </div>
+    <motion.div
+      className="w-full mt-10 space-y-6"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* کارت مالی */}
+      <motion.div
+        className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-lg shadow-xl rounded-2xl p-6 flex flex-col gap-4 border border-gray-200 dark:border-gray-700"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
+          <CreditCard className="size-5 text-purple-500" />
+          خلاصه پرداخت
+        </h2>
 
-      {/* جمع کل */}
-      <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gradient-to-r from-purple-100 to-blue-50 dark:from-gray-700 dark:to-gray-800 p-6 rounded-xl shadow-inner">
-        <div className="text-lg sm:text-xl font-medium">جمع کل: {subtotal.toLocaleString()} تومان</div>
-        {discountAmount > 0 && (
-          <div className="text-green-600 dark:text-green-400 text-lg sm:text-xl font-medium">
-            تخفیف: -{discountAmount.toLocaleString()} تومان
+        <div className="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="flex justify-between py-2 text-gray-600 dark:text-gray-300">
+            <span>جمع خرید:</span>
+            <span>{subtotal.toLocaleString()} تومان</span>
           </div>
-        )}
-        <div className="text-2xl sm:text-3xl font-extrabold text-purple-700 dark:text-purple-300">
-          قابل پرداخت: {total.toLocaleString()} تومان
+
+          {discountAmount > 0 && (
+            <motion.div
+              className="flex justify-between py-2 text-green-600 dark:text-green-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <span>تخفیف اعمال‌شده:</span>
+              <span>-{discountAmount.toLocaleString()} تومان</span>
+            </motion.div>
+          )}
+
+          <div className="flex justify-between items-center py-3 text-lg font-bold text-purple-700 dark:text-purple-300">
+            <span>مبلغ قابل پرداخت:</span>
+            <span>{total.toLocaleString()} تومان</span>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* موبایل → کد تخفیف */}
-      <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 md:hidden">
-        <input
-          type="text"
-          placeholder="کد تخفیف خود را وارد کنید"
-          value={discountCode}
-          onChange={(e) => setDiscountCode(e.target.value)}
-          className="w-full px-4 py-3 rounded-full border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white transition"
-        />
-        <button
-          onClick={applyDiscount}
-          className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold rounded-full transition shadow"
-        >
-          اعمال کد تخفیف
-        </button>
-      </div>
+      {/* فرم تخفیف */}
+      <motion.div
+        className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl p-5 shadow flex flex-col sm:flex-row items-center gap-3 border border-gray-200 dark:border-gray-700 relative overflow-hidden"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <div className="relative w-full sm:w-2/3">
+          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-5" />
+          <input
+            type="text"
+            placeholder="کد تخفیف دارید؟"
+            value={discountCode}
+            onChange={(e) => setDiscountCode(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+          />
+        </div>
 
-      {/* دکمه پرداخت موبایل */}
-      <div className="mt-8 flex justify-center sm:justify-end md:hidden">
         <button
-          onClick={handlePayment}
-          className="px-8 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-bold rounded-3xl text-lg sm:text-xl transition shadow-lg"
+          onClick={onApplyDiscount}
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold transition shadow"
         >
-          پرداخت و رفتن به شاپرک
+          اعمال تخفیف
         </button>
-      </div>
-    </>
+
+        {/* پیام موفقیت/خطا */}
+        <AnimatePresence>
+          {discountStatus === "success" && (
+            <motion.div
+              className="absolute -bottom-8 left-0 right-0 text-green-600 text-sm flex items-center justify-center gap-1"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+            >
+              <CheckCircle className="size-4" />
+              کد تخفیف با موفقیت اعمال شد
+            </motion.div>
+          )}
+          {discountStatus === "error" && (
+            <motion.div
+              className="absolute -bottom-8 left-0 right-0 text-red-500 text-sm flex items-center justify-center gap-1"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+            >
+              <XCircle className="size-4" />
+              کد تخفیف معتبر نیست
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* دکمه پرداخت */}
+      <motion.div
+        className="flex justify-center sm:justify-end"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <button
+          onClick={onPay}
+          disabled={loading}
+          className={`px-10 py-4 flex items-center gap-3 rounded-2xl text-lg font-bold transition-all shadow-lg ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white"
+          }`}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="size-5 animate-spin" />
+              در حال انتقال به درگاه...
+            </>
+          ) : (
+            <>
+              <ShieldCheck className="size-5" />
+              پرداخت امن و نهایی
+            </>
+          )}
+        </button>
+      </motion.div>
+    </motion.div>
   );
 }
