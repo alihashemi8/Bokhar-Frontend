@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import MapSelector from "./pages/MapSelector";
+import AdminOrders from "./components/admin/AdminOrders";
 export default function App() {
   const [openModal, setOpenModal] = useState(false);
 
@@ -35,9 +36,9 @@ export default function App() {
             <Route path="/order" element={<Order />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
-
             {/* مسیر محافظت‌شده برای داشبورد مشتری */}
             <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+            <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
           </Routes>
         </Router>
       </div>
