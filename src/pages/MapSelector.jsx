@@ -172,23 +172,29 @@ export default function MapSelectorPro({
 
   const handleSave = () => {
     if (!description || !isDescriptionValid(description)) {
-      alert(
-        "لطفا پلاک و واحد خود را وارد کنید"
-      );
+      alert("لطفا پلاک و واحد خود را وارد کنید");
       return;
     }
-    if (!position) {
-      alert("لطفاً یک مکان روی نقشه انتخاب کنید");
+    if (!position && !isPickup) {
+      alert("لطفاً یک مکان روی نقشه انتخاب کنید یا تحویل حضوری را انتخاب کنید");
       return;
     }
-    onLocationSelect({ coords: position, address, description });
+    onLocationSelect({ coords: position, address, description, pickup: isPickup });
     alert("مکان با موفقیت ثبت شد ✅");
   };
 
   return (
     <div dir="rtl" className="flex flex-col gap-5 max-w-3xl mx-auto w-full p-4 sm:p-6 sm:mt-15 relative z-0">
+      
+{/* هدر راهنما با لینک تحویل حضوری (ریسپانسیو) */}
+<h2 className="text-gray-800 dark:text-gray-100 font-semibold text-sm sm:text-base md:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
+  <span>آدرس خود را مشخص کنید.</span>
+
+</h2>
+
+
       {/* 🔍 نوار جستجو */}
-      <div className="relative flex flex-col sm:flex-row gap-2 mt-4">
+      <div className="relative flex flex-col sm:flex-row gap-2 mt-2">
         <div className="flex flex-1 items-center bg-gray-100 dark:bg-gray-800 rounded-full shadow-md overflow-hidden">
           <button
             onClick={handleClickSearch}
@@ -253,15 +259,13 @@ export default function MapSelectorPro({
 
       {/* 📍 باکس توضیحات */}
       <div className="bg-white dark:bg-gray-800 shadow-md rounded-xl p-4 space-y-2 text-sm sm:text-base">
-        <p className="text-gray-700 dark:text-gray-200 font-semibold">
-          آدرس و توضیحات خود را بنویسید:
-        </p>
         <textarea
           placeholder="خیابان ، کوچه ، پلاک ، واحد ... "
           className="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+
         <button
           onClick={handleSave}
           className="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-full font-semibold mt-2"
@@ -271,7 +275,8 @@ export default function MapSelectorPro({
       </div>
 
       {/* 🛒 دکمه سبد خرید */}
-      <button dir="ltr"
+      <button
+        dir="ltr"
         onClick={() => navigate("/order")}
         className="flex items-center mb-20 sm:mb-0 justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full shadow-lg transition-all text-sm sm:text-base mt-4 mx-auto"
       >

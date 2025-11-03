@@ -1,4 +1,9 @@
-import { HashRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -12,6 +17,7 @@ import Notifications from "./pages/Notifications";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import MapSelector from "./pages/MapSelector";
 import AdminOrders from "./components/admin/AdminOrders";
+import PickupPage from "./pages/About";
 
 function AppContent() {
   const [openModal, setOpenModal] = useState(false);
@@ -20,7 +26,9 @@ function AppContent() {
 
   // مسیر واقعی از location.hash استخراج می‌شود
   useEffect(() => {
-    const hashPath = location.hash ? location.hash.replace("#", "") : window.location.hash.replace("#", "");
+    const hashPath = location.hash
+      ? location.hash.replace("#", "")
+      : window.location.hash.replace("#", "");
     setCurrentPath(hashPath);
   }, [location]);
 
@@ -49,6 +57,7 @@ function AppContent() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/about" element={<PickupPage />} />
       </Routes>
     </div>
   );
