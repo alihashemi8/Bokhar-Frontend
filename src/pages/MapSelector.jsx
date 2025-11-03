@@ -230,8 +230,8 @@ export default function MapSelectorPro({
       </div>
 
       {/* 🗺️ نقشه */}
-      <div className="relative w-full rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
-        <div className="w-full h-80 sm:h-96 z-0 relative">
+      <div className="relative w-80 md:w-full mx-auto rounded-xl overflow-hidden shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="w-80 md:w-full h-80 md:h-96 z-0 relative">
           <MapContainer
             center={position || [35.6892, 51.389]}
             zoom={15}

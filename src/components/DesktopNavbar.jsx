@@ -23,15 +23,24 @@ export default function DesktopNavbar() {
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
         <div className="flex items-center gap-6">
 
-          {/* لوگو */}
-          <div
-            onClick={() => navigate("/")}
-            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
-          >
-            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
-              Logo
-            </span>
-          </div>
+          {/* پروفایل یا ورود/ثبت‌نام */}
+          {user ? (
+            <div
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
+            >
+              <User size={22} />
+              <span>{user.name || "پروفایل"}</span>
+            </div>
+          ) : (
+            <div
+              onClick={() => setOpenModal(true)}
+              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+            >
+              ورود / ثبت نام
+            </div>
+          )}
+          
 
           {/* پیام‌ها */}
           <div
@@ -64,23 +73,16 @@ export default function DesktopNavbar() {
             <DarkMode />
           </div>
 
-          {/* پروفایل یا ورود/ثبت‌نام */}
-          {user ? (
-            <div
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
-            >
-              <User size={22} />
-              <span>{user.name || "پروفایل"}</span>
-            </div>
-          ) : (
-            <div
-              onClick={() => setOpenModal(true)}
-              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
-            >
-              ورود / ثبت نام
-            </div>
-          )}
+         {/* لوگو */}
+          
+          <div
+            onClick={() => navigate("/")}
+            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
+          >
+            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
+              Logo
+            </span>
+          </div>
         </div>
       </nav>
 

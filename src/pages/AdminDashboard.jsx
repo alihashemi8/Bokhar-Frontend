@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/admin/Sidebar";
-import DesktopNavbar from "../components/DesktopNavbar";
 import { FiUsers, FiShoppingCart, FiTag, FiPackage } from "react-icons/fi";
 
 export default function AdminDashboard() {
@@ -53,9 +52,9 @@ export default function AdminDashboard() {
       dir="rtl"
       className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300"
     >
-      <DesktopNavbar />
 
-      <div className="flex flex-1 mt-16">
+
+      <div className="flex flex-1">
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}

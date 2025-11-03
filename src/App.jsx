@@ -1,7 +1,6 @@
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { HashRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { AuthProvider } from "./context/AuthContext";
-import PrivateRoute from "./components/PrivateRoute";
 
 import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
@@ -13,35 +12,54 @@ import Notifications from "./pages/Notifications";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import MapSelector from "./pages/MapSelector";
 import AdminOrders from "./components/admin/AdminOrders";
-export default function App() {
+
+function AppContent() {
   const [openModal, setOpenModal] = useState(false);
+  const [currentPath, setCurrentPath] = useState("");
+  const location = useLocation();
+
+  // مسیر واقعی از location.hash استخراج می‌شود
+  useEffect(() => {
+    const hashPath = location.hash ? location.hash.replace("#", "") : window.location.hash.replace("#", "");
+    setCurrentPath(hashPath);
+  }, [location]);
+
+  // مسیرهایی که نوبار نباید نمایش داده شود
+  const hiddenNavbarRoutes = ["/admin-dashboard", "/admin-dashboard/orders"];
+
+  // بررسی تطابق مسیر فعلی با لیست بالا
+  const hideNavbar = hiddenNavbarRoutes.includes(currentPath);
 
   return (
-    <AuthProvider>
-      <div className="bg-white dark:bg-gray-900 min-h-screen">
-        <Router>
-          {/* Navbar دسکتاپ */}
+    <div className="bg-white dark:bg-gray-900 min-h-screen">
+      {/* Navbarها فقط اگر در مسیر مخفی نباشیم */}
+      {!hideNavbar && (
+        <>
           <DesktopNavbar openModal={openModal} setOpenModal={setOpenModal} />
-
-          {/* Navbar موبایل */}
           <MobileNavbar openModal={openModal} setOpenModal={setOpenModal} />
-
-          {/* مودال در سطح بالا */}
           <AuthModal open={openModal} onClose={() => setOpenModal(false)} />
+        </>
+      )}
 
-          {/* مسیرهای برنامه */}
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/map" element={<MapSelector />} />
-            <Route path="/order" element={<Order />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            {/* مسیر محافظت‌شده برای داشبورد مشتری */}
-            <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-            <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
-          </Routes>
-        </Router>
-      </div>
- </AuthProvider>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/map" element={<MapSelector />} />
+        <Route path="/order" element={<Order />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+      </Routes>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </AuthProvider>
   );
 }
