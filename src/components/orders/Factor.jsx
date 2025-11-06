@@ -1,4 +1,5 @@
 import { FiTrash2 } from "react-icons/fi";
+import { useCart } from "../../context/CartContext";
 
 const optionLabels = {
   wash: "شستشو",
@@ -15,10 +16,14 @@ const optionLabels = {
   color: "رنگ",
 };
 
-export default function Factor({ cartItems, increaseQty, decreaseQty, removeFromCart }) {
+export default function Factor() {
+  const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
+
+  if (!cartItems) return null; // اگه undefined بود، چیزی رندر نشه
+
   return (
     <>
-      {/* دسکتاپ → جدول */}
+      {/* دسکتاپ */}
       <div className="hidden md:block">
         <table className="min-w-full text-sm sm:text-base border-collapse">
           <thead className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 uppercase tracking-wide">
@@ -55,7 +60,7 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                   </td>
                   <td className="py-3 px-4 text-center">
                     <div className="flex flex-col gap-1">
-                      {Object.entries(item.options)
+                      {Object.entries(item.options || {})
                         .filter(([_, value]) => typeof value === "boolean" && value)
                         .map(([key]) => (
                           <span key={key} className="text-sm text-purple-600 dark:text-purple-300">
@@ -66,7 +71,7 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                   </td>
                   <td className="py-3 px-4 text-center">
                     <div className="flex flex-col gap-1">
-                      {Object.entries(item.options)
+                      {Object.entries(item.options || {})
                         .filter(([_, value]) => typeof value === "string")
                         .map(([key, value]) => (
                           <span key={key} className="text-sm text-blue-600 dark:text-blue-300">
@@ -75,10 +80,15 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                         ))}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-right">{item.totalPrice.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-right">{(item.totalPrice * item.qty).toLocaleString()}</td>
+                  <td className="py-3 px-4 text-right">{item.totalPrice?.toLocaleString()}</td>
+                  <td className="py-3 px-4 text-right">
+                    {(item.totalPrice * item.qty).toLocaleString()}
+                  </td>
                   <td className="py-3 px-4 text-center">
-                    <button onClick={() => removeFromCart(item)} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => removeFromCart(item)}
+                      className="text-red-500 hover:text-red-700"
+                    >
                       <FiTrash2 size={20} />
                     </button>
                   </td>
@@ -95,7 +105,7 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
         </table>
       </div>
 
-      {/* موبایل → کارت‌ها */}
+      {/* موبایل */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {cartItems.length ? (
           cartItems.map((item, idx) => (
@@ -104,10 +114,14 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                 <div className="flex-1">
                   <p className="font-bold text-lg">{item.name}</p>
                 </div>
-                <button onClick={() => removeFromCart(item)} className="text-red-500 hover:text-red-700">
+                <button
+                  onClick={() => removeFromCart(item)}
+                  className="text-red-500 hover:text-red-700"
+                >
                   <FiTrash2 size={20} />
                 </button>
               </div>
+
               <div className="flex flex-wrap gap-2 text-xs mt-1">
                 {item.options &&
                   Object.entries(item.options).map(([key, value]) => {
@@ -127,6 +141,7 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                     return null;
                   })}
               </div>
+
               <div className="flex items-center justify-between text-sm mt-1">
                 <span>تعداد:</span>
                 <div className="flex items-center gap-2">
@@ -141,9 +156,10 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
                   >+</button>
                 </div>
               </div>
+
               <div className="flex justify-between items-center text-sm mt-1">
                 <span>قیمت واحد:</span>
-                <span>{item.totalPrice.toLocaleString()} تومان</span>
+                <span>{item.totalPrice?.toLocaleString()} تومان</span>
               </div>
               <div className="flex justify-between items-center text-sm font-bold">
                 <span>قیمت کل:</span>
@@ -152,7 +168,9 @@ export default function Factor({ cartItems, increaseQty, decreaseQty, removeFrom
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-400 dark:text-gray-300 py-6">سبد خرید خالی است</p>
+          <p className="text-center text-gray-400 dark:text-gray-300 py-6">
+            سبد خرید خالی است
+          </p>
         )}
       </div>
     </>

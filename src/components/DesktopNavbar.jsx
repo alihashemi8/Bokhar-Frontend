@@ -53,7 +53,7 @@ export default function DesktopNavbar() {
 
           {/* سبد خرید */}
           <div
-            onClick={() => navigate("/map")}
+            onClick={() => navigate("/order")}
             className="relative flex items-center gap-2 px-6 cursor-pointer hover:text-amber-300 transition"
           >
             <ShoppingCart size={22} />

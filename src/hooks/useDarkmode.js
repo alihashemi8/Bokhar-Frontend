@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function useDarkMode() {
-  const [theme, setTheme] = useState(
-    localStorage.getItem("theme") || "light"
-  );
+export function useDarkMode() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    const checkDark = () =>
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
 
-  return [theme, setTheme];
+  return isDarkMode;
 }

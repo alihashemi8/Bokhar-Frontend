@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag, ShieldCheck, CreditCard, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
-export default function Pay({
+export default function Payment({
   subtotal,
   total,
   discountAmount,

@@ -15,7 +15,6 @@ import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import CustomerDashboard from "./pages/CustomerDashboard";
-import MapSelector from "./pages/MapSelector";
 import AdminOrders from "./components/admin/AdminOrders";
 import PickupPage from "./pages/About";
 
@@ -51,7 +50,6 @@ function AppContent() {
 
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/map" element={<MapSelector />} />
         <Route path="/order" element={<Order />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
