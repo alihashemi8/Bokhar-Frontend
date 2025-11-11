@@ -1,35 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import Factor from "../components/orders/Factor";
-import DateTimeRangePicker from "../components/orders/DateTimePicker";
+import DateTimeRangePicker from "../components/orders/time/DateTimeRangePicker";
 import MapSelector from "../components/orders/map/MapSelector";
 import Payment from "../components/orders/Payment";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+
 export default function Order() {
-  const [step, setStep] = useState(1);
-  const [orderData, setOrderData] = useState({
-    cartItems: [],
-    datetime: null,
-    location: null,
-    discountCode: "",
-    discountAmount: 0,
+  // ----- مرحله فعلی -----
+  const [step, setStep] = useState(() => {
+    const savedStep = localStorage.getItem("orderStep");
+    return savedStep ? Number(savedStep) : 1;
   });
 
-  const steps = [
-    { id: 1, label: "فاکتور" },
-    { id: 2, label: "زمان" },
-    { id: 3, label: "مکان" },
-    { id: 4, label: "پرداخت" },
-  ];
+  // ----- داده‌های سفارش -----
+  const [orderData, setOrderData] = useState(() => {
+    const savedData = localStorage.getItem("orderData");
+    return savedData
+      ? JSON.parse(savedData)
+      : {
+          cartItems: [],
+          datetime: null,
+          location: null,
+          discountCode: "",
+          discountAmount: 0,
+        };
+  });
 
+  // ----- ذخیره در localStorage -----
+  useEffect(() => {
+    localStorage.setItem("orderStep", step);
+  }, [step]);
+
+  useEffect(() => {
+    localStorage.setItem("orderData", JSON.stringify(orderData));
+  }, [orderData]);
+
+  // ----- کنترل مرحله‌ها -----
   const handleNext = () => {
     if (step === 2) {
       const { datetime } = orderData;
       if (
         !datetime ||
         !datetime.delivery?.date ||
-        !datetime.delivery?.times?.length ||
+        !datetime.delivery?.time ||
         !datetime.pickup?.date ||
-        !datetime.pickup?.times?.length
+        !datetime.pickup?.time
       ) {
         alert("لطفاً زمان تحویل دادن و تحویل گرفتن را کامل انتخاب کنید.");
         return;
@@ -38,15 +55,8 @@ export default function Order() {
 
     if (step === 3) {
       const { location } = orderData;
-      if (
-        !location ||
-        !location.coords ||
-        !location.plaque ||
-        !location.unit
-      ) {
-        alert(
-          "لطفاً موقعیت مکانی خود را روی نقشه انتخاب کرده و فیلدهای ستاره‌دار را پر کنید."
-        );
+      if (!location || !location.coords || !location.plaque || !location.unit) {
+        alert("لطفاً موقعیت مکانی را کامل انتخاب کنید.");
         return;
       }
     }
@@ -54,25 +64,70 @@ export default function Order() {
     if (step < 4) setStep(step + 1);
   };
 
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
+  const handleBack = () => step > 1 && setStep(step - 1);
 
+  // ----- محاسبات قیمت -----
   const subtotal = orderData.cartItems.reduce(
     (sum, i) => sum + i.totalPrice * i.qty,
     0
   );
   const total = subtotal - (orderData.discountAmount || 0);
 
+  // ----- ارسال سفارش -----
+  const submitOrder = async () => {
+    try {
+      const payload = {
+        ...orderData,
+        subtotal,
+        total,
+      };
+
+      const response = await axios.post(`${API_URL}/orders/`, payload);
+      alert("سفارش با موفقیت ثبت شد ✅");
+      console.log("✅ پاسخ سرور:", response.data);
+
+      localStorage.removeItem("orderData");
+      localStorage.removeItem("orderStep");
+      setStep(1);
+      setOrderData({
+        cartItems: [],
+        datetime: null,
+        location: null,
+        discountCode: "",
+        discountAmount: 0,
+      });
+    } catch (error) {
+      console.error("❌ خطا در ثبت سفارش:", error);
+      alert("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
+    }
+  };
+
+  // ----- جلوگیری از حلقه رندر -----
+  const handleDatetimeChange = useCallback((datetime) => {
+    setOrderData((prev) => ({ ...prev, datetime }));
+  }, []);
+
+  const handleLocationChange = useCallback((location) => {
+    setOrderData((prev) => ({ ...prev, location }));
+  }, []);
+
+  // ----- دکمه‌ها -----
   const isStep3Disabled =
     step === 3 &&
     (!orderData.location?.coords ||
       !orderData.location?.plaque ||
       !orderData.location?.unit);
 
+  const steps = [
+    { id: 1, label: "فاکتور" },
+    { id: 2, label: "زمان" },
+    { id: 3, label: "مکان" },
+    { id: 4, label: "پرداخت" },
+  ];
+
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      {/* Progress Bar */}
+    <div className="max-w-4xl mx-auto p-6">
+      {/* نوار پیشرفت */}
       <div className="flex items-center justify-between relative md:mt-15.5 mb-8">
         <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10"></div>
         {steps.map((item) => (
@@ -81,7 +136,7 @@ export default function Order() {
               className={`w-8 h-8 flex items-center justify-center rounded-full border-2 transition-all duration-300
                 ${
                   step === item.id
-                    ? "bg-blue-600 text-white border-blue-600"
+                    ? "bg-purple-600 text-white border-purple-600"
                     : step > item.id
                     ? "bg-green-500 text-white border-green-500"
                     : "bg-white border-gray-300 text-gray-400"
@@ -100,15 +155,14 @@ export default function Order() {
         ))}
       </div>
 
-      {/* محتوا */}
+      {/* محتوای مرحله‌ها */}
       <div className="min-h-[350px]">
         {step === 1 && <Factor />}
 
         {step === 2 && (
           <DateTimeRangePicker
-            onChange={(value) =>
-              setOrderData((prev) => ({ ...prev, datetime: value }))
-            }
+            onChange={handleDatetimeChange}
+            value={orderData.datetime}
           />
         )}
 
@@ -116,21 +170,7 @@ export default function Order() {
           <MapSelector
             initialPosition={orderData.location?.coords || undefined}
             initialAddress={orderData.location?.address || ""}
-            onLocationSelect={(location) => {
-              setOrderData((prev) => {
-                const prevLoc = prev.location;
-                if (
-                  prevLoc?.coords?.lat === location.coords.lat &&
-                  prevLoc?.coords?.lng === location.coords.lng &&
-                  prevLoc?.title === location.title &&
-                  prevLoc?.plaque === location.plaque &&
-                  prevLoc?.unit === location.unit
-                ) {
-                  return prev;
-                }
-                return { ...prev, location };
-              });
-            }}
+            onLocationSelect={handleLocationChange}
           />
         )}
 
@@ -141,17 +181,17 @@ export default function Order() {
             discountAmount={orderData.discountAmount}
             discountCode={orderData.discountCode}
             setDiscountCode={(code) =>
-              setOrderData({ ...orderData, discountCode: code })
+              setOrderData((prev) => ({ ...prev, discountCode: code }))
             }
             applyDiscount={() => {
               if (orderData.discountCode === "OFF10") {
                 const discount = 0.1 * subtotal;
-                setOrderData({ ...orderData, discountAmount: discount });
+                setOrderData((prev) => ({ ...prev, discountAmount: discount }));
                 return true;
               }
               return false;
             }}
-            handlePayment={() => alert("در حال اتصال به درگاه پرداخت...")}
+            handlePayment={submitOrder}
           />
         )}
       </div>
@@ -173,7 +213,7 @@ export default function Order() {
             className={`px-4 py-2 rounded-xl transition ${
               isStep3Disabled
                 ? "bg-gray-300 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-purple-600 text-white hover:bg-purple-700"
             }`}
             disabled={isStep3Disabled}
           >
@@ -186,7 +226,7 @@ export default function Order() {
         {step === 4 && (
           <button
             className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition"
-            onClick={() => alert("سفارش با موفقیت ثبت شد ✅")}
+            onClick={submitOrder}
           >
             ثبت نهایی سفارش
           </button>

@@ -1,4 +1,3 @@
-// MapView.jsx
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useEffect } from "react";

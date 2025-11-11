@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "../Card";
 
 const shoesData = [
@@ -9,14 +9,12 @@ const shoesData = [
     basePrice: 50000,
     category: "کفش",
     options: [
-      { key: "clean", label: "تمیزکاری", price: 10000, type: "checkbox" },
-      { key: "polish", label: "واکس", price: 5000, type: "checkbox" },
-      { key: "stain", label: "لکه‌گیری", price: 8000, type: "checkbox" },
-      { key: "size", label: "سایز", type: "select", choices: [
-        { value: "38", label: "38", price: 0 },
-        { value: "39", label: "39", price: 0 },
-        { value: "40", label: "40", price: 0 },
-      ]},
+      { name: "تمیزکاری", price: 10000 },
+      { name: "واکس", price: 5000 },
+      { name: "لکه‌گیری", price: 8000 },
+      { name: "سایز 38", price: 0 },
+      { name: "سایز 39", price: 0 },
+      { name: "سایز 40", price: 0 },
     ],
   },
   {
@@ -26,12 +24,9 @@ const shoesData = [
     basePrice: 50000,
     category: "کیف",
     options: [
-      { key: "clean", label: "تمیزکاری", price: 10000, type: "checkbox" },
-      { key: "sanitize", label: "ضدعفونی", price: 5000, type: "checkbox" },
-      { key: "material", label: "جنس کیف", type: "select", choices: [
-        { value: "leather", label: "چرم", price: 10000 },
-        { value: "fabric", label: "پارچه‌ای", price: 0 },
-      ]},
+      { name: "تمیزکاری", price: 10000 },
+      { name: "چرم", price: 10000 },
+      { name: "پارچه‌ای", price: 0 },
     ],
   },
   {
@@ -41,15 +36,13 @@ const shoesData = [
     basePrice: 60000,
     category: "کفش",
     options: [
-      { key: "clean", label: "تمیزکاری", price: 12000, type: "checkbox" },
-      { key: "polish", label: "واکس", price: 8000, type: "checkbox" },
-      { key: "stain", label: "لکه‌گیری", price: 10000, type: "checkbox" },
-      { key: "size", label: "سایز", type: "select", choices: [
-        { value: "38", label: "38", price: 0 },
-        { value: "39", label: "39", price: 0 },
-        { value: "40", label: "40", price: 0 },
-        { value: "41", label: "41", price: 0 },
-      ]},
+      { name: "تمیزکاری", price: 12000 },
+      { name: "واکس", price: 8000 },
+      { name: "لکه‌گیری", price: 10000 },
+      { name: "سایز 38", price: 0 },
+      { name: "سایز 39", price: 0 },
+      { name: "سایز 40", price: 0 },
+      { name: "سایز 41", price: 0 },
     ],
   },
   {
@@ -59,8 +52,8 @@ const shoesData = [
     basePrice: 80000,
     category: "کیف",
     options: [
-      { key: "clean", label: "تمیزکاری", price: 15000, type: "checkbox" },
-      { key: "pack", label: "بسته‌بندی سفر", price: 5000, type: "checkbox" },
+      { name: "تمیزکاری", price: 15000 },
+      { name: "بسته‌بندی سفر", price: 5000 },
     ],
   },
   {
@@ -70,23 +63,49 @@ const shoesData = [
     basePrice: 35000,
     category: "کفش",
     options: [
-      { key: "clean", label: "تمیزکاری", price: 8000, type: "checkbox" },
-      { key: "polish", label: "واکس", price: 4000, type: "checkbox" },
-      { key: "size", label: "سایز", type: "select", choices: [
-        { value: "36", label: "36", price: 0 },
-        { value: "37", label: "37", price: 0 },
-        { value: "38", label: "38", price: 0 },
-      ]},
+      { name: "تمیزکاری", price: 8000 },
+      { name: "واکس", price: 4000 },
+      { name: "سایز 36", price: 0 },
+      { name: "سایز 37", price: 0 },
+      { name: "سایز 38", price: 0 },
     ],
   },
 ];
 
 export default function Shoes() {
+  const [cart, setCart] = useState([]);
+
+  const handleAddToCart = (items) => {
+    setCart((prev) => [...prev, ...items]);
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {shoesData.map((item) => (
-        <Card key={item.id} {...item} />
-      ))}
+    <div className="p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {shoesData.map((item) => (
+          <Card
+            key={item.id}
+            {...item}
+            onAddToCart={handleAddToCart}
+          />
+        ))}
+      </div>
+
+      {/* نمایش سبد خرید ساده */}
+      {cart.length > 0 && (
+        <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg w-80 max-h-[50vh] overflow-y-auto">
+          <h3 className="font-bold mb-2 text-gray-800 dark:text-gray-100">سبد خرید</h3>
+          {cart.map((item, idx) => (
+            <div key={idx} className="flex justify-between text-gray-700 dark:text-gray-200 mb-1">
+              <span>{item.name} x{item.qty}</span>
+              <span>{item.price.toLocaleString()} تومان</span>
+            </div>
+          ))}
+          <div className="mt-2 font-semibold text-gray-900 dark:text-gray-100">
+            مجموع: {cart.reduce((sum, i) => sum + i.price * i.qty, 0).toLocaleString()} تومان
+          </div>
+        </div>
+      )}
     </div>
   );
 }
