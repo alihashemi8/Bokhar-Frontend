@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Crosshair } from "lucide-react";
+import { Crosshair, ChevronDown, ChevronUp } from "lucide-react";
 import MapView from "./MapView";
 import AddressForm from "./AddressForm";
 import SavedAddressesList from "./SavedAddressesList";
@@ -8,7 +8,8 @@ import SearchBox from "./SearchBox";
 import { useSavedAddresses } from "../../../hooks/useSavedAddresses";
 import { useDarkMode } from "../../../hooks/useDarkMode";
 
-const MAPIR_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImNkMmRlNzk0ZGMwZDQzNmMxM2EwOGRhODhiYWFlYmE4NDc3ZDNhMmYyNmM5MTVlYWMyMDRjOGJkMTkyY2ExZGYwNWJmMmI2OGU1YjBhZWJkIn0.eyJhdWQiOiIzNTIxMiIsImp0aSI6ImNkMmRlNzk0ZGMwZDQzNmMxM2EwOGRhODhiYWFlYmE4NDc3ZDNhMmYyNmM5MTVlYWMyMDRjOGJkMTkyY2ExZGYwNWJmMmI2OGU1YjBhZWJkIiwiaWF0IjoxNzYyNDE0OTcwLCJuYmYiOjE3NjI0MTQ5NzAsImV4cCI6MTc2NDkyMDU3MCwic3ViIjoiIiwic2NvcGVzIjpbImJhc2ljIl19.cuaMmHr3rMuJYGFhFuG_3muOdJBT_vjntSAyd5zMQHvgkblJMRz_pSWFj23zJ69TeZ4txtXzEIHLjg4yCimlM3inRuISkOdQbHGMZFqYwDgA64Om6fFmRzd4lu9keWEKGGZ7Q6BCFkdo9ukjQ8LEJ3r2EtC-g_5cfKII8ZX3x-nxjErdaGWIilkl9sSCOnzi_ZFcsA4CW6CCt-oAzOHRx0vpQhS9BBFKulcivJsln0MsPS4SfOq9bxquvgQjmVDTbppwSpZb0qlQcVCKU3VyzBdy5qJYA6HO4pC6sQTcC6p5R_ogfmd_mBZGY1CfhvPyqdxG-Jfl-MvZvsR1e73oKQ";
+const MAPIR_TOKEN =
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImNkMmRlNzk0ZGMwZDQzNmMxM2EwOGRhODhiYWFlYmE4NDc3ZDNhMmYyNmM5MTVlYWMyMDRjOGJkMTkyY2ExZGYwNWJmMmI2OGU1YjBhZWJkIn0.eyJhdWQiOiIzNTIxMiIsImp0aSI6ImNkMmRlNzk0ZGMwZDQzNmMxM2EwOGRhODhiYWFlYmE4NDc3ZDNhMmYyNmM5MTVlYWMyMDRjOGJkIiwiaWF0IjoxNzYyNDE0OTcwLCJuYmYiOjE3NjI0MTQ5NzAsImV4cCI6MTc2NDkyMDU3MCwic3ViIjoiIiwic2NvcGVzIjpbImJhc2ljIl19.cuaMmHr3rMuJYGFhFuG_3muOdJBT_vjntSAyd5zMQHvgkblJMRz_pSWFj23zJ69TeZ4txtXzEIHLjg4yCimlM3inRuISkOdQbHGMZFqYwDgA64Om6fFmRzd4lu9keWEKGGZ7Q6BCFkdo9ukjQ8LEJ3r2EtC-g_5cfKII8ZX3x-nxjErdaGWIilkl9sSCOnzi_ZFcsA4CW6CCt-oAzOHRx0vpQhS9BBFKulcivJsln0MsPS4SfOq9bxquvgQjmVDTbppwSpZb0qlQcVCKU3VyzBdy5qJYA6HO4pC6sQTcC6p5R_ogfmd_mBZGY1CfhvPyqdxG-Jfl-MvZvsR1e73oKQ";
 
 export default function MapSelector({
   onLocationSelect,
@@ -26,6 +27,7 @@ export default function MapSelector({
   });
   const [searchQuery, setSearchQuery] = useState(initialAddress);
   const [searchResults, setSearchResults] = useState([]);
+  const [mapVisible, setMapVisible] = useState(false); // کنترل نمایش نقشه
   const { savedAddresses, addAddress, removeAddress } = useSavedAddresses();
   const isDarkMode = useDarkMode();
 
@@ -86,7 +88,9 @@ export default function MapSelector({
     const delay = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://map.ir/search/v2?text=${encodeURIComponent(searchQuery)}&limit=5`,
+          `https://map.ir/search/v2?text=${encodeURIComponent(
+            searchQuery
+          )}&limit=5`,
           {
             headers: { "x-api-key": MAPIR_TOKEN },
             signal: controller.signal,
@@ -120,7 +124,9 @@ export default function MapSelector({
     if (!searchQuery.trim()) return;
     try {
       const res = await fetch(
-        `https://map.ir/search/v2?text=${encodeURIComponent(searchQuery)}&limit=1`,
+        `https://map.ir/search/v2?text=${encodeURIComponent(
+          searchQuery
+        )}&limit=1`,
         { headers: { "x-api-key": MAPIR_TOKEN } }
       );
       const data = await res.json();
@@ -199,33 +205,64 @@ export default function MapSelector({
         />
       )}
 
-      <SearchBox
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearch={handleSearchSubmit}
-        results={searchResults}
-        onSelect={handleSelectSearch}
-      />
+      {/* دکمه دراپ‌داون نقشه */}
+      <button
+        onClick={() => setMapVisible((prev) => !prev)}
+        className="flex items-center justify-between w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+      >
+        {mapVisible ? "بستن نقشه" : "انتخاب مکان از روی نقشه"}
+        {mapVisible ? (
+          <ChevronUp className="w-4 h-4" />
+        ) : (
+          <ChevronDown className="w-4 h-4" />
+        )}
+      </button>
 
-      <div className="relative">
-        <MapView position={position} setPosition={setPosition} isDarkMode={isDarkMode} />
-        <button
-          onClick={handleLiveLocation}
-          className="absolute bottom-3 left-3 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg flex items-center justify-center transition z-[1000]"
-        >
-          <Crosshair className="w-5 h-5" />
-        </button>
+      {/* محتویات دراپ‌داون */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          mapVisible ? "max-h-[720px]" : "max-h-0"
+        }`}
+      >
+        {mapVisible && (
+          <div className="flex flex-col gap-4">
+            {/* SearchBox */}
+            <SearchBox
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onSearch={handleSearchSubmit}
+              results={searchResults}
+              onSelect={handleSelectSearch}
+            />
+
+            {/* نقشه */}
+            <div className="relative">
+              <MapView
+                position={position}
+                setPosition={setPosition}
+                isDarkMode={isDarkMode}
+              />
+              <button
+                onClick={handleLiveLocation}
+                className="absolute bottom-3 left-3 bg-green-600 hover:bg-green-700 text-white p-2 rounded-full shadow-lg flex items-center justify-center transition z-[1000]"
+              >
+                <Crosshair className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* AddressForm */}
+            <AddressForm
+              address={address}
+              formData={formData}
+              setFormData={setFormData}
+              onSave={handleSave}
+              disableSave={
+                !formData.title || !formData.plaque || !formData.unit
+              }
+            />
+          </div>
+        )}
       </div>
-
-      {formVisible && (
-        <AddressForm
-          address={address}
-          formData={formData}
-          setFormData={setFormData}
-          onSave={handleSave}
-          disableSave={!formData.title || !formData.plaque || !formData.unit}
-        />
-      )}
     </div>
   );
 }

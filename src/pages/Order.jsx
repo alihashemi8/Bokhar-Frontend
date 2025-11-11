@@ -4,7 +4,7 @@ import Factor from "../components/orders/Factor";
 import DateTimeRangePicker from "../components/orders/time/DateTimeRangePicker";
 import MapSelector from "../components/orders/map/MapSelector";
 import Payment from "../components/orders/Payment";
-
+import StepProgress from "../components/orders/StepProgress";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 export default function Order() {
@@ -137,57 +137,13 @@ export default function Order() {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-{/* نوار مراحل */}
-<div className="flex items-center justify-between relative md:mt-15.5 mb-8">
-  <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10"></div>
-  {steps.map((item) => {
-    const isClickable = item.id <= maxStep;
-    const isActive = step === item.id;
-    const isCompleted = maxStep >= item.id; // تا این مرحله رسیده
-    const isReached = item.id <= maxStep && item.id !== step; // مراحل طی‌شده ولی فعلی نیست
-
-    return (
-      <div
-        key={item.id}
-        className={`flex flex-col items-center w-full transition-all ${
-          isClickable
-            ? "cursor-pointer hover:opacity-90"
-            : "cursor-not-allowed opacity-60"
-        }`}
-        onClick={() => isClickable && handleStepClick(item.id)}
-      >
-        <div
-          className={`w-9 h-9 flex items-center justify-center rounded-full border-2 transition-all duration-300
-            ${
-              isActive
-                ? "bg-purple-600 text-white border-purple-600"
-                : isReached
-                ? "bg-purple-100 text-purple-700 border-purple-400"
-                : item.id < step
-                ? "bg-green-500 text-white border-green-500"
-                : "bg-white border-gray-300 text-gray-400"
-            }`}
-        >
-          {maxStep >= item.id ? "✓" : item.id}
-        </div>
-        <span
-          className={`mt-2 text-sm font-medium ${
-            isActive
-              ? "text-purple-700"
-              : isReached
-              ? "text-purple-500"
-              : item.id <= maxStep
-              ? "text-gray-700"
-              : "text-gray-400"
-          }`}
-        >
-          {item.label}
-        </span>
-      </div>
-    );
-  })}
-</div>
-
+      {/* نوار مراحل */}
+<StepProgress
+  steps={steps}
+  step={step}
+  maxStep={maxStep}
+  onStepClick={handleStepClick}
+/>
 
       {/* محتوای مرحله‌ها */}
       <div className="min-h-[350px]">
