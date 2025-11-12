@@ -5,6 +5,7 @@ import DateTimeRangePicker from "../components/orders/time/DateTimeRangePicker";
 import MapSelector from "../components/orders/map/MapSelector";
 import Payment from "../components/orders/Payment";
 import StepProgress from "../components/orders/StepProgress";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 export default function Order() {
@@ -33,6 +34,9 @@ export default function Order() {
           discountAmount: 0,
         };
   });
+
+  // ---- جمع کل فاکتور ----
+  const [factorTotal, setFactorTotal] = useState(0);
 
   // ---- ذخیره در localStorage ----
   useEffect(() => {
@@ -76,17 +80,11 @@ export default function Order() {
 
   const handleBack = () => step > 1 && setStep(step - 1);
 
-  // ---- محاسبات قیمت ----
-  const subtotal = orderData.cartItems.reduce(
-    (sum, i) => sum + i.totalPrice * i.qty,
-    0
-  );
-  const total = subtotal - (orderData.discountAmount || 0);
-
   // ---- ارسال سفارش ----
   const submitOrder = async () => {
     try {
-      const payload = { ...orderData, subtotal, total };
+      const total = factorTotal - (orderData.discountAmount || 0);
+      const payload = { ...orderData, subtotal: factorTotal, total };
       const response = await axios.post(`${API_URL}/orders/`, payload);
 
       alert("سفارش با موفقیت ثبت شد ✅");
@@ -105,6 +103,7 @@ export default function Order() {
         discountCode: "",
         discountAmount: 0,
       });
+      setFactorTotal(0);
     } catch (error) {
       console.error("❌ خطا در ثبت سفارش:", error);
       alert("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
@@ -138,16 +137,16 @@ export default function Order() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* نوار مراحل */}
-<StepProgress
-  steps={steps}
-  step={step}
-  maxStep={maxStep}
-  onStepClick={handleStepClick}
-/>
+      <StepProgress
+        steps={steps}
+        step={step}
+        maxStep={maxStep}
+        onStepClick={handleStepClick}
+      />
 
       {/* محتوای مرحله‌ها */}
       <div className="min-h-[350px]">
-        {step === 1 && <Factor />}
+        {step === 1 && <Factor onTotalChange={setFactorTotal} />}
         {step === 2 && (
           <DateTimeRangePicker
             onChange={handleDatetimeChange}
@@ -163,8 +162,9 @@ export default function Order() {
         )}
         {step === 4 && (
           <Payment
-            subtotal={subtotal}
-            total={total}
+            cartItems={orderData.cartItems}
+            subtotal={factorTotal}
+            total={factorTotal - (orderData.discountAmount || 0)}
             discountAmount={orderData.discountAmount}
             discountCode={orderData.discountCode}
             setDiscountCode={(code) =>
@@ -172,7 +172,7 @@ export default function Order() {
             }
             applyDiscount={() => {
               if (orderData.discountCode === "OFF10") {
-                const discount = 0.1 * subtotal;
+                const discount = 0.1 * factorTotal;
                 setOrderData((prev) => ({ ...prev, discountAmount: discount }));
                 return true;
               }
