@@ -1,9 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import Sidebar from "./Sidebar";
 import OrderModal from "./OrderModal";
 import jalaali from "jalaali-js";
 
 export default function AdminOrders() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // پیش‌فرض باز باشه در لپ‌تاپ
+  const [activeMenu, setActiveMenu] = useState("orders");
+
   const [orders, setOrders] = useState([
     {
       id: 1,
@@ -134,122 +138,157 @@ export default function AdminOrders() {
   };
 
   return (
-    <div dir="rtl" className="p-4 w-full md:mt-15.5">
-      <div className="rounded-2xl shadow-lg dark:shadow-gray-700 overflow-hidden relative">
-        <table className="min-w-full text-sm text-right dark:text-gray-200">
-          <thead className="bg-gray-100 dark:bg-gray-900">
-            <tr>
-              <th
-                className="p-3 cursor-pointer select-none"
-                onClick={() => toggleSort("id")}
-              >
-                شماره سفارش{" "}
-                {sortKey === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
-              </th>
+    <div className="flex flex-row-reverse min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* سایدبار */}
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+      />
 
-              <th className="p-3 relative">
-                <div ref={dropdownRef} className="flex justify-start relative">
-                  <button
-                    onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                    className="flex items-center gap-1 px-3 py-1 text-sm border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-                  >
-                    {cityFilter || "همه شهرها"}
-                    {cityDropdownOpen ? <FiChevronUp /> : <FiChevronDown />}
-                  </button>
-                  {cityDropdownOpen && (
-                    <ul className="absolute mt-1 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md w-40 max-h-60 overflow-y-auto border dark:border-gray-700 transition-all duration-200">
-                      <li
-                        className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                        onClick={() => {
-                          setCityFilter("");
-                          setCityDropdownOpen(false);
-                        }}
-                      >
-                        همه شهرها
-                      </li>
-                      {cities.map((city) => (
+      {/* محتوای اصلی */}
+      <main
+        dir="rtl"
+        className={`flex-1 p-4 transition-all duration-300 ${
+          isSidebarOpen
+            ? "lg:mr-64 md:mr-56 sm:mr-0" // فاصله مناسب برای اندازه‌های مختلف
+            : "mr-0"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+            مدیریت سفارش‌ها
+          </h1>
+
+          {/* دکمه باز و بسته کردن سایدبار در حالت موبایل */}
+          <button
+            onClick={() => setIsSidebarOpen((p) => !p)}
+            className="block lg:hidden text-gray-700 dark:text-gray-200 border p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            ☰
+          </button>
+        </div>
+
+        {/* جدول */}
+        <div className="rounded-2xl shadow-lg dark:shadow-gray-700 overflow-hidden bg-white dark:bg-gray-900 relative">
+          <table className="min-w-full text-sm text-right dark:text-gray-200">
+            <thead className="bg-gray-100 dark:bg-gray-800">
+              <tr>
+                <th
+                  className="p-3 cursor-pointer select-none"
+                  onClick={() => toggleSort("id")}
+                >
+                  شماره سفارش{" "}
+                  {sortKey === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </th>
+
+                <th className="p-3 relative">
+                  <div ref={dropdownRef} className="flex justify-start relative">
+                    <button
+                      onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
+                      className="flex items-center gap-1 px-3 py-1 text-sm border rounded-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                    >
+                      {cityFilter || "همه شهرها"}
+                      {cityDropdownOpen ? <FiChevronUp /> : <FiChevronDown />}
+                    </button>
+                    {cityDropdownOpen && (
+                      <ul className="absolute mt-1 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md w-40 max-h-60 overflow-y-auto border dark:border-gray-700 transition-all duration-200">
                         <li
-                          key={city}
                           className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                           onClick={() => {
-                            setCityFilter(city);
+                            setCityFilter("");
                             setCityDropdownOpen(false);
                           }}
                         >
-                          {city}
+                          همه شهرها
                         </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </th>
+                        {cities.map((city) => (
+                          <li
+                            key={city}
+                            className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                            onClick={() => {
+                              setCityFilter(city);
+                              setCityDropdownOpen(false);
+                            }}
+                          >
+                            {city}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </th>
 
-              <th
-                className="p-3 cursor-pointer select-none"
-                onClick={() => toggleSort("date")}
-              >
-                تاریخ{" "}
-                {sortKey === "date" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
-              </th>
-              <th
-                className="p-3 cursor-pointer select-none"
-                onClick={() => toggleSort("price")}
-              >
-                مبلغ{" "}
-                {sortKey === "price" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedOrders.map((order) => (
-              <tr
-                key={order.id}
-                className={`border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 cursor-pointer ${
-                  order.status === "انجام شده"
-                    ? "bg-green-50 dark:bg-green-900 hover:bg-green-100 dark:hover:bg-green-800"
-                    : "bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800"
-                }`}
-                onClick={() => openModal(order)}
-              >
-                <td className="p-3 flex items-center justify-between break-words">
-                  <span>{order.id}</span>
-                  <input
-                    type="checkbox"
-                    checked={order.status === "انجام شده"}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleStatus(order.id);
-                    }}
-                    className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600"
-                  />
-                </td>
-                <td className="p-3 break-words">{order.city}</td>
-                <td className="p-3 break-words">{formatJalaali(order.date)}</td>
-                <td className="p-3 break-words">
-                  {order.price.toLocaleString()} تومان
-                </td>
-              </tr>
-            ))}
-            {sortedOrders.length === 0 && (
-              <tr>
-                <td
-                  colSpan="4"
-                  className="p-4 text-center text-gray-500 dark:text-gray-400"
+                <th
+                  className="p-3 cursor-pointer select-none"
+                  onClick={() => toggleSort("date")}
                 >
-                  هیچ سفارشی یافت نشد
-                </td>
+                  تاریخ{" "}
+                  {sortKey === "date" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </th>
+                <th
+                  className="p-3 cursor-pointer select-none"
+                  onClick={() => toggleSort("price")}
+                >
+                  مبلغ{" "}
+                  {sortKey === "price" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+                </th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {sortedOrders.map((order) => (
+                <tr
+                  key={order.id}
+                  className={`border-b border-gray-200 dark:border-gray-700 transition-colors duration-200 cursor-pointer ${
+                    order.status === "انجام شده"
+                      ? "bg-green-50 dark:bg-green-900 hover:bg-green-100 dark:hover:bg-green-800"
+                      : "bg-red-50 dark:bg-red-900 hover:bg-red-100 dark:hover:bg-red-800"
+                  }`}
+                  onClick={() => openModal(order)}
+                >
+                  <td className="p-3 flex items-center justify-between break-words">
+                    <span>{order.id}</span>
+                    <input
+                      type="checkbox"
+                      checked={order.status === "انجام شده"}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleStatus(order.id);
+                      }}
+                      className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:border-gray-600"
+                    />
+                  </td>
+                  <td className="p-3 break-words">{order.city}</td>
+                  <td className="p-3 break-words">
+                    {formatJalaali(order.date)}
+                  </td>
+                  <td className="p-3 break-words">
+                    {order.price.toLocaleString()} تومان
+                  </td>
+                </tr>
+              ))}
+              {sortedOrders.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="p-4 text-center text-gray-500 dark:text-gray-400"
+                  >
+                    هیچ سفارشی یافت نشد
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* مودال */}
-      <OrderModal
-        order={selectedOrder}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-      />
+        {/* مودال جزئیات سفارش */}
+        <OrderModal
+          order={selectedOrder}
+          isOpen={isModalOpen}
+          onClose={closeModal}
+        />
+      </main>
     </div>
   );
 }

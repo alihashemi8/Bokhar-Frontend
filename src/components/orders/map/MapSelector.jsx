@@ -221,7 +221,7 @@ export default function MapSelector({
       {/* محتویات دراپ‌داون */}
       <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          mapVisible ? "max-h-[720px]" : "max-h-0"
+          mapVisible ? "max-h-[720px] md:max-h-[810px]" : "max-h-0"
         }`}
       >
         {mapVisible && (

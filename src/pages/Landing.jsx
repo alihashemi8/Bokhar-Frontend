@@ -140,26 +140,32 @@ export default function Landing() {
       />
       <button
         onClick={handleSearch}
-        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition"
+        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center transition"
       >
         <Search size={18} />
       </button>
     </div>
 
-    {/* ✅ لیست پیشنهاد ساده زیر اینپوت */}
-    {showSuggestions && searchQuery.trim() && filteredItems.length > 0 && (
-      <ul className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md z-50">
-        {filteredItems.slice(0, 6).map((s) => (
-          <li
-            key={`${s.category}-${s.id}`}
-            onClick={() => handleSelectSuggestion(s)}
-            className="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-          >
-            {s.title}
-          </li>
-        ))}
-      </ul>
+{/* ✅ لیست پیشنهاد ساده زیر اینپوت */}
+{showSuggestions && searchQuery.trim() && (
+  <ul className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md z-50">
+    {filteredItems.length > 0 ? (
+      filteredItems.slice(0, 6).map((s) => (
+        <li
+          key={`${s.category}-${s.id}`}
+          onClick={() => handleSelectSuggestion(s)}
+          className="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+        >
+          {s.title}
+        </li>
+      ))
+    ) : (
+      <li className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 cursor-default">
+        گزینه‌ای یافت نشد
+      </li>
     )}
+  </ul>
+)}
   </div>
 </div>
 
@@ -176,7 +182,7 @@ export default function Landing() {
       </div>
 
       {/* نمایش کارت انتخاب شده یا همه کارت‌های دسته */}
-      <section dir="rtl" className="p-6">
+      <section dir="rtl" className="p-6 md:mb-0 mb-20">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
           {selectedCard ? (
             <Card key={`${selectedCard.category}-${selectedCard.id}`} {...selectedCard} />
