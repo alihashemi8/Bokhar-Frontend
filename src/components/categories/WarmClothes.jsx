@@ -1,7 +1,7 @@
 import React from "react";
 import Card from "../Card";
 
-const warmClothesData = [
+export const warmClothesData = [
   {
     id: 1,
     title: "کاپشن",
@@ -131,9 +131,11 @@ const warmClothesData = [
   },
 ];
 
+
+
 export default function WarmClothes() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3  lg:grid-cols-4 gap-6 p-4">
       {warmClothesData.map((card) => (
         <Card key={card.id} {...card} />
       ))}

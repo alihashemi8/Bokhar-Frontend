@@ -1,6 +1,6 @@
 import Card from "../Card";
 
-const kidsData = [
+export const kidsData = [
   {
     id: 1,
     image: "/images/doll.png",

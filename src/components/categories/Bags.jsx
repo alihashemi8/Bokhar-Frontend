@@ -1,6 +1,6 @@
 import Card from "../Card"; // کارت اصلاح‌شده که پارامترهای فاکتور رو می‌فرسته
 
-const bagsData = [
+export const bagsData = [
   {
     id: 1,
     image: "/images/shoes.png",

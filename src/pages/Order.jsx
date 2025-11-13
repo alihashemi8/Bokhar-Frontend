@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useReducer, useEffect } from "react";
 import axios from "axios";
+import toast, { Toaster } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import Factor from "../components/orders/Factor";
 import DateTimeRangePicker from "../components/orders/time/DateTimeRangePicker";
 import MapSelector from "../components/orders/map/MapSelector";
@@ -8,50 +10,63 @@ import StepProgress from "../components/orders/StepProgress";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
+// ---- حالت اولیه ----
+const initialState = {
+  step: Number(localStorage.getItem("orderStep")) || 1,
+  maxStep: Number(localStorage.getItem("orderMaxStep")) || 1,
+  orderData: localStorage.getItem("orderData")
+    ? JSON.parse(localStorage.getItem("orderData"))
+    : {
+        cartItems: [],
+        datetime: null,
+        location: null,
+        discountCode: "",
+        discountAmount: 0,
+      },
+  factorTotal: 0,
+};
+
+// ---- reducer ----
+function reducer(state, action) {
+  switch (action.type) {
+    case "SET_STEP":
+      return { ...state, step: action.payload };
+    case "SET_MAX_STEP":
+      return { ...state, maxStep: action.payload };
+    case "SET_ORDER_DATA":
+      return { ...state, orderData: { ...state.orderData, ...action.payload } };
+    case "SET_FACTOR_TOTAL":
+      return { ...state, factorTotal: action.payload };
+    case "RESET_ORDER":
+      return { ...initialState, step: 1, maxStep: 1 };
+    default:
+      return state;
+  }
+}
+
 export default function Order() {
-  // ---- مرحله فعلی ----
-  const [step, setStep] = useState(() => {
-    const savedStep = localStorage.getItem("orderStep");
-    return savedStep ? Number(savedStep) : 1;
-  });
-
-  // ---- آخرین مرحله‌ای که کاربر بهش رسیده ----
-  const [maxStep, setMaxStep] = useState(() => {
-    const savedMax = localStorage.getItem("orderMaxStep");
-    return savedMax ? Number(savedMax) : 1;
-  });
-
-  // ---- داده‌های سفارش ----
-  const [orderData, setOrderData] = useState(() => {
-    const savedData = localStorage.getItem("orderData");
-    return savedData
-      ? JSON.parse(savedData)
-      : {
-          cartItems: [],
-          datetime: null,
-          location: null,
-          discountCode: "",
-          discountAmount: 0,
-        };
-  });
-
-  // ---- جمع کل فاکتور ----
-  const [factorTotal, setFactorTotal] = useState(0);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { step, maxStep, orderData, factorTotal } = state;
 
   // ---- ذخیره در localStorage ----
   useEffect(() => {
     localStorage.setItem("orderStep", step);
     if (step > maxStep) {
-      setMaxStep(step);
+      dispatch({ type: "SET_MAX_STEP", payload: step });
       localStorage.setItem("orderMaxStep", step);
     }
-  }, [step]);
+  }, [step, maxStep]);
 
   useEffect(() => {
     localStorage.setItem("orderData", JSON.stringify(orderData));
   }, [orderData]);
 
-  // ---- کنترل مرحله‌ها ----
+  // ---- اسکرول به بالا هنگام تغییر مرحله ----
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  // ---- کنترل مراحل ----
   const handleNext = () => {
     if (step === 2) {
       const { datetime } = orderData;
@@ -62,7 +77,7 @@ export default function Order() {
         !datetime.pickup?.date ||
         !datetime.pickup?.time
       ) {
-        alert("لطفاً زمان تحویل دادن و تحویل گرفتن را کامل انتخاب کنید.");
+        toast.error("لطفاً زمان تحویل دادن و تحویل گرفتن را کامل انتخاب کنید.");
         return;
       }
     }
@@ -70,15 +85,16 @@ export default function Order() {
     if (step === 3) {
       const { location } = orderData;
       if (!location || !location.coords || !location.plaque || !location.unit) {
-        alert("لطفاً موقعیت مکانی را کامل انتخاب کنید.");
+        toast.error("لطفاً موقعیت مکانی را کامل انتخاب کنید.");
         return;
       }
     }
 
-    if (step < 4) setStep(step + 1);
+    if (step < 4) dispatch({ type: "SET_STEP", payload: step + 1 });
   };
 
-  const handleBack = () => step > 1 && setStep(step - 1);
+  const handleBack = () =>
+    step > 1 && dispatch({ type: "SET_STEP", payload: step - 1 });
 
   // ---- ارسال سفارش ----
   const submitOrder = async () => {
@@ -87,37 +103,16 @@ export default function Order() {
       const payload = { ...orderData, subtotal: factorTotal, total };
       const response = await axios.post(`${API_URL}/orders/`, payload);
 
-      alert("سفارش با موفقیت ثبت شد ✅");
+      toast.success("سفارش با موفقیت ثبت شد ✅");
       console.log("✅ پاسخ سرور:", response.data);
 
-      localStorage.removeItem("orderData");
-      localStorage.removeItem("orderStep");
-      localStorage.removeItem("orderMaxStep");
-
-      setStep(1);
-      setMaxStep(1);
-      setOrderData({
-        cartItems: [],
-        datetime: null,
-        location: null,
-        discountCode: "",
-        discountAmount: 0,
-      });
-      setFactorTotal(0);
+      ["orderData", "orderStep", "orderMaxStep"].forEach(localStorage.removeItem);
+      dispatch({ type: "RESET_ORDER" });
     } catch (error) {
       console.error("❌ خطا در ثبت سفارش:", error);
-      alert("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
+      toast.error("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
     }
   };
-
-  // ---- جلوگیری از حلقه رندر ----
-  const handleDatetimeChange = useCallback((datetime) => {
-    setOrderData((prev) => ({ ...prev, datetime }));
-  }, []);
-
-  const handleLocationChange = useCallback((location) => {
-    setOrderData((prev) => ({ ...prev, location }));
-  }, []);
 
   // ---- مراحل ----
   const steps = [
@@ -130,12 +125,21 @@ export default function Order() {
   // ---- کلیک روی مراحل ----
   const handleStepClick = (clickedStep) => {
     if (clickedStep <= maxStep) {
-      setStep(clickedStep);
+      dispatch({ type: "SET_STEP", payload: clickedStep });
     }
+  };
+
+  // ---- انیمیشن برای تغییر مرحله ----
+  const fadeVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -30 },
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <Toaster position="top-center" />
+
       {/* نوار مراحل */}
       <StepProgress
         steps={steps}
@@ -144,43 +148,73 @@ export default function Order() {
         onStepClick={handleStepClick}
       />
 
-      {/* محتوای مرحله‌ها */}
+      {/* محتوای مرحله‌ها با انیمیشن */}
       <div className="min-h-[350px]">
-        {step === 1 && <Factor onTotalChange={setFactorTotal} />}
-        {step === 2 && (
-          <DateTimeRangePicker
-            onChange={handleDatetimeChange}
-            value={orderData.datetime}
-          />
-        )}
-        {step === 3 && (
-          <MapSelector
-            initialPosition={orderData.location?.coords || undefined}
-            initialAddress={orderData.location?.address || ""}
-            onLocationSelect={handleLocationChange}
-          />
-        )}
-        {step === 4 && (
-          <Payment
-            cartItems={orderData.cartItems}
-            subtotal={factorTotal}
-            total={factorTotal - (orderData.discountAmount || 0)}
-            discountAmount={orderData.discountAmount}
-            discountCode={orderData.discountCode}
-            setDiscountCode={(code) =>
-              setOrderData((prev) => ({ ...prev, discountCode: code }))
-            }
-            applyDiscount={() => {
-              if (orderData.discountCode === "OFF10") {
-                const discount = 0.1 * factorTotal;
-                setOrderData((prev) => ({ ...prev, discountAmount: discount }));
-                return true;
-              }
-              return false;
-            }}
-            handlePayment={submitOrder}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            variants={fadeVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ duration: 0.3 }}
+          >
+            {step === 1 && (
+              <Factor
+                onTotalChange={(value) =>
+                  dispatch({ type: "SET_FACTOR_TOTAL", payload: value })
+                }
+              />
+            )}
+            {step === 2 && (
+              <DateTimeRangePicker
+                onChange={(datetime) =>
+                  dispatch({ type: "SET_ORDER_DATA", payload: { datetime } })
+                }
+                value={orderData.datetime}
+              />
+            )}
+            {step === 3 && (
+              <MapSelector
+                initialPosition={orderData.location?.coords || undefined}
+                initialAddress={orderData.location?.address || ""}
+                onLocationSelect={(location) =>
+                  dispatch({ type: "SET_ORDER_DATA", payload: { location } })
+                }
+              />
+            )}
+            {step === 4 && (
+              <Payment
+                cartItems={orderData.cartItems}
+                subtotal={factorTotal}
+                total={factorTotal - (orderData.discountAmount || 0)}
+                discountAmount={orderData.discountAmount}
+                discountCode={orderData.discountCode}
+                setDiscountCode={(code) =>
+                  dispatch({
+                    type: "SET_ORDER_DATA",
+                    payload: { discountCode: code },
+                  })
+                }
+                applyDiscount={() => {
+                  const codes = { OFF10: 0.1, OFF20: 0.2 };
+                  const rate = codes[orderData.discountCode.toUpperCase()];
+                  if (rate) {
+                    dispatch({
+                      type: "SET_ORDER_DATA",
+                      payload: { discountAmount: rate * factorTotal },
+                    });
+                    toast.success("تخفیف اعمال شد 🎉");
+                    return true;
+                  }
+                  toast.error("کد تخفیف نامعتبر است ❌");
+                  return false;
+                }}
+                handlePayment={submitOrder}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* کنترل مرحله‌ها */}

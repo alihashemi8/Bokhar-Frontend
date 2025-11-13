@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Card from "../Card";
 
-const shoesData = [
+export const shoesData = [
   {
     id: 1,
     title: "کتونی",

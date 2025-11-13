@@ -1,7 +1,7 @@
 import React from "react";
 import Card from "../Card";
 
-const womenData = [
+export const womenData = [
   {
     id: 1,
     image: "/images/scarf.png",
@@ -203,7 +203,7 @@ const womenData = [
 
 export default function Women() {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
       {womenData.map((item) => (
         <Card key={item.id} {...item} />
       ))}

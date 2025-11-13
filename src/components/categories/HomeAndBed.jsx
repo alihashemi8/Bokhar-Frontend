@@ -1,6 +1,6 @@
 import Card from "../Card"; // کارت اصلاح‌شده با پارامترهای فاکتور
 
-const homeAndBedData = [
+export const homeAndBedData = [
   {
     id: 1,
     image: "/images/quilt.png",

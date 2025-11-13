@@ -1,7 +1,7 @@
 import React from "react";
 import Card from "../Card";
 
-const sportsData = [
+export const sportsData = [
   {
     id: 1,
     title: "ست ورزشی",

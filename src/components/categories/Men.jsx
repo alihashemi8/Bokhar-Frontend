@@ -1,6 +1,6 @@
 import Card from "../Card";
 
-const menData = [
+export const menData = [
   {
     id: 1,
     image: "/images/vest.png",
