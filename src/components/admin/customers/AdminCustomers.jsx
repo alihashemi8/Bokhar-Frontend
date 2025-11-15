@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
-import Sidebar from "./Sidebar";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../Sidebar";
 import { FiSearch, FiUser, FiUsers, FiStar } from "react-icons/fi";
 
 export default function AdminCustomers() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("customers");
-
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
-  // داده‌های نمونه
+  const navigate = useNavigate();
+
+  // داده‌های نمونه مشتریان
   const customers = [
     { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
     { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
@@ -21,20 +23,17 @@ export default function AdminCustomers() {
   const filtered = useMemo(() => {
     return customers.filter((c) => {
       const matchCategory = activeTab === "all" || c.type === activeTab;
-      const matchSearch =
-        c.name.includes(search) || c.phone.includes(search);
-
+      const matchSearch = c.name.includes(search) || c.phone.includes(search);
       return matchCategory && matchSearch;
     });
   }, [search, activeTab]);
 
   return (
     <div
-      dir="rtl"
+      dir="RTL"
       className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300"
     >
       <div className="flex flex-1">
-        
         {/* سایدبار */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
@@ -91,15 +90,17 @@ export default function AdminCustomers() {
           </div>
 
           {/* جدول مشتریان */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-          rounded-2xl p-5 shadow-lg overflow-x-auto">
+          <div
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
+          rounded-2xl p-5 shadow-lg overflow-x-auto"
+          >
             <table className="min-w-full text-right">
               <thead>
                 <tr className="text-gray-500 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                   <th className="p-3">نام</th>
                   <th className="p-3">شماره تماس</th>
                   <th className="p-3">نوع مشتری</th>
-                  <th className="p-3">تعداد سفارش‌ها</th>
+                  <th className="p-3">سفارش‌ها</th>
                 </tr>
               </thead>
 
@@ -114,8 +115,8 @@ export default function AdminCustomers() {
                   filtered.map((c) => (
                     <tr
                       key={c.id}
-                      className="border-b border-gray-100 dark:border-gray-700 
-                    hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition"
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 cursor-pointer transition"
+                      onClick={() => navigate(`/admin-dashboard/customers/${c.id}/transactions`)}
                     >
                       <td className="p-3 font-medium">{c.name}</td>
                       <td className="p-3">{c.phone}</td>

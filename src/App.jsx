@@ -17,7 +17,8 @@ import Notifications from "./pages/Notifications";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminOrders from "./components/admin/AdminOrders";
 import AdminCategories from "./components/admin/AdminCategories";
-import AdminCustomers from "./components/admin/AdminCustomers";
+import AdminCustomers from "./components/admin/customers/AdminCustomers";
+import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
 import AdminDiscount from "./components/admin/AdminDiscount";
 import AdminReports from "./components/admin/AdminReports";
 import AdminServices from "./components/admin/AdminServices";
@@ -25,24 +26,17 @@ import PickupPage from "./pages/About";
 
 function AppContent() {
   const [openModal, setOpenModal] = useState(false);
-  const [currentPath, setCurrentPath] = useState("");
   const location = useLocation();
 
   // مسیر واقعی از location.hash استخراج می‌شود
+  const [currentPath, setCurrentPath] = useState("");
   useEffect(() => {
-    const hashPath = location.hash
-      ? location.hash.replace("#", "")
-      : window.location.hash.replace("#", "");
+    const hashPath = location.hash ? location.hash.replace("#", "") : window.location.hash.replace("#", "");
     setCurrentPath(hashPath);
   }, [location]);
 
-  // مسیرهایی که نوبار نباید نمایش داده شود
-  const hiddenNavbarRoutes = ["/admin-dashboard", "/admin-dashboard/orders" , "/admin-dashboard/customers" ,
-    "/admin-dashboard/services", "/admin-dashboard/categories" , "/admin-dashboard/discounts" , "/admin-dashboard/reports"
-   ];
-
-  // بررسی تطابق مسیر فعلی با لیست بالا
-  const hideNavbar = hiddenNavbarRoutes.includes(currentPath);
+  // همه مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
+  const hideNavbar = currentPath.startsWith("/admin-dashboard");
 
   return (
     <div className="bg-white dark:bg-gray-900 min-h-screen">
@@ -62,6 +56,7 @@ function AppContent() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
         <Route path="/admin-dashboard/customers" element={<AdminCustomers />} />
+        <Route path="/admin-dashboard/customers/:id/transactions" element={<CustomerTransactions />} />
         <Route path="/admin-dashboard/services" element={<AdminServices />} />
         <Route path="/admin-dashboard/categories" element={<AdminCategories />} />
         <Route path="/admin-dashboard/discounts" element={<AdminDiscount />} />
