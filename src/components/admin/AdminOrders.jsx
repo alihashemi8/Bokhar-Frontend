@@ -138,7 +138,7 @@ export default function AdminOrders() {
   };
 
   return (
-    <div className="flex flex-row-reverse min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div dir="rtl" className="flex flex-row-reverse min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* سایدبار */}
       <Sidebar
         isSidebarOpen={isSidebarOpen}

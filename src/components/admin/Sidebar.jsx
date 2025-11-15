@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiLogOut,
   FiHome,
@@ -11,22 +12,32 @@ import {
   FiMenu,
   FiSun,
   FiMoon,
-  FiChevronRight
+  FiChevronRight,
 } from "react-icons/fi";
 import { useTheme } from "../../context/ThemeContext";
 
-export default function Sidebar({ activeMenu, setActiveMenu }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+/**
+ * Props expected:
+ * - activeMenu, setActiveMenu
+ * - isSidebarOpen, setIsSidebarOpen   <-- مطابق AdminDashboard که اینها را پاس می‌کند
+ */
+export default function Sidebar({
+  activeMenu,
+  setActiveMenu,
+  isSidebarOpen,
+  setIsSidebarOpen,
+}) {
+  const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   const allMenuItems = [
-    { label: "داشبورد", icon: <FiLayout />, key: "dashboard" },
-    { label: "سفارش‌ها", icon: <FiHome />, key: "orders" },
-    { label: "مشتریان", icon: <FiUsers />, key: "customers" },
-    { label: "خدمات", icon: <FiPackage />, key: "services" },
-    { label: "دسته‌بندی‌ها", icon: <FiGrid />, key: "categories" },
-    { label: "تخفیف‌ها", icon: <FiTag />, key: "discounts" },
-    { label: "گزارش‌ها", icon: <FiBarChart />, key: "reports" },
+    { label: "داشبورد", icon: <FiLayout />, key: "dashboard", path: "/admin-dashboard" },
+    { label: "سفارش‌ها", icon: <FiHome />, key: "orders", path: "/admin-dashboard/orders" },
+    { label: "مشتریان", icon: <FiUsers />, key: "customers", path: "/admin-dashboard/customers" },
+    { label: "خدمات", icon: <FiPackage />, key: "services", path: "/admin-dashboard/services" },
+    { label: "دسته‌بندی‌ها", icon: <FiGrid />, key: "categories", path: "/admin-dashboard/categories" },
+    { label: "تخفیف‌ها", icon: <FiTag />, key: "discounts", path: "/admin-dashboard/discounts" },
+    { label: "گزارش‌ها", icon: <FiBarChart />, key: "reports", path: "/admin-dashboard/reports" },
   ];
 
   const toggleTheme = () => {
@@ -34,8 +45,8 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
   };
 
   return (
-    <div dir="rtl" className="relative h-screen flex">
-      {/* دکمه همبرگر موبایل */}
+    <>
+      {/* دکمه منوی موبایل */}
       <button
         className="md:hidden fixed top-4 right-4 z-50 bg-blue-900 text-white p-2 rounded-lg shadow-lg"
         onClick={() => setIsSidebarOpen(true)}
@@ -46,73 +57,67 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
       {/* Overlay موبایل */}
       {isSidebarOpen && (
         <div
-          onClick={() => setIsSidebarOpen(false)}
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
         className={`
-          fixed right-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 z-50
+          fixed right-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 shadow-xl
+          transform transition-transform duration-300 z-50
           ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}
           md:translate-x-0
         `}
-        style={{
-          top: 0,
-          height: "100vh",
-        }}
       >
         <div className="flex flex-col h-full">
-          {/* عنوان + دکمه بستن موبایل */}
+          {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h1 className="text-2xl font-bold text-blue-700 dark:text-blue-400">
               پنل مدیریت
             </h1>
 
-{/* دکمه بستن فقط موبایل با انیمیشن fade + slide */}
-<button
-  onClick={() => setIsSidebarOpen(false)}
-  className={`
-    md:hidden p-1 rounded transition-all duration-300
-    ${isSidebarOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
-    hover:bg-gray-200 dark:hover:bg-gray-700
-    absolute top-4 left-4
-  `}
->
-  <FiChevronRight size={24} className="text-gray-800 dark:text-gray-200" />
-</button>
-
-
+            {/* Close mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className={`
+                md:hidden p-1 rounded transition-all duration-300
+                ${isSidebarOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
+                hover:bg-gray-200 dark:hover:bg-gray-700
+              `}
+            >
+              <FiChevronRight size={24} className="text-gray-800 dark:text-gray-200" />
+            </button>
           </div>
 
-          {/* آیتم‌های منو */}
-          <nav className="flex-1 overflow-y-auto text-gray-800 dark:text-gray-200 px-4 py-2">
+          {/* Menu items */}
+          <nav className="flex-1 overflow-y-auto px-4 py-2 text-gray-800 dark:text-gray-200">
             {allMenuItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => {
                   setActiveMenu(item.key);
+                  // navigate to the correct route
+                  if (item.path) navigate(item.path);
                   setIsSidebarOpen(false);
                 }}
                 className={`
                   flex items-center gap-2 w-full px-3 py-3 rounded text-right transition-all duration-200
-                  ${
-                    activeMenu === item.key
-                      ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
-                      : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
-                  }
-                  md:py-2.5 md:gap-3 md:mb-3
+                  ${activeMenu === item.key
+                    ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"}
                 `}
               >
-                {item.icon} {item.label}
+                {item.icon}
+                <span>{item.label}</span>
               </button>
             ))}
           </nav>
 
-          {/* پایین سایدبار */}
+          {/* Footer */}
           <div className="border-t px-4 pt-2 flex flex-col gap-3">
-            {/* سوئیچ تم دسکتاپ (iOS style) */}
+            {/* Theme Toggle */}
             <div className="flex items-center justify-between">
               <span className="text-gray-700 dark:text-gray-200 font-medium">
                 حالت {theme === "dark" ? "تاریک" : "روشن"}
@@ -133,24 +138,22 @@ export default function Sidebar({ activeMenu, setActiveMenu }) {
                   `}
                 >
                   {theme === "dark" ? (
-                    <FiMoon className="text-blue-700" size={16} />
+                    <FiMoon size={16} className="text-blue-700" />
                   ) : (
-                    <FiSun className="text-yellow-500" size={16} />
+                    <FiSun size={16} className="text-yellow-500" />
                   )}
                 </span>
               </button>
             </div>
 
-            {/* دکمه خروج */}
-            <button
-              className="flex items-center gap-2 w-full justify-start hover:bg-gray-200 dark:hover:bg-gray-700 
-                        text-red-600 dark:text-red-400 font-semibold p-2 rounded transition-all duration-200"
-            >
-              <FiLogOut /> خروج
+            {/* Logout */}
+            <button className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded transition-all">
+              <FiLogOut />
+              خروج
             </button>
           </div>
         </div>
       </aside>
-    </div>
+    </>
   );
 }
