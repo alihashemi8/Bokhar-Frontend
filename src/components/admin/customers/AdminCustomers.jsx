@@ -3,6 +3,45 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar";
 import { FiSearch, FiUser, FiUsers, FiStar } from "react-icons/fi";
 
+// ----------- Hook برای داده‌ها ----------
+function useCustomers() {
+  const [customers] = useState([
+    { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
+    { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
+    { id: 3, name: "محمد کریمی", phone: "09132223344", type: "inactive", orders: 0 },
+    { id: 4, name: "مهسا سلطانی", phone: "09012225566", type: "active", orders: 5 },
+  ]);
+  return customers;
+}
+
+// ----------- کامپوننت کارت مشتری ----------
+function CustomerCard({ customer, onClick }) {
+  const { name, phone, type, orders } = customer;
+  const typeColor =
+    type === "vip" ? "bg-yellow-100 text-yellow-700" :
+    type === "active" ? "bg-green-100 text-green-700" :
+    "bg-red-100 text-red-700";
+
+  return (
+    <div
+      className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-2xl transition transform duration-300 hover:-translate-y-1 hover:scale-[1.01]"
+      onClick={onClick}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">{name}</h2>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeColor}`}>
+          {type === "vip" ? "VIP" : type === "active" ? "فعال" : "غیرفعال"}
+        </span>
+      </div>
+      <div className="flex justify-between text-gray-600 dark:text-gray-300">
+        <span>شماره: {phone}</span>
+        <span>سفارش‌ها: {orders}</span>
+      </div>
+    </div>
+  );
+}
+
+// ----------- کامپوننت اصلی ----------
 export default function AdminCustomers() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("customers");
@@ -10,31 +49,20 @@ export default function AdminCustomers() {
   const [activeTab, setActiveTab] = useState("all");
 
   const navigate = useNavigate();
+  const customers = useCustomers();
 
-  // داده‌های نمونه مشتریان
-  const customers = [
-    { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
-    { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
-    { id: 3, name: "محمد کریمی", phone: "09132223344", type: "inactive", orders: 0 },
-    { id: 4, name: "مهسا سلطانی", phone: "09012225566", type: "active", orders: 5 },
-  ];
-
-  // فیلتر دسته‌بندی + سرچ
   const filtered = useMemo(() => {
-    return customers.filter((c) => {
+    const query = search.toLowerCase();
+    return customers.filter(c => {
       const matchCategory = activeTab === "all" || c.type === activeTab;
-      const matchSearch = c.name.includes(search) || c.phone.includes(search);
+      const matchSearch = c.name.toLowerCase().includes(query) || c.phone.includes(query);
       return matchCategory && matchSearch;
     });
-  }, [search, activeTab]);
+  }, [search, activeTab, customers]);
 
   return (
-    <div
-      dir="RTL"
-      className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300"
-    >
+    <div dir="RTL" className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <div className="flex flex-1">
-        {/* سایدبار */}
         <Sidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -42,100 +70,65 @@ export default function AdminCustomers() {
           setActiveMenu={setActiveMenu}
         />
 
-        {/* محتوای اصلی */}
-        <main
-          className={`flex-1 p-6 overflow-y-auto text-gray-800 dark:text-gray-100 transition-all duration-300
-            ${!isSidebarOpen ? "md:mr-64" : ""}`}
-        >
-          <h1 className="text-2xl font-bold mb-6">مشتریان</h1>
+        <main className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}>
+          <h1 className="text-3xl md:text-4xl font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
+            مشتریان
+          </h1>
 
-          {/* سرچ */}
-          <div className="relative mb-6 w-full max-w-md">
-            <FiSearch className="absolute left-3 top-3 text-gray-500" size={20} />
-            <input
-              type="text"
-              placeholder="جستجو بر اساس نام یا شماره..."
-              className="w-full p-3 pr-4 pl-10 rounded-xl bg-white dark:bg-gray-800 border 
-              border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 
-              focus:ring-blue-500 focus:outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* تب‌ها و سرچ */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
+            <div className="flex gap-3 flex-wrap">
+              {[
+                { key: "all", label: "همه", icon: <FiUsers /> },
+                { key: "active", label: "فعال", icon: <FiUser /> },
+                { key: "inactive", label: "غیرفعال", icon: <FiUser /> },
+                { key: "vip", label: "VIP", icon: <FiStar /> },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`
+                    flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 border font-semibold
+                    ${activeTab === tab.key
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl transform scale-105"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
+                    }`}
+                  aria-pressed={activeTab === tab.key}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="relative w-full md:w-1/3">
+              <FiSearch className="absolute left-4 top-3.5 text-gray-400 dark:text-gray-500" size={22} />
+              <input
+                type="text"
+                placeholder="جستجو بر اساس نام یا شماره..."
+                className="w-full p-3 pl-12 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 shadow-md focus:ring-2 focus:ring-blue-400 focus:outline-none transition transform duration-200 hover:scale-[1.01]"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          {/* دسته‌بندی‌ها */}
-          <div className="flex gap-3 mb-6 overflow-x-auto">
-            {[
-              { key: "all", label: "همه", icon: <FiUsers /> },
-              { key: "active", label: "فعال", icon: <FiUser /> },
-              { key: "inactive", label: "غیرفعال", icon: <FiUser /> },
-              { key: "vip", label: "VIP", icon: <FiStar /> },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-xl transition-all border
-                  ${
-                    activeTab === tab.key
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700"
-                  }
-                `}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* جدول مشتریان */}
-          <div
-            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-          rounded-2xl p-5 shadow-lg overflow-x-auto"
-          >
-            <table className="min-w-full text-right">
-              <thead>
-                <tr className="text-gray-500 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                  <th className="p-3">نام</th>
-                  <th className="p-3">شماره تماس</th>
-                  <th className="p-3">نوع مشتری</th>
-                  <th className="p-3">سفارش‌ها</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="text-center p-4 text-gray-400">
-                      مشتری‌ای یافت نشد.
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((c) => (
-                    <tr
-                      key={c.id}
-                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 cursor-pointer transition"
-                      onClick={() => navigate(`/admin-dashboard/customers/${c.id}/transactions`)}
-                    >
-                      <td className="p-3 font-medium">{c.name}</td>
-                      <td className="p-3">{c.phone}</td>
-                      <td className="p-3">
-                        {c.type === "vip" ? (
-                          <span className="text-yellow-500 font-bold">VIP</span>
-                        ) : c.type === "active" ? (
-                          <span className="text-green-500">فعال</span>
-                        ) : (
-                          <span className="text-red-400">غیرفعال</span>
-                        )}
-                      </td>
-                      <td className="p-3">{c.orders}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {/* کارت‌های مشتریان */}
+          {filtered.length === 0 ? (
+            <div className="text-center p-8 text-gray-400 dark:text-gray-500 text-lg">
+              مشتری‌ای یافت نشد.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filtered.map(c => (
+                <CustomerCard
+                  key={c.id}
+                  customer={c}
+                  onClick={() => navigate(`/admin-dashboard/customers/${c.id}/transactions`)}
+                />
+              ))}
+            </div>
+          )}
         </main>
       </div>
     </div>
