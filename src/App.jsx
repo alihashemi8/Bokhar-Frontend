@@ -37,7 +37,9 @@ function AppContent() {
   }, [location]);
 
   // مسیرهایی که نوبار نباید نمایش داده شود
-  const hiddenNavbarRoutes = ["/admin-dashboard", "/admin-dashboard/orders"];
+  const hiddenNavbarRoutes = ["/admin-dashboard", "/admin-dashboard/orders" , "/admin-dashboard/customers" ,
+    "/admin-dashboard/services", "/admin-dashboard/categories" , "/admin-dashboard/discounts" , "/admin-dashboard/reports"
+   ];
 
   // بررسی تطابق مسیر فعلی با لیست بالا
   const hideNavbar = hiddenNavbarRoutes.includes(currentPath);

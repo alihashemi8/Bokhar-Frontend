@@ -16,11 +16,6 @@ import {
 } from "react-icons/fi";
 import { useTheme } from "../../context/ThemeContext";
 
-/**
- * Props expected:
- * - activeMenu, setActiveMenu
- * - isSidebarOpen, setIsSidebarOpen   <-- مطابق AdminDashboard که اینها را پاس می‌کند
- */
 export default function Sidebar({
   activeMenu,
   setActiveMenu,
