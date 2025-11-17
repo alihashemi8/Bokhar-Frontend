@@ -21,7 +21,7 @@ import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
 import AdminDiscount from "./components/admin/AdminDiscount";
 import AdminReports from "./components/admin/AdminReports";
-import AdminServices from "./components/admin/AdminServices";
+import AdminServices from "./components/admin/services/AdminServices";
 import PickupPage from "./pages/About";
 
 function AppContent() {
