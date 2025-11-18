@@ -90,7 +90,7 @@ export default function AdminCustomers() {
                   className={`
                     flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 border font-semibold
                     ${activeTab === tab.key
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl transform scale-105"
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
                       : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
                     }`}
                   aria-pressed={activeTab === tab.key}

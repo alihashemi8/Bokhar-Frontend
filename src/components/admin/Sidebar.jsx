@@ -30,7 +30,6 @@ export default function Sidebar({
     { label: "سفارش‌ها", icon: <FiHome />, key: "orders", path: "/admin-dashboard/orders" },
     { label: "مشتریان", icon: <FiUsers />, key: "customers", path: "/admin-dashboard/customers" },
     { label: "خدمات", icon: <FiPackage />, key: "services", path: "/admin-dashboard/services" },
-    { label: "دسته‌بندی‌ها", icon: <FiGrid />, key: "categories", path: "/admin-dashboard/categories" },
     { label: "تخفیف‌ها", icon: <FiTag />, key: "discounts", path: "/admin-dashboard/discounts" },
     { label: "گزارش‌ها", icon: <FiBarChart />, key: "reports", path: "/admin-dashboard/reports" },
   ];
@@ -69,8 +68,8 @@ export default function Sidebar({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h1 className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-              پنل مدیریت
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 inline-block text-transparent bg-clip-text ">
+              خشکشویی افشار
             </h1>
 
             {/* Close mobile */}
