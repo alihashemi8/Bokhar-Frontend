@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
 import AuthModal from "./components/auth/AuthModal";
+
 import Landing from "./pages/Landing";
 import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -19,10 +20,13 @@ import AdminOrders from "./components/admin/AdminOrders";
 import AdminCategories from "./components/admin/AdminCategories";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
-import AdminDiscount from "./components/admin/AdminDiscount";
 import AdminReports from "./components/admin/AdminReports";
-import AdminServices from "./components/admin/services/AdminServices";
 import PickupPage from "./pages/About";
+
+// Context برای خدمات و تخفیف
+import { ServicesProvider } from "./components/admin/services/ServicesContext";
+import AdminServices from "./components/admin/services/AdminServices";
+import AdminDiscount from "./components/admin/AdminDiscount";
 
 function AppContent() {
   const [openModal, setOpenModal] = useState(false);
@@ -35,7 +39,7 @@ function AppContent() {
     setCurrentPath(hashPath);
   }, [location]);
 
-  // همه مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
+  // مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
   const hideNavbar = currentPath.startsWith("/admin-dashboard");
 
   return (
@@ -57,9 +61,23 @@ function AppContent() {
         <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
         <Route path="/admin-dashboard/customers" element={<AdminCustomers />} />
         <Route path="/admin-dashboard/customers/:id/transactions" element={<CustomerTransactions />} />
-        <Route path="/admin-dashboard/services" element={<AdminServices />} />
+        <Route
+          path="/admin-dashboard/services"
+          element={
+            <ServicesProvider>
+              <AdminServices />
+            </ServicesProvider>
+          }
+        />
         <Route path="/admin-dashboard/categories" element={<AdminCategories />} />
-        <Route path="/admin-dashboard/discounts" element={<AdminDiscount />} />
+        <Route
+          path="/admin-dashboard/discounts"
+          element={
+            <ServicesProvider>
+              <AdminDiscount />
+            </ServicesProvider>
+          }
+        />
         <Route path="/admin-dashboard/reports" element={<AdminReports />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/about" element={<PickupPage />} />

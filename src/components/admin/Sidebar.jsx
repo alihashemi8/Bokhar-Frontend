@@ -7,7 +7,6 @@ import {
   FiPackage,
   FiTag,
   FiBarChart,
-  FiGrid,
   FiLayout,
   FiMenu,
   FiSun,
@@ -59,7 +58,7 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`
-          fixed right-0 top-0 h-screen w-64 bg-white dark:bg-gray-800 shadow-xl
+          fixed top-0 right-0 h-screen w-64 bg-white dark:bg-gray-800 shadow-xl
           transform transition-transform duration-300 z-50
           ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}
           md:translate-x-0
@@ -68,18 +67,14 @@ export default function Sidebar({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 inline-block text-transparent bg-clip-text ">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 inline-block text-transparent bg-clip-text">
               خشکشویی افشار
             </h1>
-
-            {/* Close mobile */}
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className={`
-                md:hidden p-1 rounded transition-all duration-300
+              className={`md:hidden p-1 rounded transition-all duration-300
                 ${isSidebarOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4"}
-                hover:bg-gray-200 dark:hover:bg-gray-700
-              `}
+                hover:bg-gray-200 dark:hover:bg-gray-700`}
             >
               <FiChevronRight size={24} className="text-gray-800 dark:text-gray-200" />
             </button>
@@ -92,7 +87,6 @@ export default function Sidebar({
                 key={item.key}
                 onClick={() => {
                   setActiveMenu(item.key);
-                  // navigate to the correct route
                   if (item.path) navigate(item.path);
                   setIsSidebarOpen(false);
                 }}
@@ -100,7 +94,8 @@ export default function Sidebar({
                   flex items-center gap-2 w-full px-3 py-3 rounded text-right transition-all duration-200
                   ${activeMenu === item.key
                     ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
-                    : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"}
+                    : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  }
                 `}
               >
                 {item.icon}
@@ -116,20 +111,15 @@ export default function Sidebar({
               <span className="text-gray-700 dark:text-gray-200 font-medium">
                 حالت {theme === "dark" ? "تاریک" : "روشن"}
               </span>
-
               <button
                 onClick={toggleTheme}
-                className={`
-                  relative w-14 h-8 rounded-full p-1 transition-all duration-300
-                  ${theme === "dark" ? "bg-blue-600" : "bg-gray-300"}
-                `}
+                className={`relative w-14 h-8 rounded-full p-1 transition-all duration-300
+                  ${theme === "dark" ? "bg-blue-600" : "bg-gray-300"}`}
               >
                 <span
-                  className={`
-                    absolute top-1 left-1 w-6 h-6 rounded-full bg-white flex items-center justify-center
+                  className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white flex items-center justify-center
                     transform transition-transform duration-300
-                    ${theme === "dark" ? "translate-x-6" : ""}
-                  `}
+                    ${theme === "dark" ? "translate-x-6" : ""}`}
                 >
                   {theme === "dark" ? (
                     <FiMoon size={16} className="text-blue-700" />

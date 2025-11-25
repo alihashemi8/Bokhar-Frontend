@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function ServicesModal({ onClose, onSave, editItem, categories }) {
-  const [form, setForm] = useState(
-    editItem || {
-      title: "",
-      category: categories[0],
-      materialPrices: {},     // مثال: { چرم: 5000 }
-      sizeType: "",           // singe | double | meter
-      singlePrice: "",
-      doublePrice: "",
-      meter: { width: "", height: "" }
-    }
-  );
+  const [form, setForm] = useState({
+    title: "",
+    category: categories[0] || "",
+    materialPrices: {},
+    sizeType: "",
+    singlePrice: "",
+    doublePrice: "",
+    meter: { width: "", height: "" },
+    pricePerMeter: ""
+  });
 
   const materials = ["چرم", "مخمل", "نخی", "کتان"];
+
+  // همگام‌سازی فرم با editItem هنگام باز شدن مودال
+  useEffect(() => {
+    setForm(
+      editItem || {
+        title: "",
+        category: categories[0] || "",
+        materialPrices: {},
+        sizeType: "",
+        singlePrice: "",
+        doublePrice: "",
+        meter: { width: "", height: "" },
+        pricePerMeter: ""
+      }
+    );
+  }, [editItem, categories]);
 
   const change = (e) => {
     const { name, value } = e.target;
@@ -28,15 +43,25 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
   };
 
   const submit = () => {
-    const area =
-      form.sizeType === "meter"
-        ? Number(form.meter.width) * Number(form.meter.height)
-        : null;
+    let finalPrice = 0;
+
+    if (form.sizeType === "singleDouble") {
+      finalPrice = Number(form.singlePrice) || 0;
+    } else if (form.sizeType === "meter") {
+      finalPrice =
+        (Number(form.pricePerMeter) || 0) *
+        (Number(form.meter.width) || 0) *
+        (Number(form.meter.height) || 0);
+    }
 
     onSave({
       ...form,
-      finalArea: area,
-      status: "pending",
+      basePrice: finalPrice,
+      finalArea:
+        form.sizeType === "meter"
+          ? (Number(form.meter.width) || 0) * (Number(form.meter.height) || 0)
+          : null,
+      status: "active"
     });
   };
 
@@ -62,7 +87,6 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
         <h2 className="text-xl font-bold mb-5 text-right">افزودن / ویرایش سرویس</h2>
 
         <div className="space-y-5 text-right">
-
           {/* عنوان */}
           <input
             name="title"
@@ -84,111 +108,127 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
             ))}
           </select>
 
-{/* جنس‌ها */}
-<div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl space-y-4">
-  <p className="font-bold">جنس (نمایش input بعد از کلیک)</p>
+          {/* جنس‌ها */}
+          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl space-y-4">
+            <p className="font-bold">جنس (نمایش input بعد از کلیک)</p>
+            <div className="space-y-3">
+              {materials.map((mat) => {
+                const active = form.materialPrices[mat] !== undefined;
 
-  <div className="space-y-3">
-    {materials.map((mat) => {
-      const active = form.materialPrices[mat] !== undefined;
+                return (
+                  <div key={mat} className="flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((f) => ({
+                          ...f,
+                          materialPrices: active
+                            ? (() => {
+                                const copy = { ...f.materialPrices };
+                                delete copy[mat];
+                                return copy;
+                              })()
+                            : { ...f.materialPrices, [mat]: "" }
+                        }));
+                      }}
+                      className={`px-3 py-2 rounded-xl border
+                        ${active ? "bg-purple-600 text-white" : "bg-white dark:bg-gray-600"}
+                      `}
+                    >
+                      {mat}
+                    </button>
 
-      return (
-        <div key={mat} className="flex items-center justify-between gap-3">
+                    {active && (
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={form.materialPrices[mat]}
+                        onChange={(e) => handleMaterialPrice(mat, e.target.value)}
+                        placeholder="قیمت"
+                        className="flex-1 p-2 rounded-xl bg-white dark:bg-gray-600 text-left"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-          {/* دکمه جنس */}
-          <button
-            type="button"
-            onClick={() => {
-              setForm((f) => ({
-                ...f,
-                materialPrices: active
-                  ? (() => {
-                      const copy = { ...f.materialPrices };
-                      delete copy[mat];
-                      return copy;
-                    })()
-                  : { ...f.materialPrices, [mat]: "" }
-              }));
-            }}
-            className={`px-3 py-2 rounded-xl border
-              ${active ? "bg-purple-600 text-white" : "bg-white dark:bg-gray-600"}
-            `}
-          >
-            {mat}
-          </button>
+          {/* نوع ابعاد */}
+          <div className="space-y-3">
+            <p className="font-bold">ابعاد</p>
+            <select
+              name="sizeType"
+              value={form.sizeType}
+              onChange={change}
+              className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+            >
+              <option value="">نوع ابعاد را انتخاب کنید</option>
+              <option value="singleDouble">تک نفره / دو نفره</option>
+              <option value="meter">متراژی (متر مربع)</option>
+            </select>
 
-          {/* اینپوت قیمت فقط وقتی فعال شده باشد */}
-          {active && (
-            <input
-              type="number"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={form.materialPrices[mat]}
-              onChange={(e) => handleMaterialPrice(mat, e.target.value)}
-              placeholder="قیمت"
-              className="flex-1 p-2 rounded-xl bg-white dark:bg-gray-600 text-left"
-            />
-          )}
-        </div>
-      );
-    })}
-  </div>
-</div>
+            {form.sizeType === "singleDouble" && (
+              <div className="space-y-2">
+                <input
+                  type="number"
+                  name="singlePrice"
+                  value={form.singlePrice}
+                  onChange={change}
+                  placeholder="قیمت تک نفره"
+                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+                />
+                <input
+                  type="number"
+                  name="doublePrice"
+                  value={form.doublePrice}
+                  onChange={change}
+                  placeholder="قیمت دو نفره"
+                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+                />
+              </div>
+            )}
 
-
-{/* نوع ابعاد */}
-<div className="space-y-3">
-  <p className="font-bold">ابعاد</p>
-
-  <select
-    name="sizeType"
-    value={form.sizeType}
-    onChange={change}
-    className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-  >
-    <option value="">نوع ابعاد را انتخاب کنید</option>
-    <option value="singleDouble">تک نفره / دو نفره</option>
-    <option value="meter">متراژی (متر مربع)</option>
-  </select>
-
-  {/* تک نفره / دو نفره */}
-  {form.sizeType === "singleDouble" && (
-    <div className="space-y-2">
-      <input
-        type="number"
-        name="singlePrice"
-        value={form.singlePrice}
-        onChange={change}
-        placeholder="قیمت تک نفره"
-        className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-      />
-      <input
-        type="number"
-        name="doublePrice"
-        value={form.doublePrice}
-        onChange={change}
-        placeholder="قیمت دو نفره"
-        className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-      />
-    </div>
-  )}
-
-  {/* متراژی */}
-  {form.sizeType === "meter" && (
-    <div className="space-y-2">
-      <input
-        type="number"
-        name="pricePerMeter"
-        value={form.pricePerMeter}
-        onChange={change}
-        placeholder="قیمت هر متر مربع"
-        className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-      />
-     
-    </div>
-  )}
-</div>
-
+            {form.sizeType === "meter" && (
+              <div className="space-y-2">
+                <input
+                  type="number"
+                  name="meter.width"
+                  value={form.meter.width}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      meter: { ...f.meter, width: e.target.value }
+                    }))
+                  }
+                  placeholder="عرض (متر)"
+                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+                />
+                <input
+                  type="number"
+                  name="meter.height"
+                  value={form.meter.height}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      meter: { ...f.meter, height: e.target.value }
+                    }))
+                  }
+                  placeholder="ارتفاع (متر)"
+                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+                />
+                <input
+                  type="number"
+                  name="pricePerMeter"
+                  value={form.pricePerMeter}
+                  onChange={change}
+                  placeholder="قیمت هر متر مربع"
+                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* دکمه‌ها */}
@@ -207,7 +247,6 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
             ذخیره
           </button>
         </div>
-
       </div>
     </div>
   );
