@@ -20,7 +20,7 @@ import AdminOrders from "./components/admin/AdminOrders";
 import AdminCategories from "./components/admin/AdminCategories";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
-import AdminReports from "./components/admin/AdminReports";
+import AdminReports from "./components/admin/reports/AdminReports";
 import PickupPage from "./pages/About";
 
 // Context برای خدمات و تخفیف
