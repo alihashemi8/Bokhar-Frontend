@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export default function ServicesModal({ onClose, onSave, editItem, categories }) {
-  const [form, setForm] = useState({
+  const emptyForm = {
     title: "",
     category: categories[0] || "",
     materialPrices: {},
@@ -10,24 +10,15 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
     doublePrice: "",
     meter: { width: "", height: "" },
     pricePerMeter: ""
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
 
   const materials = ["چرم", "مخمل", "نخی", "کتان"];
 
-  // همگام‌سازی فرم با editItem هنگام باز شدن مودال
+  // همگام‌سازی فرم با editItem
   useEffect(() => {
-    setForm(
-      editItem || {
-        title: "",
-        category: categories[0] || "",
-        materialPrices: {},
-        sizeType: "",
-        singlePrice: "",
-        doublePrice: "",
-        meter: { width: "", height: "" },
-        pricePerMeter: ""
-      }
-    );
+    setForm(editItem ? { ...emptyForm, ...editItem } : emptyForm);
   }, [editItem, categories]);
 
   const change = (e) => {
@@ -71,10 +62,7 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
       onClick={onClose}
     >
       <div
-        className="
-          bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl
-          overflow-y-auto max-h-[90vh] relative
-        "
+        className="bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl overflow-y-auto max-h-[90vh] relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -87,6 +75,7 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
         <h2 className="text-xl font-bold mb-5 text-right">افزودن / ویرایش سرویس</h2>
 
         <div className="space-y-5 text-right">
+
           {/* عنوان */}
           <input
             name="title"
@@ -110,49 +99,46 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
 
           {/* جنس‌ها */}
           <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl space-y-4">
-            <p className="font-bold">جنس (نمایش input بعد از کلیک)</p>
-            <div className="space-y-3">
-              {materials.map((mat) => {
-                const active = form.materialPrices[mat] !== undefined;
+            <p className="font-bold">جنس</p>
 
-                return (
-                  <div key={mat} className="flex items-center justify-between gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setForm((f) => ({
-                          ...f,
-                          materialPrices: active
-                            ? (() => {
-                                const copy = { ...f.materialPrices };
-                                delete copy[mat];
-                                return copy;
-                              })()
-                            : { ...f.materialPrices, [mat]: "" }
-                        }));
-                      }}
-                      className={`px-3 py-2 rounded-xl border
-                        ${active ? "bg-purple-600 text-white" : "bg-white dark:bg-gray-600"}
-                      `}
-                    >
-                      {mat}
-                    </button>
+            {materials.map((mat) => {
+              const active = form.materialPrices[mat] !== undefined;
 
-                    {active && (
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        value={form.materialPrices[mat]}
-                        onChange={(e) => handleMaterialPrice(mat, e.target.value)}
-                        placeholder="قیمت"
-                        className="flex-1 p-2 rounded-xl bg-white dark:bg-gray-600 text-left"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+              return (
+                <div key={mat} className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        materialPrices: active
+                          ? (() => {
+                              const copy = { ...f.materialPrices };
+                              delete copy[mat];
+                              return copy;
+                            })()
+                          : { ...f.materialPrices, [mat]: "" }
+                      }))
+                    }
+                    className={`px-3 py-2 rounded-xl border ${
+                      active ? "bg-purple-600 text-white" : "bg-white dark:bg-gray-600"
+                    }`}
+                  >
+                    {mat}
+                  </button>
+
+                  {active && (
+                    <input
+                      type="number"
+                      value={form.materialPrices[mat]}
+                      onChange={(e) => handleMaterialPrice(mat, e.target.value)}
+                      placeholder="قیمت"
+                      className="flex-1 p-2 rounded-xl bg-white dark:bg-gray-600 text-left"
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* نوع ابعاد */}
@@ -179,6 +165,7 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
                   placeholder="قیمت تک نفره"
                   className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
                 />
+
                 <input
                   type="number"
                   name="doublePrice"
@@ -194,7 +181,6 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
               <div className="space-y-2">
                 <input
                   type="number"
-                  name="meter.width"
                   value={form.meter.width}
                   onChange={(e) =>
                     setForm((f) => ({
@@ -205,9 +191,9 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
                   placeholder="عرض (متر)"
                   className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
                 />
+
                 <input
                   type="number"
-                  name="meter.height"
                   value={form.meter.height}
                   onChange={(e) =>
                     setForm((f) => ({
@@ -218,6 +204,7 @@ export default function ServicesModal({ onClose, onSave, editItem, categories })
                   placeholder="ارتفاع (متر)"
                   className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
                 />
+
                 <input
                   type="number"
                   name="pricePerMeter"
