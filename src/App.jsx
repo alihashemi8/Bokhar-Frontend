@@ -27,6 +27,7 @@ import PickupPage from "./pages/About";
 import { ServicesProvider } from "./components/admin/services/ServicesContext";
 import AdminServices from "./components/admin/services/AdminServices";
 import AdminDiscount from "./components/admin/AdminDiscount";
+import { OrdersProvider } from "./context/OrdersContext";
 
 function AppContent() {
   const [openModal, setOpenModal] = useState(false);
@@ -35,7 +36,9 @@ function AppContent() {
   // مسیر واقعی از location.hash استخراج می‌شود
   const [currentPath, setCurrentPath] = useState("");
   useEffect(() => {
-    const hashPath = location.hash ? location.hash.replace("#", "") : window.location.hash.replace("#", "");
+    const hashPath = location.hash
+      ? location.hash.replace("#", "")
+      : window.location.hash.replace("#", "");
     setCurrentPath(hashPath);
   }, [location]);
 
@@ -58,9 +61,19 @@ function AppContent() {
         <Route path="/order" element={<Order />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/admin-dashboard/orders" element={<AdminOrders />} />
+        <Route
+          path="/admin-dashboard/orders"
+          element={
+            <OrdersProvider>
+              <AdminOrders />
+            </OrdersProvider>
+          }
+        />
         <Route path="/admin-dashboard/customers" element={<AdminCustomers />} />
-        <Route path="/admin-dashboard/customers/:id/transactions" element={<CustomerTransactions />} />
+        <Route
+          path="/admin-dashboard/customers/:id/transactions"
+          element={<CustomerTransactions />}
+        />
         <Route
           path="/admin-dashboard/services"
           element={
@@ -69,7 +82,10 @@ function AppContent() {
             </ServicesProvider>
           }
         />
-        <Route path="/admin-dashboard/categories" element={<AdminCategories />} />
+        <Route
+          path="/admin-dashboard/categories"
+          element={<AdminCategories />}
+        />
         <Route
           path="/admin-dashboard/discounts"
           element={
