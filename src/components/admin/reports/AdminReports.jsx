@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState , useRef} from "react";
 import RevenueChart from "./RevenueChart";
 import KPICard from "./KPICard";
 import TopServices from "./TopServices";
 import Sidebar from "../Sidebar";
-
+import useDragToggle from "../../../hooks/uesDragToggle";
 /**
  * SegmentedToggle: iOS-like segmented control
  * props:
@@ -13,24 +13,82 @@ import Sidebar from "../Sidebar";
  */
 function SegmentedToggle({ options, value, onChange }) {
   const idx = options.findIndex(o => o.value === value);
-  const widthPercent = 100 / options.length;
+  const segmentWidth = 100 / options.length;
+
+  const wrapperRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const [dragX, setDragX] = useState(null);
+
+  const startDrag = () => setDragging(true);
+
+  const moveDrag = (clientX) => {
+    if (!dragging || !wrapperRef.current) return;
+
+    const rect = wrapperRef.current.getBoundingClientRect();
+    let x = ((clientX - rect.left) / rect.width) * 100;
+
+    // جلوگیری از بیرون زدن
+    x = Math.max(0, Math.min(100, x));
+
+    setDragX(x);
+  };
+
+  const endDrag = () => {
+    if (!dragging || dragX == null) {
+      setDragging(false);
+      return;
+    }
+
+    const segment = Math.floor(dragX / segmentWidth);
+    onChange(options[segment].value);
+
+    // ریست
+    setDragging(false);
+    setDragX(null);
+  };
+
+  const left =
+    dragX != null
+      ? dragX - segmentWidth / 2
+      : idx * segmentWidth;
 
   return (
-    <div className="relative inline-flex bg-gray-200 dark:bg-gray-700 rounded-full p-1">
+    <div
+      ref={wrapperRef}
+      className="relative inline-flex bg-gray-200 dark:bg-gray-700 rounded-full p-0.5 select-none overflow-hidden"
+      
+      // Mouse
+      onMouseDown={startDrag}
+      onMouseMove={(e) => moveDrag(e.clientX)}
+      onMouseUp={endDrag}
+      onMouseLeave={endDrag}
+
+      // Touch
+      onTouchStart={startDrag}
+      onTouchMove={(e) => moveDrag(e.touches[0].clientX)}
+      onTouchEnd={endDrag}
+    >
+
+      {/* اسلایدر */}
       <div
-        className="absolute top-1 bottom-1 bg-white dark:bg-gray-900 rounded-full shadow transition-all duration-300"
+        className="absolute top-0.5 bottom-0.5 bg-white dark:bg-gray-900 rounded-full shadow transition-all duration-300"
         style={{
-          width: `${widthPercent}%`,
-          left: `${idx * widthPercent}%`,
+          width: `${segmentWidth}%`,
+          left: `calc(${left}% )`,
+          transition: dragging ? "none" : "all 0.25s ease",
         }}
       />
+
+      {/* دکمه‌ها (بدون تغییر سایز) */}
       {options.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          className={`relative z-10 px-4 py-1 text-sm font-medium text-center transition ${
-            value === opt.value ? "text-blue-600 dark:text-blue-400" : "text-gray-700 dark:text-gray-300"
-          }`}
+          className={`relative z-10 px-2 py-0.5 text-2xs font-medium text-center transition
+            ${value === opt.value
+              ? "text-blue-600 dark:text-blue-400"
+              : "text-gray-700 dark:text-gray-300"}
+          `}
           type="button"
         >
           {opt.label}
@@ -39,6 +97,8 @@ function SegmentedToggle({ options, value, onChange }) {
     </div>
   );
 }
+
+
 
 export default function AdminReports() {
   const persianMonths = [
@@ -71,7 +131,7 @@ export default function AdminReports() {
 
       const weeks = Array.from({ length: 5 }).map((_, wIdx) => {
         const start = wIdx * 7;
-        const end = Math.min(start + 7, days.length); // مهم: جلوگیری از overflow
+        const end = Math.min(start + 7, days.length);
         const weekDays = days.slice(start, end);
         return {
           week: `هفته ${wIdx + 1}`,
@@ -101,25 +161,22 @@ export default function AdminReports() {
     }, {});
   }, [/* static */]);
 
-  // وقتی ماه تغییر کرد، داده‌ها رو بارگذاری و activeWeek رو reset کن
   useEffect(() => {
     const data = monthlyData[activeMonth];
     if (data) {
       setSummary(data.summary);
       setSeries(data.series);
       setTopServices(data.topServices);
-      setActiveWeek(0); // بازنشانی هفته به 0 وقتی ماه عوض شد
+      setActiveWeek(0);
     }
   }, [activeMonth, monthlyData]);
 
-  // وقتی series تغییر کرد (مثلاً ماه جدید)، مطمئن شو activeWeek معتبره
   useEffect(() => {
     if (series.length === 0) return;
     const maxWeek = Math.max(0, series.length - 1);
     if (activeWeek > maxWeek) setActiveWeek(maxWeek);
   }, [series, activeWeek]);
 
-  // ساخت داده برای چارت بسته به viewType و valueType و activeWeek
   const dataForChart = React.useMemo(() => {
     if (viewType === "week") {
       return series.map(w => ({
@@ -127,7 +184,6 @@ export default function AdminReports() {
         value: valueType === "revenue" ? w.revenue : w.count,
       }));
     } else {
-      // day view -> فقط روزهای هفته‌ی فعال
       const w = series[activeWeek];
       if (!w) return [];
       return w.days.map(d => ({
@@ -137,16 +193,9 @@ export default function AdminReports() {
     }
   }, [viewType, valueType, series, activeWeek]);
 
-  // xKey که به RevenueChart پاس داده میشه
   const xKey = viewType === "week" ? "week" : "day";
+  const fmt = (n) => (n == null ? "-" : n.toLocaleString("fa-IR"));
 
-  // کمک‌تابع نمایش عدد با کاما (برای KPI)
-  const fmt = (n) => {
-    if (n == null) return "-";
-    return n.toLocaleString("fa-IR");
-  };
-
-  // هندلرهای هفته قبل / بعد
   const goPrevWeek = () => setActiveWeek(prev => Math.max(prev - 1, 0));
   const goNextWeek = () => setActiveWeek(prev => Math.min(prev + 1, Math.max(0, series.length - 1)));
 
@@ -165,8 +214,8 @@ export default function AdminReports() {
             گزارش‌های مدیریتی
           </h1>
 
-          {/* انتخاب ماه (همیشه یک ردیف، اسکرول افقی روی موبایل) */}
-          <div className="flex gap-2 flex-nowrap overflow-x-auto mb-4 py-2">
+          {/* انتخاب ماه */}
+          <div className="flex gap-2 flex-nowrap overflow-x-auto text-sm xl:text-xl mb-4 py-2">
             {persianMonths.map(month => (
               <button
                 key={month}
@@ -183,7 +232,7 @@ export default function AdminReports() {
             ))}
           </div>
 
-          {/* KPI Cards: موبایل دو در یک ردیف */}
+          {/* KPI Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             <KPICard title="فروش کل" value={fmt(summary?.total_revenue)} />
             <KPICard title="تعداد سفارش‌ها" value={fmt(summary?.orders_count)} />
@@ -191,47 +240,39 @@ export default function AdminReports() {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg transition transform duration-300 hover:shadow-2xl">
+<div className="lg:col-span-2 bg-white dark:bg-gray-800 p-4 pr-2 md:pr-4 rounded-2xl shadow-lg transition transform duration-300 hover:shadow-2xl overflow-hidden max-w-full">
 
-              {/* عنوان + segmented controls + week nav */}
+              {/* عنوان + controls + week nav */}
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-3">
-
-                {/* عنوان نمودار — روی موبایل بالا، روی دسکتاپ سمت راست */}
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 order-1 md:order-2 whitespace-nowrap">
                   نمودار فروش ({activeMonth})
                 </h3>
 
-                {/* کنترل‌ها */}
-                <div className="flex items-center gap-3 order-2 md:order-1">
-                  {/* segmented هفته/روز */}
+                <div className="flex items-center gap-2 order-2 md:order-1 flex-wrap">
                   <SegmentedToggle
-                    options={[{ label: "هفته‌ای", value: "week" }, { label: "روزانه", value: "day" }]}
+                    options={[{ label: "هفته‌ای", value: "day" }, { label: "روزانه", value: "week" }]}
                     value={viewType}
                     onChange={(v) => { setViewType(v); if (v === "day") setActiveWeek(0); }}
                   />
-
-                  {/* segmented قیمت/تعداد */}
                   <SegmentedToggle
-                    options={[{ label: "قیمت", value: "revenue" }, { label: "تعداد", value: "count" }]}
+                    options={[{ label: "قیمت", value: "count" }, { label: "تعداد", value: "revenue" }]}
                     value={valueType}
                     onChange={setValueType}
                   />
 
-                  {/* هفته قبل/بعد (فعال فقط در حالت روزانه) */}
-                  <div className="flex items-center gap-2">
+                  {/* هفته قبل/بعد */}
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={goPrevWeek}
                       disabled={viewType !== "day" || activeWeek <= 0}
-                      className={`px-3 py-1 rounded text-sm ${viewType === "day" && activeWeek > 0 ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
-                      type="button"
+                      className={`px-2 py-0.5 text-2xs rounded ${viewType === "day" && activeWeek > 0 ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                     >
                       قبلی
                     </button>
                     <button
                       onClick={goNextWeek}
                       disabled={viewType !== "day" || activeWeek >= Math.max(0, series.length - 1)}
-                      className={`px-3 py-1 rounded text-sm ${viewType === "day" && activeWeek < Math.max(0, series.length - 1) ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
-                      type="button"
+                      className={`px-2 py-0.5 text-2xs rounded ${viewType === "day" && activeWeek < Math.max(0, series.length - 1) ? "bg-gray-200 hover:bg-gray-300" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                     >
                       بعدی
                     </button>
@@ -241,14 +282,7 @@ export default function AdminReports() {
 
               {/* نمودار */}
               <RevenueChart
-                data={dataForChart.map(item => {
-                  // recharts keys: use the same y-key 'value' but line uses dataKey="value"
-                  // RevenueChart expected earlier had dataKey 'revenue' — ensure compatibility:
-                  // here we keep key 'value' and pass xKey; but RevenueChart uses dataKey="revenue".
-                  // To avoid touching RevenueChart, map value -> revenue
-                  if (viewType === "week") return { week: item.week, revenue: item.value };
-                  return { day: item.day, revenue: item.value };
-                })}
+                data={dataForChart.map(item => viewType === "week" ? { week: item.week, revenue: item.value } : { day: item.day, revenue: item.value })}
                 xKey={xKey}
               />
             </div>
