@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import Sidebar from "./Sidebar";
 import OrderModal from "./OrderModal";
+import KPICard from "./reports/KPICard"; 
 import jalaali from "jalaali-js";
 
 export default function AdminOrders() {
@@ -47,9 +48,7 @@ export default function AdminOrders() {
   const toggleStatus = (id) => {
     setOrders((prev) =>
       prev.map((o) =>
-        o.id === id
-          ? { ...o, status: o.status === "انجام شده" ? "انجام نشده" : "انجام شده" }
-          : o
+        o.id === id ? { ...o, status: o.status === "انجام شده" ? "انجام نشده" : "انجام شده" } : o
       )
     );
   };
@@ -61,16 +60,20 @@ export default function AdminOrders() {
     copy.sort((a, b) => {
       let valA = a[sortKey];
       let valB = b[sortKey];
+
       if (sortKey === "date" || sortKey === "deliveryDate") {
         valA = new Date(valA);
         valB = new Date(valB);
       }
+
       if (sortKey === "price" || sortKey === "id") {
         valA = Number(valA);
         valB = Number(valB);
       }
+
       return sortOrder === "asc" ? valA - valB : valB - valA;
     });
+
     return copy;
   }, [orders, sortKey, sortOrder, cityFilter]);
 
@@ -90,6 +93,19 @@ export default function AdminOrders() {
     setIsModalOpen(false);
   };
 
+  // ------------------------
+  //      KPI CALCULATIONS
+  // ------------------------
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todayOrders = orders.filter(o => o.date === today).length;
+
+  const todayUndelivered = orders.filter(
+    o => o.deliveryDate === today && o.status !== "انجام شده"
+  ).length;
+
+  const totalOrders = orders.length;
+
   return (
     <div dir="rtl" className="flex flex-row-reverse min-h-screen">
       <Sidebar
@@ -99,14 +115,20 @@ export default function AdminOrders() {
         setActiveMenu={setActiveMenu}
       />
 
-<main
-  className={`flex-1 p-4 transition-all duration-300 
-  ${isSidebarOpen ? "lg:mr-64 md:mr-56" : "lg:mr-64 md:mr-56 mr-0"}`}
->
+      <main
+        className={`flex-1 p-4 transition-all duration-300 
+        ${isSidebarOpen ? "lg:mr-64 md:mr-56" : "lg:mr-64 md:mr-56 mr-0"}`}
+      >
 
-
-        <div className="flex justify-between items-center  mt-10">
+        <div className="flex justify-between items-center mt-10">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">مدیریت سفارش‌ها</h1>
+        </div>
+
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <KPICard title="سفارش‌های امروز" value={todayOrders} />
+          <KPICard title="تحویل‌نشده‌های امروز" value={todayUndelivered} />
+          <KPICard title="کل سفارش‌ها" value={totalOrders} />
         </div>
 
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden mt-6">
@@ -119,6 +141,7 @@ export default function AdminOrders() {
                 {cityFilter || "همه شهرها"}
                 {cityDropdownOpen ? <FiChevronUp /> : <FiChevronDown />}
               </button>
+
               {cityDropdownOpen && (
                 <ul className="absolute mt-1 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md w-44 max-h-60 overflow-y-auto border dark:border-gray-700">
                   <li
@@ -154,12 +177,15 @@ export default function AdminOrders() {
                 <th className="p-3">وضعیت</th>
               </tr>
             </thead>
+
             <tbody>
               {sortedOrders.map((order) => (
                 <tr
                   key={order.id}
                   className={`transition-colors duration-200 cursor-pointer hover:shadow-md ${
-                    order.status === "انجام شده" ? "bg-green-50 dark:bg-green-900" : "bg-red-50 dark:bg-red-900"
+                    order.status === "انجام شده"
+                      ? "bg-green-50 dark:bg-green-900"
+                      : "bg-red-50 dark:bg-red-900"
                   }`}
                   onClick={() => openModal(order)}
                 >
@@ -168,12 +194,13 @@ export default function AdminOrders() {
                   <td className="p-3">{order.city}</td>
                   <td className="p-3">{remainingDays(order.deliveryDate)} روز</td>
                   <td className="p-3">{order.price.toLocaleString()} تومان</td>
+
                   <td className="p-3">
                     <input
                       type="checkbox"
                       checked={order.status === "انجام شده"}
                       onChange={(e) => {
-                        e.stopPropagation(); // جلوگیری از باز شدن مودال
+                        e.stopPropagation();
                         toggleStatus(order.id);
                       }}
                       className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
@@ -181,6 +208,7 @@ export default function AdminOrders() {
                   </td>
                 </tr>
               ))}
+
               {sortedOrders.length === 0 && (
                 <tr>
                   <td colSpan="6" className="p-4 text-center text-gray-500 dark:text-gray-400">
@@ -192,7 +220,7 @@ export default function AdminOrders() {
           </table>
         </div>
 
-        <OrderModal order={selectedOrder} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        <OrderModal order={selectedOrder} isOpen={isModalOpen} onClose={closeModal} />
       </main>
     </div>
   );
