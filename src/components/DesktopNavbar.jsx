@@ -17,29 +17,22 @@ export default function DesktopNavbar() {
       <nav
         dir="rtl"
         className="hidden md:flex fixed top-0 left-0 w-full justify-between items-center
-                   backdrop-blur-md bg-purple-600/70 border-b border-white/20
+                   backdrop-blur-md bg-gradient-to-l from-bouquet-600/80  to-bouquet-400/80 border-b border-white/20
                    text-white px-6 py-3 shadow-lg z-50"
       >
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
         <div className="flex items-center gap-6">
 
-          {/* پروفایل یا ورود/ثبت‌نام */}
-          {user ? (
-            <div
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
-            >
-              <User size={22} />
-              <span>{user.name || "پروفایل"}</span>
-            </div>
-          ) : (
-            <div
-              onClick={() => setOpenModal(true)}
-              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
-            >
-              ورود / ثبت نام
-            </div>
-          )}
+         {/* لوگو */}
+          
+          <div
+            onClick={() => navigate("/")}
+            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
+          >
+            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
+              Logo
+            </span>
+          </div>
           
 
           {/* پیام‌ها */}
@@ -73,16 +66,24 @@ export default function DesktopNavbar() {
             <DarkMode />
           </div>
 
-         {/* لوگو */}
-          
-          <div
-            onClick={() => navigate("/")}
-            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
-          >
-            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
-              Logo
-            </span>
-          </div>
+          {/* پروفایل یا ورود/ثبت‌نام */}
+          {user ? (
+            <div
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
+            >
+              <User size={22} />
+              <span>{user.name || "پروفایل"}</span>
+            </div>
+          ) : (
+            <div
+              onClick={() => setOpenModal(true)}
+              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+            >
+              ورود / ثبت نام
+            </div>
+          )}
+
         </div>
       </nav>
 

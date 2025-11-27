@@ -109,7 +109,7 @@ export default function Landing() {
   }, [searchQuery]);
 
   return (
-    <div dir="rtl" className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div dir="rtl" className="min-h-screen  text-gray-900 dark:text-gray-100">
       {/* هدر */}
       <section className="p-8 text-center">
         <h1 className="text-3xl font-bold md:mt-10">به سایت ما خوش آمدید</h1>
@@ -119,7 +119,7 @@ export default function Landing() {
       </section>
 
 {/* سرچ */}
-<div className="px-4 mt-4 flex justify-center relative z-50">
+<div className="px-4 mt-4 flex justify-center relative">
   <div
     ref={searchRef}
     className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col"

@@ -15,23 +15,16 @@
 :root {
   --glass-bg: rgba(255,255,255,0.06);
 }
-
-@import url('https://unpkg.com/leaflet/dist/leaflet.css');
-@import url('https://unpkg.com/leaflet-geosearch/dist/geosearch.css');
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
-}
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@theme {
+--color-bouquet-50: #f9f6f8;
+--color-bouquet-100: #f5eef3;
+--color-bouquet-200: #ecdee8;
+--color-bouquet-300: #ddc4d5;
+--color-bouquet-400: #c79fb9;
+--color-bouquet-500: #af7a9b;
+--color-bouquet-600: #9d6585;
+--color-bouquet-700: #84526d;
+--color-bouquet-800: #6f455b;
+--color-bouquet-900: #5e3d4e;
+--color-bouquet-950: #37202c;
 }

@@ -46,7 +46,7 @@ function AppContent() {
   const hideNavbar = currentPath.startsWith("/admin-dashboard");
 
   return (
-    <div className="bg-white dark:bg-gray-900 min-h-screen">
+    <div className="bg-gradient-to-bl from-bouquet-200/80 to-bouquet-500/60 min-h-screen">
       {/* Navbarها فقط اگر در مسیر مخفی نباشیم */}
       {!hideNavbar && (
         <>
