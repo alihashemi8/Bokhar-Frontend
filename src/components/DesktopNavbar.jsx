@@ -17,7 +17,7 @@ export default function DesktopNavbar() {
       <nav
         dir="rtl"
         className="hidden md:flex fixed top-0 left-0 w-full justify-between items-center
-                   backdrop-blur-md bg-gradient-to-l from-bouquet-600/80  to-bouquet-400/80 border-b border-white/20
+                   backdrop-blur-md bg-gradient-to-l from-pink-400/50 via-blue-200/70  to-blue-300/70 border-b border-white/20
                    text-white px-6 py-3 shadow-lg z-50"
       >
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}

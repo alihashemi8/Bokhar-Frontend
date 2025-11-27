@@ -124,7 +124,7 @@ export default function Landing() {
     ref={searchRef}
     className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col"
   >
-    <div className="flex rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+    <div className="flex rounded-full text-black font-semibold border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
       <input
         type="text"
         placeholder="چی می‌خوای پیدا کنی؟"
@@ -140,7 +140,8 @@ export default function Landing() {
       />
       <button
         onClick={handleSearch}
-        className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white flex items-center justify-center transition"
+        className="px-4 py-2 bg-sky-300/90 hover:bg-sky-600/60 text-white flex items-center justify-center transition"
+        
       >
         <Search size={18} />
       </button>
