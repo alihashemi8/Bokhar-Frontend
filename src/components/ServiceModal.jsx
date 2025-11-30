@@ -14,7 +14,8 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     { name: "خشکشویی ویژه", price: 90000 },
   ];
 
-  const cardServices = cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
+  const cardServices =
+    cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 768);
@@ -38,7 +39,11 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
       if (prevSet.includes(value)) {
         return { ...prev, [groupName]: prevSet.filter((v) => v !== value) };
       } else {
-        return { ...prev, [groupName]: [...prevSet, value], [`${groupName}_price_${value}`]: price };
+        return {
+          ...prev,
+          [groupName]: [...prevSet, value],
+          [`${groupName}_price_${value}`]: price,
+        };
       }
     });
   };
@@ -47,7 +52,13 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     (selectedMain?.price || 0) * quantity +
     Object.entries(selectedOptions).reduce((sum, [key, value]) => {
       if (key.includes("_price_")) return sum;
-      return sum + value.reduce((s, val) => s + (selectedOptions[`${key}_price_${val}`] || 0), 0);
+      return (
+        sum +
+        value.reduce(
+          (s, val) => s + (selectedOptions[`${key}_price_${val}`] || 0),
+          0
+        )
+      );
     }, 0);
 
   const handleAdd = () => {
@@ -73,16 +84,19 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
   };
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-end md:items-center">
-<div
-  className="bg-white dark:bg-gray-800 rounded-t-3xl md:rounded-2xl 
+    <div
+      className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-end md:items-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-gradient-to-bl from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800 rounded-t-3xl md:rounded-2xl 
              w-full md:w-[550px] max-h-[80vh] md:max-h-[80vh]
              shadow-lg p-5 flex flex-col"
->
-
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-purple-700 dark:text-purple-400">
+        <div dir="rtl" className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-sky-700 dark:text-purple-400">
             خدمات قابل انتخاب
           </h2>
           <button onClick={onClose}>
@@ -91,70 +105,89 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
         </div>
 
         {/* محتوا */}
-        <div className="flex-1 overflow-y-auto space-y-3 pb-24">
-          <div className="flex gap-2 flex-wrap">
-            {defaultServices.map((service) => (
-              <button
-                key={service.name}
-                onClick={() => handleMainSelect(service)}
-                className={`px-3 py-1 rounded-lg border flex-shrink-0 ${
-                  selectedMain?.name === service.name
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-                }`}
-              >
-                {service.name}
-              </button>
-            ))}
-          </div>
+<div
+  dir="rtl"
+  className="flex-1 overflow-y-auto space-y-4 pb-2 px-1"
+>
 
-          {selectedMain && (
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700"
-              >
-                -
-              </button>
-              <span className="w-6 text-center">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700"
-              >
-                +
-              </button>
-            </div>
-          )}
+  {/* دسته‌بندی سرویس اصلی */}
+  <div className="flex gap-2 flex-wrap justify-center text-center">
+    {defaultServices.map((service) => (
+      <button
+        key={service.name}
+        onClick={() => handleMainSelect(service)}
+        className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-sm transition-all ${
+          selectedMain?.name === service.name
+            ? "bg-sky-600 text-white scale-105 shadow-md"
+            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+        }`}
+      >
+        {service.name}
+      </button>
+    ))}
+  </div>
 
-          {cardServices.map((item) => (
-            <div key={item.name} className="border dark:border-gray-700 rounded-xl p-3">
-              <span className="font-medium mb-2 text-gray-800 dark:text-gray-100">{item.name}</span>
-              <div className="flex gap-2 flex-wrap overflow-x-auto">
-                {item.choices?.map((choice) => (
-                  <button
-                    key={choice.value || choice.label}
-                    onClick={() => handleOptionToggle(item.name, choice.label, choice.price)}
-                    className={`px-3 py-1 rounded-lg border flex-shrink-0 ${
-                      selectedOptions[item.name]?.includes(choice.label)
-                        ? "bg-purple-600 text-white border-purple-600"
-                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-                    }`}
-                  >
-                    {choice.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+  {/* تعداد */}
+  {selectedMain && (
+    <div className="flex items-center gap-4 justify-center mt-2">
+      <button
+        onClick={() => handleQuantityChange(-1)}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
+      >
+        -
+      </button>
+      <span className="w-8 text-center text-lg font-semibold">
+        {quantity}
+      </span>
+      <button
+        onClick={() => handleQuantityChange(1)}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
+      >
+        +
+      </button>
+    </div>
+  )}
 
-        <div className="sticky bottom-0 border-t p-4 flex justify-between items-center bg-white dark:bg-gray-800">
+  {/* گزینه‌های کارتی */}
+  {cardServices.map((item) => (
+    <div
+      key={item.name}
+      className="rounded-xl p-3 bg-white/50 dark:bg-gray-700/30 shadow-sm"
+    >
+      <span className="block font-semibold text-gray-700 dark:text-gray-200 mb-3 text-sm">
+        {item.name}
+      </span>
+
+      <div className="flex gap-2 flex-wrap">
+        {item.choices?.map((choice) => (
+          <button
+            key={choice.value || choice.label}
+            onClick={() =>
+              handleOptionToggle(item.name, choice.label, choice.price)
+            }
+            className={`px-3 py-1 rounded-xl border text-sm flex-shrink-0 transition ${
+              selectedOptions[item.name]?.includes(choice.label)
+                ? "bg-sky-600 text-white border-sky-600 shadow-md"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+            }`}
+          >
+            {choice.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  ))}
+
+</div>
+
+
+        <div className="sticky bottom-0 border-t p-4 flex justify-between items-center bg-gradient-to-r from-sky-200 via-sky-100 to-sky-50 dark:bg-gray-800">
           <span className="text-sm text-gray-600 dark:text-gray-300">
             مجموع: {totalPrice.toLocaleString()} تومان
           </span>
           <button
             onClick={handleAdd}
-            className="px-4 py-2 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition"
+            className="px-4 py-2 rounded-xl bg-sky-600 text-white font-medium hover:bg-sky-700 transition"
             disabled={!selectedMain}
           >
             افزودن به سبد

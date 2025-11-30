@@ -40,7 +40,7 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
         {/* دکمه باز کردن مودال */}
         <button
           onClick={() => setOpen(true)}
-          className="w-full py-2 rounded-lg font-medium bg-sky-400/80 text-white hover:bg-sky-600 transition"
+          className="w-full py-2 rounded-lg font-medium bg-sky-600/80 text-white hover:bg-sky-700 transition"
         >
           خدمات
         </button>

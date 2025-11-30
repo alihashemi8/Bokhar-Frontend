@@ -112,9 +112,9 @@ export default function Landing() {
     <div dir="rtl" className="min-h-screen  text-gray-900 dark:text-gray-100">
       {/* هدر */}
       <section className="p-8 text-center">
-        <h1 className="text-3xl font-bold md:mt-10">به سایت ما خوش آمدید</h1>
+        <h1 className="text-3xl font-bold md:mt-10">خشکشویی</h1>
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-          اینجا می‌تونی سرویس خشکشویی آنلاین رو تست کنی
+          خدمات خشکشویی ، سفیدشویی ، اتو و تعمیر رنگ
         </p>
       </section>
 
