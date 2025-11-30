@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
+import ReactDOM from "react-dom";
 import { X } from "lucide-react";
 
 export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedMain, setSelectedMain] = useState(null); // سرویس اصلی
-  const [quantity, setQuantity] = useState(1); // تعداد سرویس اصلی
-  const [selectedOptions, setSelectedOptions] = useState({}); // آپشن های select کارت
+  const [selectedMain, setSelectedMain] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [selectedOptions, setSelectedOptions] = useState({});
 
   const defaultServices = [
     { name: "خشکشویی", price: 50000 },
@@ -56,24 +57,29 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
       { name: selectedMain.name, qty: quantity, price: selectedMain.price },
       ...Object.entries(selectedOptions).flatMap(([key, vals]) => {
         if (key.includes("_price_")) return [];
-        return vals.map((val) => ({ name: `${key}: ${val}`, qty: 1, price: selectedOptions[`${key}_price_${val}`] || 0 }));
+        return vals.map((val) => ({
+          name: `${key}: ${val}`,
+          qty: 1,
+          price: selectedOptions[`${key}_price_${val}`] || 0,
+        }));
       }),
     ];
 
     onAddToCart(items);
-
-    // ریست
     setSelectedMain(null);
     setQuantity(1);
     setSelectedOptions({});
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-end md:items-center">
-      <div
-        className={`bg-white dark:bg-gray-800 rounded-t-3xl md:rounded-2xl w-full md:w-[550px] md:max-h-[80vh] shadow-lg p-5 flex flex-col`}
-      >
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 bg-black/40 z-[9999] flex justify-center items-end md:items-center">
+<div
+  className="bg-white dark:bg-gray-800 rounded-t-3xl md:rounded-2xl 
+             w-full md:w-[550px] max-h-[80vh] md:max-h-[80vh]
+             shadow-lg p-5 flex flex-col"
+>
+
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-purple-700 dark:text-purple-400">
@@ -85,8 +91,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
         </div>
 
         {/* محتوا */}
-        <div className="flex-1 overflow-y-auto space-y-3 pb-24"> {/* padding-bottom برای فیکس شدن footer */}
-          {/* سرویس اصلی */}
+        <div className="flex-1 overflow-y-auto space-y-3 pb-24">
           <div className="flex gap-2 flex-wrap">
             {defaultServices.map((service) => (
               <button
@@ -103,7 +108,6 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
             ))}
           </div>
 
-          {/* تعداد سرویس اصلی */}
           {selectedMain && (
             <div className="flex items-center gap-2 mt-2">
               <button
@@ -122,7 +126,6 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
             </div>
           )}
 
-          {/* آپشن های کارت */}
           {cardServices.map((item) => (
             <div key={item.name} className="border dark:border-gray-700 rounded-xl p-3">
               <span className="font-medium mb-2 text-gray-800 dark:text-gray-100">{item.name}</span>
@@ -145,7 +148,6 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
           ))}
         </div>
 
-        {/* Footer فیکس */}
         <div className="sticky bottom-0 border-t p-4 flex justify-between items-center bg-white dark:bg-gray-800">
           <span className="text-sm text-gray-600 dark:text-gray-300">
             مجموع: {totalPrice.toLocaleString()} تومان
@@ -159,6 +161,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById("modal-root")
   );
 }

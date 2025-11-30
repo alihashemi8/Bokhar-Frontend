@@ -20,9 +20,9 @@ export default function DarkMode({ className = "" }) {
       }
     >
       {isDark ? (
-        <Sun size={20} className="text-white hover:text-amber-400" />
+        <Sun size={15} className="text-white hover:text-amber-400" />
       ) : (
-        <Moon size={20} className="text-white hover:text-amber-400" />
+        <Moon size={15} className="text-white hover:text-amber-400" />
       )}
     </button>
   );

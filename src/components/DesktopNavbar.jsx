@@ -14,12 +14,15 @@ export default function DesktopNavbar() {
 
   return (
     <>
-      <nav
-        dir="rtl"
-        className="hidden md:flex fixed top-0 left-0 w-full justify-between items-center
-                   backdrop-blur-md bg-gradient-to-l from-pink-400/50 via-blue-200/70  to-blue-300/70 border-b border-white/20
-                   text-white px-6 py-3 shadow-lg z-50"
-      >
+<nav
+  dir="rtl"
+  className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 
+             w-[92%] max-w-6xl justify-between items-center
+             backdrop-blur-md bg-sky-50/60
+             border border-white/20 text-gray-800 px-6 py-2 
+             shadow-lg rounded-full z-50"
+>
+
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
         <div className="flex items-center gap-6">
 
@@ -60,7 +63,7 @@ export default function DesktopNavbar() {
         </div>
 
         {/* بخش چپ: حالت تاریک و پروفایل/ورود */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 ">
           {/* حالت تاریک */}
           <div className="hidden md:flex items-center gap-4">
             <DarkMode />
@@ -70,7 +73,7 @@ export default function DesktopNavbar() {
           {user ? (
             <div
               onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 cursor-pointer hover:text-amber-300 transition"
+              className="flex items-center gap-2 cursor-pointer text-gray-800 hover:text-amber-300 transition"
             >
               <User size={22} />
               <span>{user.name || "پروفایل"}</span>
@@ -78,7 +81,7 @@ export default function DesktopNavbar() {
           ) : (
             <div
               onClick={() => setOpenModal(true)}
-              className="text-gray-100 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+              className="text-gray-800 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
             >
               ورود / ثبت نام
             </div>

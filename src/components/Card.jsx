@@ -14,7 +14,11 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
   };
 
   return (
-    <div dir="rtl" className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition flex flex-col overflow-hidden">
+<div
+  dir="rtl"
+  className="bg-sky-100/40 dark:bg-gray-800 h-5/6 rounded-2xl shadow-lg shadow-pink-300 hover:shadow-xl 
+             border-2 border-sky-100 transition hover:scale-103 flex flex-col"
+>
       {/* تصویر */}
       <div className="w-full h-56 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
         <img
@@ -36,7 +40,7 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
         {/* دکمه باز کردن مودال */}
         <button
           onClick={() => setOpen(true)}
-          className="w-full py-2 rounded-lg font-medium bg-gray-500 text-white hover:bg-gray-600 transition"
+          className="w-full py-2 rounded-lg font-medium bg-sky-400/80 text-white hover:bg-sky-600 transition"
         >
           خدمات
         </button>
