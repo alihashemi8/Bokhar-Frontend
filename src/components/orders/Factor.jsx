@@ -38,7 +38,7 @@ export default function Factor({ onTotalChange }) {
 
   return (
     <motion.div
-      className="w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl overflow-hidden"
+      className="w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl shadow-pink-300 overflow-hidden"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -49,9 +49,18 @@ export default function Factor({ onTotalChange }) {
       </h2>
 
       {/* --- جدول دسکتاپ --- */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="min-w-full text-sm sm:text-base border-collapse">
-          <thead className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+      <div className="hidden md:block">
+        <table className="min-w-full text-sm sm:text-base border-collapse  ">
+          <thead
+            className="
+    bg-gradient-to-l from-sky-50 to-white
+    dark:bg-gray-700 
+    text-gray-800 
+    dark:text-gray-200 
+    uppercase tracking-wide
+    rounded-xl overflow-hidden
+  "
+          >
             <tr>
               <th className="py-3 px-4 text-left">محصول</th>
               <th className="py-3 px-4 text-center">تعداد</th>
@@ -62,68 +71,83 @@ export default function Factor({ onTotalChange }) {
               <th className="py-3 px-4 text-center">حذف</th>
             </tr>
           </thead>
+
           <tbody>
             {cartItems.length ? (
               cartItems.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                >
-                  <td className="py-3 px-4 font-medium flex items-center gap-2">
-                    {item.name}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => decreaseQty(item)}
-                        className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 transition"
-                      >
-                        -
-                      </button>
-                      {item.qty}
-                      <button
-                        onClick={() => increaseQty(item)}
-                        className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 transition"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex flex-col gap-1">
-                      {Object.entries(item.options || {})
-                        .filter(([_, v]) => typeof v === "boolean" && v)
-                        .map(([key]) => (
-                          <span key={key} className="text-sm text-purple-600">
-                            {optionLabels[key] || key}
-                          </span>
-                        ))}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <div className="flex flex-col gap-1">
-                      {Object.entries(item.options || {})
-                        .filter(([_, v]) => typeof v === "string")
-                        .map(([key, v]) => (
-                          <span key={key} className="text-sm text-blue-600">
-                            {optionLabels[key] || key}: {v}
-                          </span>
-                        ))}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    {item.totalPrice?.toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4 text-right font-semibold">
-                    {(item.totalPrice * item.qty).toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => removeFromCart(item)}
-                      className="text-red-500 hover:text-red-700 transition"
+                <tr key={idx} className="group">
+                  <td colSpan={7} className="p-0">
+                    <div
+                      className="
+        grid grid-cols-7 
+        items-center
+        py-3 px-4 
+        border-t border-gray-200 dark:border-gray-700 
+        rounded-xl
+        hover:bg-gray-50 dark:hover:bg-gray-700
+        transition
+      "
                     >
-                      <FiTrash2 size={20} />
-                    </button>
+                      {/* ستون‌ها */}
+                      <div className="font-medium flex items-center gap-2">
+                        {item.name}
+                      </div>
+
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => decreaseQty(item)}
+                            className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 transition"
+                          >
+                            -
+                          </button>
+                          {item.qty}
+                          <button
+                            onClick={() => increaseQty(item)}
+                            className="px-2 py-1 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 transition"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-center flex flex-col gap-1">
+                        {Object.entries(item.options || {})
+                          .filter(([_, v]) => typeof v === "boolean" && v)
+                          .map(([key]) => (
+                            <span key={key} className="text-sm text-p-600">
+                              {optionLabels[key] || key}
+                            </span>
+                          ))}
+                      </div>
+
+                      <div className="text-center flex flex-col gap-1">
+                        {Object.entries(item.options || {})
+                          .filter(([_, v]) => typeof v === "string")
+                          .map(([key, v]) => (
+                            <span key={key} className="text-sm text-blue-600">
+                              {optionLabels[key] || key}: {v}
+                            </span>
+                          ))}
+                      </div>
+
+                      <div className="text-right">
+                        {item.totalPrice?.toLocaleString()}
+                      </div>
+
+                      <div className="text-right font-semibold">
+                        {(item.totalPrice * item.qty).toLocaleString()}
+                      </div>
+
+                      <div className="text-center">
+                        <button
+                          onClick={() => removeFromCart(item)}
+                          className="text-red-500 hover:text-red-700 transition"
+                        >
+                          <FiTrash2 size={20} />
+                        </button>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -140,9 +164,8 @@ export default function Factor({ onTotalChange }) {
           </tbody>
         </table>
 
-        {/* ---- جمع کل دسکتاپ ---- */}
         {cartItems.length > 0 && (
-          <div className="mt-4 text-right text-lg font-bold text-purple-700 dark:text-purple-300">
+          <div className="mt-4 text-right text-lg font-bold text-gray-800 dark:text-purple-300">
             جمع کل: {totalPrice.toLocaleString()} تومان
           </div>
         )}
@@ -208,14 +231,12 @@ export default function Factor({ onTotalChange }) {
             ))}
 
             {/* ---- جمع کل موبایل ---- */}
-            <div className="bg-purple-100 dark:bg-purple-900/40 p-4 rounded-2xl text-center font-bold mt-2 text-purple-700 dark:text-purple-300">
+            <div className="bg-purple-100 dark:bg-purple-900/40 p-4 rounded-2xl text-center font-bold mt-2 text-gray-800 dark:text-purple-300">
               جمع کل: {totalPrice.toLocaleString()} تومان
             </div>
           </>
         ) : (
-          <p className="text-center text-gray-400 py-6">
-            سبد خرید خالی است
-          </p>
+          <p className="text-center text-gray-400 py-6">سبد خرید خالی است</p>
         )}
       </div>
     </motion.div>

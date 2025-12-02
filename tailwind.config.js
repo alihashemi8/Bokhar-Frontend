@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./src/**/*.{js,jsx}"],
   theme: {
@@ -9,7 +8,7 @@ module.exports = {
         dark: "#222831",
 
         bouquet: {
-          50:  "#f9f6f8",
+          50: "#f9f6f8",
           100: "#f5eef3",
           200: "#ecdee8",
           300: "#ddc4d5",
@@ -21,6 +20,16 @@ module.exports = {
           900: "#5e3d4e",
           950: "#37202c",
         },
+      },
+
+      keyframes: {
+        fadeInUp: {
+          "0%": { opacity: 0, transform: "translateY(10px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        fadeInUp: "fadeInUp 0.3s ease-in-out forwards",
       },
     },
   },

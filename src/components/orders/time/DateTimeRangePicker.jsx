@@ -84,10 +84,13 @@ export default function DateTimeRangePicker({ value, onChange }) {
   };
 
   return (
-    <div
-      dir="rtl"
-      className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-md p-6"
-    >
+<div
+  dir="rtl"
+  className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md 
+             p-4 md:p-3 space-y-6 md:space-y-4"
+>
+
+
       <h2 className="text-xl font-semibold mb-4 text-center text-purple-700">
         انتخاب بازه‌های زمانی
       </h2>
@@ -156,7 +159,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
                 {formatSafe(deliveryDate)}
               </span>{" "}
               ساعت{" "}
-              <span className="text-purple-700 font-semibold">
+              <span className="text-purple-700  font-semibold">
                 {deliveryTime}
               </span>
             </p>

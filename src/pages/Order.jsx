@@ -237,7 +237,7 @@ export default function Order() {
                 !orderData.location?.plaque ||
                 !orderData.location?.unit)
                 ? "bg-gray-300 cursor-not-allowed"
-                : "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-sky-200 text-gray-800 hover:bg-sky-300 shadow-2xl shadow-pink-300 border border-sky-300"
             }`}
           >
             {step === 1 && "انتخاب زمان تحویل"}

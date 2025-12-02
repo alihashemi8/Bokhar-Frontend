@@ -83,7 +83,7 @@ export default function TimeSelector({
 
       {/* بازه‌های زمانی */}
       {selectedDate && (
-        <div className="mt-5 flex justify-center gap-3 flex-wrap transition-all duration-300 ease-in-out opacity-0 translate-y-3 animate-[fadeInUp_0.3s_ease-in-out_forwards]">
+<div className="mt-5 flex justify-center gap-3 flex-wrap animate-fadeInUp">
           {timeSlots.map((slot, idx) => (
             <button
               key={idx}

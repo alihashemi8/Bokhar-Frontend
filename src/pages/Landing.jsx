@@ -183,8 +183,8 @@ export default function Landing() {
       </div>
 
       {/* نمایش کارت انتخاب شده یا همه کارت‌های دسته */}
-      <section dir="rtl" className="p-6 md:mb-0 mb-20">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+      <section dir="rtl" className="p-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
           {selectedCard ? (
             <Card key={`${selectedCard.category}-${selectedCard.id}`} {...selectedCard} />
           ) : (
