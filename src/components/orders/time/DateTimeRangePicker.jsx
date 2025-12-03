@@ -84,14 +84,11 @@ export default function DateTimeRangePicker({ value, onChange }) {
   };
 
   return (
-<div
-  dir="rtl"
-  className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md 
-             p-4 md:p-3 space-y-6 md:space-y-4"
->
-
-
-      <h2 className="text-xl font-semibold mb-4 text-center text-purple-700">
+    <div
+      dir="rtl"
+      className="w-full max-w-4xl mx-auto bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-2xl shadow-md shadow-pink-300 border border-pink-200 p-6 "
+    >
+      <h2 className="text-xl font-semibold mb-4 text-center text-gray-800">
         انتخاب بازه‌های زمانی
       </h2>
 
@@ -122,15 +119,16 @@ export default function DateTimeRangePicker({ value, onChange }) {
         </section>
       </div>
 
-      {/* 📱 موبایل */}
-      <div className="md:hidden flex flex-col gap-3 mt-4">
-        <button
-          onClick={() => setActiveModal("delivery")}
-          className="bg-purple-600 text-white px-5 py-2 rounded-xl"
-        >
-          انتخاب زمان تحویل
-        </button>
-      </div>
+{/* 📱 موبایل */}
+<div className="md:hidden flex flex-col gap-2 mt-2">
+  <button
+    onClick={() => setActiveModal("delivery")}
+    className="block bg-pink-500 text-white px-5 py-2 rounded-xl mx-auto"
+  >
+    انتخاب زمان تحویل
+  </button>
+</div>
+
 
       {/* 📱 مودال انتخاب */}
       {activeModal && (
@@ -151,15 +149,15 @@ export default function DateTimeRangePicker({ value, onChange }) {
 
       {/* ✅ خلاصه انتخاب */}
       {(pickupDate || deliveryDate) && (
-        <div className="mt-6 text-center text-gray-700 space-y-2">
+        <div className="mt-5 text-center text-gray-700 space-y-2">
           {deliveryDate && deliveryTime && (
             <p>
               📦 تحویل دادن:{" "}
-              <span className="text-purple-700 font-semibold">
+              <span className="text-pink-500 font-semibold">
                 {formatSafe(deliveryDate)}
               </span>{" "}
               ساعت{" "}
-              <span className="text-purple-700  font-semibold">
+              <span className="text-pink-500  font-semibold">
                 {deliveryTime}
               </span>
             </p>
@@ -167,11 +165,11 @@ export default function DateTimeRangePicker({ value, onChange }) {
           {pickupDate && pickupTime && (
             <p>
               🕒 تحویل گرفتن:{" "}
-              <span className="text-purple-700 font-semibold">
+              <span className="text-pink-500 font-semibold">
                 {formatSafe(pickupDate)}
               </span>{" "}
               ساعت{" "}
-              <span className="text-purple-700 font-semibold">
+              <span className="text-pink-500 font-semibold">
                 {pickupTime}
               </span>
             </p>

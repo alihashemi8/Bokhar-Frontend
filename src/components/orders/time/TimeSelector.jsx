@@ -34,7 +34,7 @@ export default function TimeSelector({
       <div className="flex justify-between items-center mb-3">
         <button
           onClick={() => setWeekOffset((p) => Math.max(0, p - 1))}
-          className="text-purple-500 disabled:text-gray-300"
+          className="text-pink-500 disabled:text-gray-300"
           disabled={weekOffset <= 0}
         >
           ← هفته قبل
@@ -42,19 +42,18 @@ export default function TimeSelector({
         <span className="font-medium text-gray-700">هفته {weekOffset + 1}</span>
         <button
           onClick={() => setWeekOffset((p) => p + 1)}
-          className="text-purple-500"
+          className="text-pink-500"
         >
           هفته بعد →
         </button>
       </div>
 
-      {/* روزها — برای موبایل اسکرول‌پذیر افقی */}
       <div className="md:grid md:grid-cols-7 gap-1 flex overflow-x-auto scrollbar-hide">
         {isLoading
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 w-20 bg-purple-100/50 animate-pulse rounded-xl flex-shrink-0 "
+                className="h-24 w-20 bg-pink-100/50 animate-pulse rounded-xl flex-shrink-0 "
               />
             ))
           : days.map((day, idx) => {
@@ -64,14 +63,14 @@ export default function TimeSelector({
                 <div
                   key={idx}
                   onClick={() => setSelectedDate(day)}
-                  className={`border rounded-2xl p-3 text-center cursor-pointer transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-auto
+                  className={`border rounded-2xl p-3 my-2  text-center cursor-pointer transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-auto
               ${
                 isSelected
-                  ? "bg-purple-100 border-purple-600"
-                  : "border-gray-200 hover:bg-gray-50"
+                  ? "bg-pink-50 border-pink-600 shadow-md shadow-pink-900 scale-105"
+                  : " border-pink-400 hover:bg-pink-50 shadow-md shadow-pink-400"
               }`}
                 >
-                  <p className="text-sm font-medium text-purple-800">
+                  <p className="text-sm font-medium text-pink-500">
                     {day.weekDay.name}
                   </p>
                   <p className="text-2xl font-bold text-gray-800">{day.day}</p>
@@ -90,8 +89,8 @@ export default function TimeSelector({
               onClick={() => setSelectedTime(slot)}
               className={`px-5 py-3 rounded-xl text-sm border transition ${
                 selectedTime === slot
-                  ? "bg-purple-600 text-white border-purple-600"
-                  : "border-gray-300 text-gray-700 hover:bg-purple-50"
+                  ? "bg-pink-500/80 text-white border-pink-600 shadow-md shadow-pink-400 scale-105"
+                  : "bg-sky-50 border-pink-400 text-gray-700 hover:bg-pink-300 shadow-xl shadow-pink-100 "
               }`}
             >
               {slot}
