@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import TimeSelector from "./TimeSelector";
 import ModalPicker from "./ModalPicker";
 import DateObject from "react-date-object";
@@ -12,7 +12,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
   const [deliveryTime, setDeliveryTime] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
 
-  // 🟣 مقداردهی اولیه از props فقط یک‌بار هنگام mount
+  // 🟣 مقداردهی اولیه فقط یک‌بار هنگام mount
   useEffect(() => {
     if (!value) return;
     try {
@@ -32,36 +32,62 @@ export default function DateTimeRangePicker({ value, onChange }) {
             locale: persian_fa,
           })
         );
-      if (value.pickup?.times?.[0]) setPickupTime(value.pickup.times[0]);
-      if (value.delivery?.times?.[0]) setDeliveryTime(value.delivery.times[0]);
+      if (value.pickup?.time) setPickupTime(value.pickup.time);
+      if (value.delivery?.time) setDeliveryTime(value.delivery.time);
     } catch (e) {
       console.warn("❌ خطا در مقداردهی اولیه تاریخ:", e);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ✅ فقط یک‌بار اجرا شود، نه در هر تغییر value
+  }, []); // فقط یک‌بار اجرا شود
 
-  // 🟣 ارسال تغییرات به والد (به صورت پایدار)
-  const updateParent = useCallback(() => {
+  // ✅ تابع امن برای ارسال به والد
+  const triggerOnChange = (newState = {}) => {
     if (!onChange) return;
-    onChange({
+
+    const updated = {
       pickup: {
-        date: pickupDate
-          ? new DateObject(pickupDate).format("YYYY-MM-DD")
-          : null,
-        time: pickupTime || null,
+        date: newState.pickupDate !== undefined ? newState.pickupDate : pickupDate,
+        time: newState.pickupTime !== undefined ? newState.pickupTime : pickupTime,
       },
       delivery: {
-        date: deliveryDate
-          ? new DateObject(deliveryDate).format("YYYY-MM-DD")
+        date: newState.deliveryDate !== undefined ? newState.deliveryDate : deliveryDate,
+        time: newState.deliveryTime !== undefined ? newState.deliveryTime : deliveryTime,
+      },
+    };
+
+    onChange({
+      pickup: {
+        date: updated.pickup.date
+          ? new DateObject(updated.pickup.date).format("YYYY-MM-DD")
           : null,
-        time: deliveryTime || null,
+        time: updated.pickup.time || null,
+      },
+      delivery: {
+        date: updated.delivery.date
+          ? new DateObject(updated.delivery.date).format("YYYY-MM-DD")
+          : null,
+        time: updated.delivery.time || null,
       },
     });
-  }, [pickupDate, pickupTime, deliveryDate, deliveryTime, onChange]);
+  };
 
-  useEffect(() => {
-    updateParent();
-  }, [updateParent]);
+  // 🟣 هر بار که state تغییر کرد، onChange مستقیم فراخوانی می‌شود
+  const handlePickupDateChange = (date) => {
+    setPickupDate(date);
+    triggerOnChange({ pickupDate: date });
+  };
+  const handlePickupTimeChange = (time) => {
+    setPickupTime(time);
+    triggerOnChange({ pickupTime: time });
+  };
+  const handleDeliveryDateChange = (date) => {
+    setDeliveryDate(date);
+    triggerOnChange({ deliveryDate: date });
+  };
+  const handleDeliveryTimeChange = (time) => {
+    setDeliveryTime(time);
+    triggerOnChange({ deliveryTime: time });
+  };
 
   // 🟣 کنترل مودال‌ها
   const handleConfirm = (type) => {
@@ -100,9 +126,9 @@ export default function DateTimeRangePicker({ value, onChange }) {
           </h3>
           <TimeSelector
             selectedDate={deliveryDate}
-            setSelectedDate={setDeliveryDate}
+            setSelectedDate={handleDeliveryDateChange}
             selectedTime={deliveryTime}
-            setSelectedTime={setDeliveryTime}
+            setSelectedTime={handleDeliveryTimeChange}
           />
         </section>
 
@@ -112,23 +138,22 @@ export default function DateTimeRangePicker({ value, onChange }) {
           </h3>
           <TimeSelector
             selectedDate={pickupDate}
-            setSelectedDate={setPickupDate}
+            setSelectedDate={handlePickupDateChange}
             selectedTime={pickupTime}
-            setSelectedTime={setPickupTime}
+            setSelectedTime={handlePickupTimeChange}
           />
         </section>
       </div>
 
-{/* 📱 موبایل */}
-<div className="md:hidden flex flex-col gap-2 mt-2">
-  <button
-    onClick={() => setActiveModal("delivery")}
-    className="block bg-pink-500 text-white px-5 py-2 rounded-xl mx-auto"
-  >
-    انتخاب زمان تحویل
-  </button>
-</div>
-
+      {/* 📱 موبایل */}
+      <div className="md:hidden flex flex-col gap-2 mt-2">
+        <button
+          onClick={() => setActiveModal("delivery")}
+          className="block bg-pink-500 text-white px-5 py-2 rounded-xl mx-auto"
+        >
+          انتخاب زمان تحویل
+        </button>
+      </div>
 
       {/* 📱 مودال انتخاب */}
       {activeModal && (
@@ -138,11 +163,11 @@ export default function DateTimeRangePicker({ value, onChange }) {
           onConfirm={handleConfirm}
           selectedDate={activeModal === "pickup" ? pickupDate : deliveryDate}
           setSelectedDate={
-            activeModal === "pickup" ? setPickupDate : setDeliveryDate
+            activeModal === "pickup" ? handlePickupDateChange : handleDeliveryDateChange
           }
           selectedTime={activeModal === "pickup" ? pickupTime : deliveryTime}
           setSelectedTime={
-            activeModal === "pickup" ? setPickupTime : setDeliveryTime
+            activeModal === "pickup" ? handlePickupTimeChange : handleDeliveryTimeChange
           }
         />
       )}

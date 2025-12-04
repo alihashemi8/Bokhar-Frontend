@@ -106,7 +106,9 @@ export default function Order() {
       toast.success("سفارش با موفقیت ثبت شد ✅");
       console.log("✅ پاسخ سرور:", response.data);
 
-      ["orderData", "orderStep", "orderMaxStep"].forEach(localStorage.removeItem);
+      ["orderData", "orderStep", "orderMaxStep"].forEach(
+        localStorage.removeItem
+      );
       dispatch({ type: "RESET_ORDER" });
     } catch (error) {
       console.error("❌ خطا در ثبت سفارش:", error);
@@ -181,8 +183,10 @@ export default function Order() {
                 onLocationSelect={(location) =>
                   dispatch({ type: "SET_ORDER_DATA", payload: { location } })
                 }
+                goToNextStep={handleNext} 
               />
             )}
+
             {step === 4 && (
               <Payment
                 cartItems={orderData.cartItems}

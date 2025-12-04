@@ -8,6 +8,7 @@ export default function MapSelector({
   initialPosition,
   initialAddress,
   onLocationSelect,
+  goToNextStep, // اضافه شد: تابع رفتن به مرحله بعد
 }) {
   const [coords, setCoords] = useState(initialPosition || null);
   const [address, setAddress] = useState(initialAddress || "");
@@ -22,11 +23,13 @@ export default function MapSelector({
 
     onLocationSelect({ coords, address, plaque, unit });
     setOpen(false);
+
+    // رفتن مستقیم به مرحله بعد
+    goToNextStep?.();
   };
 
   return (
     <div className="relative flex flex-col gap-5">
-
       {/* نقشه */}
       <div
         className="relative rounded-xl border border-pink-200 overflow-hidden shadow-md shadow-pink-300 z-0 w-[90%] md:w-[75%] mx-auto"
@@ -44,6 +47,7 @@ export default function MapSelector({
             onSelect={(loc) => {
               setCoords({ lat: loc.lat, lng: loc.lng });
               setAddress(loc.address);
+              // ❗ مودال باز نشود
             }}
           />
         </div>
@@ -52,9 +56,9 @@ export default function MapSelector({
       {/* دکمه تایید موقعیت */}
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-2 bg-sky-100 border border-pink-300 text-gray-700 font-bold rounded-xl  hover:bg-sky-200 hover:text-gray-800
-                    shadow-md shadow-pink-300  hover:shadow-pink-400
-                    w-[75%]  mx-auto" 
+        className="px-3 py-2 bg-sky-100 border border-pink-300 text-gray-700 font-bold rounded-xl  
+                   hover:bg-sky-200 hover:text-gray-800 shadow-md shadow-pink-300  
+                   hover:shadow-pink-400 w-[75%] mx-auto"
       >
         تایید موقعیت
       </button>
@@ -73,21 +77,20 @@ export default function MapSelector({
         />
       )}
 
- {/* دسکتاپ → DropDown روی نقشه دقیقاً به اندازه نقشه */}
-  {!isMobile && (
-    <AddressDropdown
-      open={open}
-      onClose={() => setOpen(false)}
-      onSubmit={handleSubmit}
-      plaque={plaque}
-      setPlaque={setPlaque}
-      unit={unit}
-      setUnit={setUnit}
-      address={address}
-      fullScreen={true} // مهم
-    />
-  )}
-
+      {/* دسکتاپ → AddressDropdown */}
+      {!isMobile && (
+        <AddressDropdown
+          open={open}
+          onClose={() => setOpen(false)}
+          onSubmit={handleSubmit}
+          plaque={plaque}
+          setPlaque={setPlaque}
+          unit={unit}
+          setUnit={setUnit}
+          address={address}
+          fullScreen={true}
+        />
+      )}
     </div>
   );
 }
