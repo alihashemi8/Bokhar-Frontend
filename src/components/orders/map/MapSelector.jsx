@@ -56,7 +56,7 @@ export default function MapSelector({
       {/* دکمه تایید موقعیت */}
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-2 bg-sky-100 border border-pink-300 text-gray-700 font-bold rounded-xl  
+        className="px-3 py-2 mb-20 md:mb-0 bg-sky-100 border border-pink-300 text-gray-700 font-bold rounded-xl  
                    hover:bg-sky-200 hover:text-gray-800 shadow-md shadow-pink-300  
                    hover:shadow-pink-400 w-[75%] mx-auto"
       >

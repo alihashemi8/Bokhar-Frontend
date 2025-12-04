@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import TimeSelector from "./TimeSelector";
 import ModalPicker from "./ModalPicker";
@@ -5,14 +6,14 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
-export default function DateTimeRangePicker({ value, onChange }) {
+export default function DateTimeRangePicker({ value, onChange, onComplete, onGoLocation }) {
   const [pickupDate, setPickupDate] = useState(null);
   const [pickupTime, setPickupTime] = useState(null);
   const [deliveryDate, setDeliveryDate] = useState(null);
   const [deliveryTime, setDeliveryTime] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
 
-  // 🟣 مقداردهی اولیه فقط یک‌بار هنگام mount
+  // مقداردهی اولیه فقط یک‌بار هنگام mount
   useEffect(() => {
     if (!value) return;
     try {
@@ -40,7 +41,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // فقط یک‌بار اجرا شود
 
-  // ✅ تابع امن برای ارسال به والد
+  // تابع امن برای ارسال به والد
   const triggerOnChange = (newState = {}) => {
     if (!onChange) return;
 
@@ -71,7 +72,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
     });
   };
 
-  // 🟣 هر بار که state تغییر کرد، onChange مستقیم فراخوانی می‌شود
+  // هر بار که state تغییر کرد، onChange مستقیم فراخوانی می‌شود
   const handlePickupDateChange = (date) => {
     setPickupDate(date);
     triggerOnChange({ pickupDate: date });
@@ -89,13 +90,17 @@ export default function DateTimeRangePicker({ value, onChange }) {
     triggerOnChange({ deliveryTime: time });
   };
 
-  // 🟣 کنترل مودال‌ها
+  // کنترل مودال‌ها
   const handleConfirm = (type) => {
-    if (type === "delivery") setActiveModal("pickup");
-    else setActiveModal(null);
+    if (type === "delivery") {
+      setActiveModal("pickup");
+    } else {
+      setActiveModal(null);
+      if (onComplete) onComplete();
+    }
   };
 
-  // ✅ تابع امن برای فرمت تاریخ
+  // تابع امن برای فرمت تاریخ
   const formatSafe = (date) => {
     if (!date) return "";
     try {
@@ -118,7 +123,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
         انتخاب بازه‌های زمانی
       </h2>
 
-      {/* 💻 دسکتاپ */}
+      {/* دسکتاپ */}
       <div className="hidden md:block space-y-10">
         <section>
           <h3 className="text-md font-medium text-gray-700 mb-2">
@@ -143,9 +148,35 @@ export default function DateTimeRangePicker({ value, onChange }) {
             setSelectedTime={handlePickupTimeChange}
           />
         </section>
+
+        {/* دکمه انتخاب موقعیت مکانی - فقط دسکتاپ */}
+        <div className="hidden md:flex justify-center mt-8">
+          <button
+            disabled={
+              !(deliveryDate && deliveryTime && pickupDate && pickupTime)
+            }
+            className={`px-6 py-3 rounded-xl font-semibold transition
+      ${
+        deliveryDate &&
+        deliveryTime &&
+        pickupDate &&
+        pickupTime
+          ? "bg-sky-200 text-gray-800 cursor-pointer border border-pink-300 shadow-md shadow-pink-300  hover:bg-sky-300"
+          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+      }
+    `}
+            onClick={() => {
+              if (deliveryDate && deliveryTime && pickupDate && pickupTime) {
+                onGoLocation && onGoLocation();
+              }
+            }}
+          >
+            انتخاب موقعیت مکانی
+          </button>
+        </div>
       </div>
 
-      {/* 📱 موبایل */}
+      {/* موبایل */}
       <div className="md:hidden flex flex-col gap-2 mt-2">
         <button
           onClick={() => setActiveModal("delivery")}
@@ -155,7 +186,7 @@ export default function DateTimeRangePicker({ value, onChange }) {
         </button>
       </div>
 
-      {/* 📱 مودال انتخاب */}
+      {/* مودال انتخاب */}
       {activeModal && (
         <ModalPicker
           type={activeModal}
@@ -172,31 +203,23 @@ export default function DateTimeRangePicker({ value, onChange }) {
         />
       )}
 
-      {/* ✅ خلاصه انتخاب */}
+      {/* خلاصه انتخاب */}
       {(pickupDate || deliveryDate) && (
         <div className="mt-5 text-center text-gray-700 space-y-2">
           {deliveryDate && deliveryTime && (
             <p>
-              📦 تحویل دادن:{" "}
-              <span className="text-pink-500 font-semibold">
-                {formatSafe(deliveryDate)}
-              </span>{" "}
-              ساعت{" "}
-              <span className="text-pink-500  font-semibold">
-                {deliveryTime}
-              </span>
+              📦 تحویل دادن: {" "}
+              <span className="text-pink-500 font-semibold">{formatSafe(deliveryDate)}</span>{" "}
+              ساعت {" "}
+              <span className="text-pink-500  font-semibold">{deliveryTime}</span>
             </p>
           )}
           {pickupDate && pickupTime && (
             <p>
-              🕒 تحویل گرفتن:{" "}
-              <span className="text-pink-500 font-semibold">
-                {formatSafe(pickupDate)}
-              </span>{" "}
-              ساعت{" "}
-              <span className="text-pink-500 font-semibold">
-                {pickupTime}
-              </span>
+              🕒 تحویل گرفتن: {" "}
+              <span className="text-pink-500 font-semibold">{formatSafe(pickupDate)}</span>{" "}
+              ساعت {" "}
+              <span className="text-pink-500 font-semibold">{pickupTime}</span>
             </p>
           )}
         </div>
