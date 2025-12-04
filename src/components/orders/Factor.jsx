@@ -38,7 +38,7 @@ export default function Factor({ onTotalChange }) {
 
   return (
     <motion.div
-      className="w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800/80 backdrop-blur-xl border border-pink-200 dark:border-gray-700 rounded-3xl p-6 shadow-xl shadow-pink-300 overflow-hidden"
+      className="w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800/80 backdrop-blur-xl border border-pink-200 dark:border-gray-700 rounded-3xl p-6 shadow-md shadow-pink-300 overflow-hidden"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}

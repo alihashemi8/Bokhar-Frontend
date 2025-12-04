@@ -1,65 +1,47 @@
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
+import { useEffect, useState } from "react";
 
-// 🎯 آیکون مارکر
-const markerIcon = new L.Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+export default function MapView({ initialPosition, onPositionChange, onMarkerClick }) {
+  const [position, setPosition] = useState(initialPosition || { lat: 35.6892, lng: 51.3890 });
 
-// 📍 انتخاب با کلیک روی نقشه
-function LocationMarker({ position, setPosition }) {
-  useMapEvents({
-    click(e) {
-      setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
-    },
-  });
-
-  return position ? (
-    <Marker position={[position.lat, position.lng]} icon={markerIcon}></Marker>
-  ) : null;
-}
-
-// 🚀 حرکت دادن نقشه وقتی position تغییر می‌کنه
-function MapUpdater({ position }) {
-  const map = useMap();
+  const MarkerHandler = () => {
+    useMapEvents({
+      click(e) {
+        setPosition(e.latlng);
+        onPositionChange?.(e.latlng);
+      },
+    });
+    return null;
+  };
 
   useEffect(() => {
-    if (position && map) {
-      map.flyTo([position.lat, position.lng], 15, { animate: true });
-    }
-  }, [position, map]);
-
-  return null;
-}
-
-// 🗺️ کامپوننت اصلی MapView
-export default function MapView({ position, setPosition, isDarkMode }) {
-  const lightUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-  const darkUrl =
-    "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png";
-
-  const defaultCenter = { lat: 35.6892, lng: 51.389 }; // تهران
+    if (initialPosition) setPosition(initialPosition);
+  }, [initialPosition]);
 
   return (
-    <div className="relative w-full h-80 md:h-96 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-      <MapContainer
-        center={position || defaultCenter}
-        zoom={15}
-        scrollWheelZoom
-        style={{ width: "100%", height: "100%" }}
-      >
-        <TileLayer
-          url={isDarkMode ? darkUrl : lightUrl}
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
+    <MapContainer
+      center={position}
+      zoom={13}
+      scrollWheelZoom={true}
+      style={{ height: "400px", width: "100%", borderRadius: "1rem" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
 
-        <LocationMarker position={position} setPosition={setPosition} />
-        {position && <MapUpdater position={position} />}
-      </MapContainer>
-    </div>
+      <Marker
+        position={position}
+        eventHandlers={{
+          click() {
+            onMarkerClick?.(position);
+          },
+        }}
+      />
+
+      <MarkerHandler />
+    </MapContainer>
   );
 }

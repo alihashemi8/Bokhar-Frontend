@@ -4,7 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import Factor from "../components/orders/Factor";
 import DateTimeRangePicker from "../components/orders/time/DateTimeRangePicker";
-import MapSelector from "../components/orders/map/MapSelector";
+import MapSelector from "../components/orders/map/MapSelector.jsx";
 import Payment from "../components/orders/Payment";
 import StepProgress from "../components/orders/StepProgress";
 
