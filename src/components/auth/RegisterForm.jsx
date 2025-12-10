@@ -1,26 +1,34 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiPost } from "../../api";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, EyeSlashIcon, UserIcon, PhoneIcon, LockClosedIcon } from "@heroicons/react/24/solid";
 
 export default function RegisterForm({ onSwitch, setLoading }) {
   const [fullName, setFullName] = useState("");
-  const [phoneOrEmail, setPhoneOrEmail] = useState("");
-  const [email, setEmail] = useState(""); // اختیاری
+  const [phoneValues, setPhoneValues] = useState(Array(11).fill(""));
+  const inputsRef = useRef([]);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLocalLoading] = useState(false);
 
+  const getPhoneNumber = () => phoneValues.join("");
+
   const validateInputs = () => {
     const newErrors = {};
     if (!fullName.trim()) newErrors.fullName = "نام و نام خانوادگی الزامی است";
-    if (!phoneOrEmail.trim())
-      newErrors.phoneOrEmail = "شماره یا ایمیل الزامی است";
-    if (email && !/^[\w.%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email))
-      newErrors.email = "ایمیل معتبر وارد کنید";
+    if (getPhoneNumber().length !== 11) newErrors.phoneOrEmail = "شماره موبایل باید 11 رقم باشد";
     if (!password.trim()) newErrors.password = "رمز عبور الزامی است";
+    if (password.length < 6) newErrors.password = "رمز عبور باید حداقل 6 کاراکتر باشد";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePhoneChange = (index, val) => {
+    if (!/^\d?$/.test(val)) return;
+    const newValues = [...phoneValues];
+    newValues[index] = val;
+    setPhoneValues(newValues);
+    if (val && index < 10) inputsRef.current[index + 1].focus();
   };
 
   const handleSubmit = async () => {
@@ -30,8 +38,7 @@ export default function RegisterForm({ onSwitch, setLoading }) {
     try {
       await apiPost("/register/", {
         name: fullName,
-        phone_or_email: phoneOrEmail,
-        email: email || null,
+        phone_or_email: getPhoneNumber(),
         password,
       });
       alert("ثبت‌نام با موفقیت انجام شد ✅");
@@ -46,118 +53,97 @@ export default function RegisterForm({ onSwitch, setLoading }) {
   };
 
   return (
-    <div className="text-gray-700 dark:text-gray-100">
-      <h2 className="text-lg sm:text-xl font-bold mb-5 text-center">
+    <div className="max-w-md mx-auto p-6 sm:p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
         ثبت‌نام
       </h2>
 
       {/* نام و نام خانوادگی */}
-      <div className="mb-3 sm:mb-4">
+      <div className="mb-5">
+        <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
+          <UserIcon className="w-4 h-4" /> نام و نام خانوادگی
+        </label>
         <input
           type="text"
-          placeholder="نام و نام خانوادگی"
+          placeholder="مثال: علی محمدی"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 placeholder-gray-400 ${
+          className={`w-full border-b-2 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 placeholder-gray-400 ${
             errors.fullName ? "border-red-500" : "border-gray-300"
           }`}
         />
-        {errors.fullName && (
-          <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
-        )}
+        {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
       </div>
 
-      {/* شماره یا ایمیل */}
-      <div className="mb-3 sm:mb-4">
-        <input
-          type="text"
-          dir="ltr"
-          placeholder="شماره موبایل یا ایمیل"
-          value={phoneOrEmail}
-          onChange={(e) => setPhoneOrEmail(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 placeholder-gray-400 ${
-            errors.phoneOrEmail ? "border-red-500" : "border-gray-300"
-          }`}
-        />
-        {errors.phoneOrEmail && (
-          <p className="text-red-500 text-xs mt-1">{errors.phoneOrEmail}</p>
-        )}
-      </div>
+{/* شماره موبایل */}
+<div  className="mb-5 mx-auto">
+  <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center mx-auto gap-1">
+    <PhoneIcon className="w-4 h-4" /> شماره موبایل
+  </label>
 
-      {/* ایمیل اختیاری */}
-      <div className="mb-3 sm:mb-4">
-        <input
-          type="email"
-          dir="ltr"
-          placeholder="ایمیل (اختیاری)"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 placeholder-gray-400 ${
-            errors.email ? "border-red-500" : "border-gray-300"
-          }`}
-        />
-        {errors.email && (
-          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-        )}
-      </div>
+  <div dir="ltr" className="flex justify-between gap-1 max-w-sm mx-auto">
+    {phoneValues.map((v, i) => (
+      <input
+        key={i}
+        ref={(el) => (inputsRef.current[i] = el)}
+        type="text"
+        inputMode="numeric"
+        maxLength={1}
+        value={i === 0 ? "0" : i === 1 ? "9" : v}
+        readOnly={i === 0 || i === 1}
+        onChange={(e) => handlePhoneChange(i, e.target.value)}
+        className="
+          w-5 h-10 text-center
+          border-b-2 border-gray-400
+          focus:border-blue-500
+          outline-none rounded-b-sm
+          bg-transparent
+          text-gray-800 dark:text-gray-100
+        "
+      />
+    ))}
+  </div>
+
+  {errors.phoneOrEmail && (
+    <p className="text-red-500 text-xs mt-1 text-center">
+      {errors.phoneOrEmail}
+    </p>
+  )}
+</div>
+
 
       {/* رمز عبور */}
-      <div className="mb-4 relative">
+      <div className="mb-6 relative">
+        <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
+          <LockClosedIcon className="w-4 h-4" /> رمز عبور
+        </label>
         <input
           type={showPassword ? "text" : "password"}
-          placeholder="رمز عبور"
+          placeholder="حداقل 6 کاراکتر"
           dir="ltr"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-2 sm:py-3 text-sm focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 placeholder-gray-400 ${
+          className={`w-full border-b-2 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 placeholder-gray-400 ${
             errors.password ? "border-red-500" : "border-gray-300"
           }`}
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+          className="absolute bottom-0.5 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
         >
-          {showPassword ? (
-            <EyeSlashIcon className="w-5 h-5" />
-          ) : (
-            <EyeIcon className="w-5 h-5" />
-          )}
+          {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
         </button>
-        {errors.password && (
-          <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-        )}
+        {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
       </div>
 
       {/* دکمه ثبت‌نام */}
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 sm:py-3 rounded-lg font-medium shadow-sm transition flex justify-center items-center gap-2 text-sm sm:text-base"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition flex justify-center items-center gap-2"
       >
-        {loading && (
-          <svg
-            className="w-5 h-5 animate-spin text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4l3.536-3.536A8 8 0 004 12z"
-            ></path>
-          </svg>
-        )}
-        ثبت‌نام
+        {loading ? "در حال ثبت‌نام..." : "ثبت‌نام"}
       </button>
 
       {/* لینک ورود */}
