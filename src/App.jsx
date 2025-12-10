@@ -11,11 +11,17 @@ import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
 import AuthModal from "./components/auth/AuthModal";
 
+import CustomerDashboard from "./pages/CustomerDashboard";
+import EditProfile from "./components/customers/Edit";
+import WalletPage from "./components/customers/Wallet";
+import OrderTracking from "./components/customers/OrderTracking";
+import SecurityPrivacy from "./components/customers/Privacy";
+import Support from "./components/customers/Support";
+
 import Landing from "./pages/Landing";
 import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
-import CustomerDashboard from "./pages/CustomerDashboard";
 import AdminOrders from "./components/admin/AdminOrders";
 import AdminCategories from "./components/admin/AdminCategories";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
@@ -60,6 +66,13 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/order" element={<Order />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer-dashboard/edit" element={<EditProfile />} />
+        <Route path="/customer-dashboard/wallet" element={<WalletPage />} />
+        <Route path="/customer-dashboard/orders-tracking" element={<OrderTracking />} />
+        <Route path="/customer-dashboard/privacy" element={<SecurityPrivacy />} />
+        <Route path="/customer-dashboard/support" element={<Support />} />
+
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route
           path="/admin-dashboard/orders"
@@ -95,7 +108,6 @@ function AppContent() {
           }
         />
         <Route path="/admin-dashboard/reports" element={<AdminReports />} />
-        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/about" element={<PickupPage />} />
       </Routes>
     </div>
