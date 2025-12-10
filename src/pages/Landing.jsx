@@ -124,10 +124,11 @@ export default function Landing() {
     ref={searchRef}
     className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col"
   >
+     <h className="flex mr-2 my-1">چی میخوای پیدا کنی؟</h>
     <div className="flex rounded-full text-black font-semibold border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
       <input
         type="text"
-        placeholder="چی می‌خوای پیدا کنی؟"
+        placeholder="پتو ،مانتو، شلوار ..."
         value={searchQuery}
         onChange={(e) => {
           setSearchQuery(e.target.value);
@@ -184,7 +185,7 @@ export default function Landing() {
 
       {/* نمایش کارت انتخاب شده یا همه کارت‌های دسته */}
       <section dir="rtl" className="p-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 mb-18 md:mb-0">
           {selectedCard ? (
             <Card key={`${selectedCard.category}-${selectedCard.id}`} {...selectedCard} />
           ) : (
