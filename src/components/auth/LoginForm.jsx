@@ -1,22 +1,44 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiPost } from "../../api";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  PhoneIcon,
+  LockClosedIcon,
+} from "@heroicons/react/24/solid";
 
 export default function LoginForm({
   onSwitchRegister,
   onOtpLogin,
   setLoading,
 }) {
-  const [phoneOrEmail, setPhoneOrEmail] = useState("");
+  const [phoneValues, setPhoneValues] = useState(Array(11).fill(""));
+  const inputsRef = useRef([]);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [localLoading, setLocalLoading] = useState(false);
 
+  const getPhoneNumber = () => phoneValues.join("");
+
+  const handlePhoneChange = (index, val) => {
+    if (!/^\d?$/.test(val)) return;
+    const newValues = [...phoneValues];
+    newValues[index] = val;
+    setPhoneValues(newValues);
+    if (val && index < 10) inputsRef.current[index + 1]?.focus();
+  };
+
+  const handlePhoneKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !phoneValues[index] && index > 2) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
   const validateInputs = () => {
     const newErrors = {};
-    if (!phoneOrEmail.trim())
-      newErrors.phoneOrEmail = "شماره یا ایمیل الزامی است";
+    if (getPhoneNumber().length !== 11)
+      newErrors.phone = "شماره موبایل باید 11 رقم باشد";
     if (!password.trim()) newErrors.password = "رمز عبور الزامی است";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -27,7 +49,10 @@ export default function LoginForm({
     setLocalLoading(true);
     setLoading?.(true);
     try {
-      await apiPost("/login/", { phone_or_email: phoneOrEmail, password });
+      await apiPost("/login/", {
+        phone_or_email: getPhoneNumber(),
+        password,
+      });
       alert("ورود موفق ✅");
     } catch (err) {
       console.error(err);
@@ -39,42 +64,72 @@ export default function LoginForm({
   };
 
   return (
-    <div className="text-gray-700 dark:text-gray-100">
-      <h2 className="text-xl font-bold mb-5 text-center">ورود</h2>
+    <div className="max-w-md mx-auto p-6 sm:p-8">
+      <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
+        ورود
+      </h2>
 
-      {/* شماره موبایل یا ایمیل */}
-      <div className="mb-4">
-        <input
-          type="text"
-          dir="ltr"
-          placeholder="شماره موبایل یا ایمیل"
-          value={phoneOrEmail}
-          onChange={(e) => setPhoneOrEmail(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 ${
-            errors.phoneOrEmail ? "border-red-500" : "border-gray-300"
-          }`}
-        />
-        {errors.phoneOrEmail && (
-          <p className="text-red-500 text-xs mt-1">{errors.phoneOrEmail}</p>
+      {/* شماره موبایل */}
+      <div className="mb-5">
+        <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
+          <PhoneIcon className="w-4 h-4" />
+          شماره موبایل
+        </label>
+
+        <div dir="ltr" className="flex justify-between gap-1 max-w-sm mx-auto">
+          {phoneValues.map((v, i) => (
+            <input
+              key={i}
+              ref={(el) => (inputsRef.current[i] = el)}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={i === 0 ? "0" : i === 1 ? "9" : v}
+              readOnly={i === 0 || i === 1}
+              onChange={(e) => handlePhoneChange(i, e.target.value)}
+              onKeyDown={(e) => handlePhoneKeyDown(i, e)}
+              className={`w-5 h-10 text-center border-b-2 bg-transparent outline-none
+                text-gray-800 dark:text-gray-100 focus:border-blue-500
+                ${
+                  errors.phone ? "border-red-500" : "border-gray-400"
+                }`}
+            />
+          ))}
+        </div>
+
+        {errors.phone && (
+          <p className="text-red-500 text-xs mt-1 text-center">
+            {errors.phone}
+          </p>
         )}
       </div>
 
       {/* رمز عبور */}
-      <div className="mb-5 relative">
+      <div className="mb-6 relative">
+        <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
+          <LockClosedIcon className="w-4 h-4" />
+          رمز عبور
+        </label>
+
         <input
           type={showPassword ? "text" : "password"}
           dir="ltr"
-          placeholder="رمز عبور"
+          placeholder="حداقل 6 کاراکتر"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={`w-full border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700 ${
-            errors.password ? "border-red-500" : "border-gray-300"
-          }`}
+          className={`w-full border-b-2 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 
+            dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400
+            ${
+              errors.password ? "border-red-500" : "border-gray-300"
+            }`}
         />
+
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+          className="absolute bottom-0.5 right-3 -translate-y-1/2
+            text-gray-500 hover:text-gray-700
+            dark:text-gray-400 dark:hover:text-gray-200 transition"
         >
           {showPassword ? (
             <EyeSlashIcon className="w-5 h-5" />
@@ -82,6 +137,7 @@ export default function LoginForm({
             <EyeIcon className="w-5 h-5" />
           )}
         </button>
+
         {errors.password && (
           <p className="text-red-500 text-xs mt-1">{errors.password}</p>
         )}
@@ -91,38 +147,17 @@ export default function LoginForm({
       <button
         onClick={handleSubmit}
         disabled={localLoading}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition flex justify-center items-center gap-2"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg
+          font-medium shadow-md transition"
       >
-        {localLoading && (
-          <svg
-            className="w-5 h-5 animate-spin text-white"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v4l3.536-3.536A8 8 0 004 12z"
-            ></path>
-          </svg>
-        )}
-        ورود
+        {localLoading ? "در حال ورود..." : "ورود"}
       </button>
 
       {/* لینک‌ها */}
-      <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4 space-y-2">
+      <div className="text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-4 space-y-2">
         <button
           onClick={onOtpLogin}
-          className="text-blue-600 hover:underline text-xs"
+          className="text-blue-600 dark:text-blue-400 hover:underline"
         >
           ورود با رمز یک‌بار مصرف
         </button>
@@ -130,7 +165,7 @@ export default function LoginForm({
           حساب ندارید؟{" "}
           <button
             onClick={onSwitchRegister}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 dark:text-blue-400 hover:underline"
           >
             ثبت‌نام
           </button>

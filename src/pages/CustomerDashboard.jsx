@@ -50,7 +50,7 @@ export default function CustomersDashboard() {
     <div dir="rtl" className="min-h-screen  p-4 md:p-8">
       
       {/* Profile Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 flex items-center gap-4 shadow-md md:max-w-3xl md:mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 flex items-center gap-4 md:mt-12 shadow-md md:max-w-3xl md:mx-auto">
         <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl">
           👤
         </div>

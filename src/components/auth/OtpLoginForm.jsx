@@ -1,12 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiPost } from "../../api";
+import { PhoneIcon } from "@heroicons/react/24/solid";
 
 export default function OtpLoginForm({ onBack, onClose, setLoading }) {
   const [step, setStep] = useState("form"); // form | otp
-  const [phone, setPhone] = useState("");
+  const [phoneValues, setPhoneValues] = useState(Array(11).fill(""));
+  const inputsRef = useRef([]);
   const [otp, setOtp] = useState(new Array(6).fill(""));
   const [timer, setTimer] = useState(60);
   const [resendAvailable, setResendAvailable] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const getPhoneNumber = () => phoneValues.join("");
 
   useEffect(() => {
     let interval;
@@ -19,11 +24,28 @@ export default function OtpLoginForm({ onBack, onClose, setLoading }) {
     return () => clearInterval(interval);
   }, [step, timer]);
 
+  const handlePhoneChange = (index, val) => {
+    if (!/^\d?$/.test(val)) return;
+    const newValues = [...phoneValues];
+    newValues[index] = val;
+    setPhoneValues(newValues);
+    if (val && index < 10) inputsRef.current[index + 1]?.focus();
+  };
+
+  const handlePhoneKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !phoneValues[index] && index > 2) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
   const handleSendOtp = async () => {
-    if (!phone.trim()) return alert("شماره موبایل را وارد کنید");
+    if (getPhoneNumber().length !== 11) {
+      return setErrors({ phone: "شماره موبایل باید 11 رقم باشد" });
+    }
+    setErrors({});
     setLoading(true);
     try {
-      await apiPost("/submit-otp/", { phone });
+      await apiPost("/submit-otp/", { phone: getPhoneNumber() });
       setStep("otp");
       setTimer(60);
       setResendAvailable(false);
@@ -37,7 +59,10 @@ export default function OtpLoginForm({ onBack, onClose, setLoading }) {
   const handleVerifyOtp = async () => {
     setLoading(true);
     try {
-      await apiPost("/verify-otp/", { phone, otp: otp.join("") });
+      await apiPost("/verify-otp/", {
+        phone: getPhoneNumber(),
+        otp: otp.join(""),
+      });
       alert("ورود موفق با رمز یک‌بار مصرف ✅");
       onClose();
     } catch {
@@ -51,32 +76,61 @@ export default function OtpLoginForm({ onBack, onClose, setLoading }) {
     setTimer(60);
     setResendAvailable(false);
     try {
-      await apiPost("/resend-otp/", { phone });
+      await apiPost("/resend-otp/", { phone: getPhoneNumber() });
     } catch {
       alert("ارسال مجدد کد با خطا مواجه شد");
     }
   };
 
   return (
-    <div className="text-gray-700 dark:text-gray-100">
+    <div className="max-w-md mx-auto p-6 sm:p-8 text-gray-700 dark:text-gray-100">
       {step === "form" && (
         <>
-          <h2 className="text-xl font-bold mb-5 text-center">ورود با رمز یک‌بار مصرف</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">
+            ورود با رمز یک‌بار مصرف
+          </h2>
 
-          <div className="mb-4">
-            <input
-              dir="ltr"
-              type="text"
-              placeholder="شماره موبایل"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full border rounded-lg px-3 py-3 text-sm focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-700"
-            />
+          {/* شماره موبایل */}
+          <div className="mb-5 mx-auto">
+            <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
+              <PhoneIcon className="w-4 h-4" /> شماره موبایل
+            </label>
+
+            <div dir="ltr" className="flex justify-center gap-0.5 max-w-sm mx-auto">
+              {phoneValues.map((v, i) => (
+                <input
+                  key={i}
+                  ref={(el) => (inputsRef.current[i] = el)}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={i === 0 ? "0" : i === 1 ? "9" : v}
+                  readOnly={i === 0 || i === 1}
+                  onChange={(e) => handlePhoneChange(i, e.target.value)}
+                  onKeyDown={(e) => handlePhoneKeyDown(i, e)}
+                  className="
+                    w-6 h-10 text-center
+                    border-b-2 border-gray-400
+                    focus:border-blue-500
+                    outline-none
+                    bg-transparent
+                    text-gray-800 dark:text-gray-100
+                    rounded-b-sm
+                  "
+                />
+              ))}
+            </div>
+
+            {errors.phone && (
+              <p className="text-red-500 text-xs mt-1 text-center">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           <button
             onClick={handleSendOtp}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition text-sm"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition"
           >
             دریافت کد تایید
           </button>
@@ -100,20 +154,21 @@ export default function OtpLoginForm({ onBack, onClose, setLoading }) {
                 key={i}
                 id={`otp-${i}`}
                 type="text"
-                maxLength="1"
+                maxLength={1}
                 value={digit}
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (/^[0-9]?$/.test(val)) {
+                  if (/^\d?$/.test(val)) {
                     const newOtp = [...otp];
                     newOtp[i] = val;
                     setOtp(newOtp);
-                    if (val && i < 5) document.getElementById(`otp-${i + 1}`).focus();
+                    if (val && i < 5)
+                      document.getElementById(`otp-${i + 1}`)?.focus();
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Backspace" && !otp[i] && i > 0)
-                    document.getElementById(`otp-${i - 1}`).focus();
+                    document.getElementById(`otp-${i - 1}`)?.focus();
                 }}
                 className="w-12 h-12 text-center font-mono text-base border rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -122,7 +177,7 @@ export default function OtpLoginForm({ onBack, onClose, setLoading }) {
 
           <button
             onClick={handleVerifyOtp}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition text-sm mb-3"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium shadow-md transition mb-3"
           >
             تایید
           </button>

@@ -13,6 +13,14 @@ export default function RegisterForm({ onSwitch, setLoading }) {
 
   const getPhoneNumber = () => phoneValues.join("");
 
+const handlePhoneKeyDown = (index, e) => {
+  if (e.key === "Backspace") {
+    if (phoneValues[index] === "" && index > 2) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  }
+};
+
   const validateInputs = () => {
     const newErrors = {};
     if (!fullName.trim()) newErrors.fullName = "نام و نام خانوادگی الزامی است";
@@ -53,7 +61,7 @@ export default function RegisterForm({ onSwitch, setLoading }) {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 sm:p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
+    <div className="max-w-md mx-auto p-6 sm:p-8  ">
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
         ثبت‌نام
       </h2>
@@ -74,14 +82,13 @@ export default function RegisterForm({ onSwitch, setLoading }) {
         />
         {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
       </div>
-
 {/* شماره موبایل */}
-<div  className="mb-5 mx-auto">
-  <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center mx-auto gap-1">
+<div className="mb-5 mx-auto">
+  <label className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1 flex items-center gap-1">
     <PhoneIcon className="w-4 h-4" /> شماره موبایل
   </label>
 
-  <div dir="ltr" className="flex justify-between gap-1 max-w-sm mx-auto">
+  <div dir="ltr" className="flex justify-center gap-0.5 max-w-sm mx-auto">
     {phoneValues.map((v, i) => (
       <input
         key={i}
@@ -92,13 +99,15 @@ export default function RegisterForm({ onSwitch, setLoading }) {
         value={i === 0 ? "0" : i === 1 ? "9" : v}
         readOnly={i === 0 || i === 1}
         onChange={(e) => handlePhoneChange(i, e.target.value)}
+        onKeyDown={(e) => handlePhoneKeyDown(i, e)}
         className="
-          w-5 h-10 text-center
+          w-6 h-10 text-center
           border-b-2 border-gray-400
           focus:border-blue-500
-          outline-none rounded-b-sm
+          outline-none
           bg-transparent
           text-gray-800 dark:text-gray-100
+          rounded-b-sm
         "
       />
     ))}
@@ -110,7 +119,6 @@ export default function RegisterForm({ onSwitch, setLoading }) {
     </p>
   )}
 </div>
-
 
       {/* رمز عبور */}
       <div className="mb-6 relative">

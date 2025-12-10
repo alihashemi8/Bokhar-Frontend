@@ -4,7 +4,7 @@ import LoginForm from "./LoginForm";
 import OtpLoginForm from "./OtpLoginForm";
 
 export default function AuthModal({ isOpen, onClose }) {
-  const [mode, setMode] = useState("register"); // register | login | otp-login
+  const [mode, setMode] = useState("register");
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -12,17 +12,19 @@ export default function AuthModal({ isOpen, onClose }) {
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 flex items-center justify-center bg-black/40 dark:bg-black/60 z-50"
+      onClick={onClose}
+      className="fixed inset-0 flex items-center justify-center bg-black/40 dark:bg-black/60 z-100"
     >
       {/* مودال */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className="
-          relative w-[90%] max-w-sm 
-         
-          text-gray-800 dark:text-gray-100 
-         
-         
-          p-6 sm:p-6 px-4 py-5 transition-all duration-300
+          relative w-[90%] max-w-sm
+          bg-white dark:bg-gray-900
+          text-gray-800 dark:text-gray-100
+          rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700
+          p-6 sm:p-6 px-4 py-5
+          transition-all duration-300
         "
       >
         {/* دکمه بستن */}
