@@ -61,7 +61,7 @@ const handlePhoneKeyDown = (index, e) => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 sm:p-8  ">
+    <div className="max-w-md mx-auto p-6  ">
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
         ثبت‌نام
       </h2>

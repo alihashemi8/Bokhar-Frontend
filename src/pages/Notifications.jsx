@@ -114,8 +114,8 @@ function PillButton({ active, onClick, icon, label, badge }) {
       className={`flex-1 min-w-[100px] sm:min-w-[120px] flex justify-center items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border transition-all focus:outline-none text-sm sm:text-base
         ${
           active
-            ? "bg-purple-600/70 text-white border-transparent shadow-md"
-            : "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+            ? "bg-sky-400 text-white border-transparent shadow-md"
+            : "bg-sky-50 dark:bg-gray-900 border-sky-300 dark:border-gray-700 hover:bg-sky-100 dark:hover:bg-gray-800"
         }`}
     >
       {icon}
@@ -125,8 +125,8 @@ function PillButton({ active, onClick, icon, label, badge }) {
           className={`ml-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full 
             ${
               active
-                ? "bg-white text-purple-600/70"
-                : "bg-purple-600/70 text-white"
+                ? "bg-white text-sky-400"
+                : "bg-sky-400 text-white"
             }`}
         >
           {badge}

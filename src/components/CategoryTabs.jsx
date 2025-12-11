@@ -34,7 +34,7 @@ export default function CategoryTabs({ onCategoryChange }) {
               ${
                 active === label
                   ? "bg-sky-800 border border-sky-800 shadow-md shadow-sky-800 text-gray-100 scale-105"
-                  : "bg-sky-100/80 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-300 border border-sky-400/80 shadow-md shadow-sky-100 text-gray-800 dark:text-gray-300"
+                  : "bg-sky-100/80 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-300 border border-sky-400/80 shadow-md shadow-sky-200 text-gray-800 dark:text-gray-300"
               }`}
           >
             <span className="mr-1">{emoji}</span>

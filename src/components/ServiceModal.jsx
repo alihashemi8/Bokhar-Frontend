@@ -7,6 +7,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
   const [selectedMain, setSelectedMain] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [dragY, setDragY] = useState(0);
 
   const defaultServices = [
     { name: "خشکشویی", price: 50000 },
@@ -23,6 +24,31 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     window.addEventListener("resize", checkScreen);
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
+
+  // ------------------------
+  //  Drag Handler for Mobile
+  // ------------------------
+  const handleDragStart = (e) => {
+    if (!isMobile) return;
+
+    const startY = e.touches[0].clientY;
+
+    const move = (ev) => {
+      const diff = ev.touches[0].clientY - startY;
+      setDragY(Math.max(0, diff));
+    };
+
+    const end = () => {
+      if (dragY > 120) onClose(); // Close if dragged enough
+      setDragY(0);
+
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", end);
+    };
+
+    window.addEventListener("touchmove", move);
+    window.addEventListener("touchend", end);
+  };
 
   const handleMainSelect = (service) => {
     setSelectedMain(service);
@@ -89,11 +115,20 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
       onClick={onClose}
     >
       <div
-        className="bg-gradient-to-bl from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800 rounded-t-3xl md:rounded-2xl 
-             w-full md:w-[550px] max-h-[80vh] md:max-h-[80vh]
-             shadow-lg p-5 flex flex-col"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleDragStart}
+        style={{
+          transform: `translateY(${dragY}px)`,
+        }}
+        className={`bg-gradient-to-bl from-sky-50 via-sky-100 to-sky-200 
+        dark:bg-gray-800 rounded-t-3xl md:rounded-2xl 
+        w-full md:w-[550px] max-h-[85vh]
+        shadow-lg p-5 flex flex-col transform transition-transform duration-300 
+        ${isMobile ? "animate-slide-up" : ""}`}
       >
+        {/* Drag Handle */}
+        <div className="w-12 h-1.5 bg-gray-400/60 dark:bg-gray-500/60 rounded-full mx-auto mb-3" />
+
         {/* Header */}
         <div dir="rtl" className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-sky-700 dark:text-purple-400">
@@ -104,83 +139,78 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
           </button>
         </div>
 
-        {/* محتوا */}
-<div
-  dir="rtl"
-  className="flex-1 overflow-y-auto space-y-4 pb-2 px-1"
->
+        {/* Content */}
+        <div dir="rtl" className="flex-1 overflow-y-auto space-y-4 pb-2 px-1">
+          {/* Main Services */}
+          <div className="flex gap-2 flex-wrap justify-center text-center">
+            {defaultServices.map((service) => (
+              <button
+                key={service.name}
+                onClick={() => handleMainSelect(service)}
+                className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-sm transition-all ${
+                  selectedMain?.name === service.name
+                    ? "bg-sky-600 text-white scale-105 shadow-md"
+                    : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+                }`}
+              >
+                {service.name}
+              </button>
+            ))}
+          </div>
 
-  {/* دسته‌بندی سرویس اصلی */}
-  <div className="flex gap-2 flex-wrap justify-center text-center">
-    {defaultServices.map((service) => (
-      <button
-        key={service.name}
-        onClick={() => handleMainSelect(service)}
-        className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-sm transition-all ${
-          selectedMain?.name === service.name
-            ? "bg-sky-600 text-white scale-105 shadow-md"
-            : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
-        }`}
-      >
-        {service.name}
-      </button>
-    ))}
-  </div>
+          {/* Quantity */}
+          {selectedMain && (
+            <div className="flex items-center gap-4 justify-center mt-2">
+              <button
+                onClick={() => handleQuantityChange(-1)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
+              >
+                -
+              </button>
+              <span className="w-8 text-center text-lg font-semibold">
+                {quantity}
+              </span>
+              <button
+                onClick={() => handleQuantityChange(1)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
+              >
+                +
+              </button>
+            </div>
+          )}
 
-  {/* تعداد */}
-  {selectedMain && (
-    <div className="flex items-center gap-4 justify-center mt-2">
-      <button
-        onClick={() => handleQuantityChange(-1)}
-        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
-      >
-        -
-      </button>
-      <span className="w-8 text-center text-lg font-semibold">
-        {quantity}
-      </span>
-      <button
-        onClick={() => handleQuantityChange(1)}
-        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600"
-      >
-        +
-      </button>
-    </div>
-  )}
+          {/* Card Options */}
+          {cardServices.map((item) => (
+            <div
+              key={item.name}
+              className="rounded-xl p-3 bg-white/50 dark:bg-gray-700/30 shadow-sm"
+            >
+              <span className="block font-semibold text-gray-700 dark:text-gray-200 mb-3 text-sm">
+                {item.name}
+              </span>
 
-  {/* گزینه‌های کارتی */}
-  {cardServices.map((item) => (
-    <div
-      key={item.name}
-      className="rounded-xl p-3 bg-white/50 dark:bg-gray-700/30 shadow-sm"
-    >
-      <span className="block font-semibold text-gray-700 dark:text-gray-200 mb-3 text-sm">
-        {item.name}
-      </span>
+              <div className="flex gap-2 flex-wrap">
+                {item.choices?.map((choice) => (
+                  <button
+                    key={choice.label}
+                    onClick={() =>
+                      handleOptionToggle(item.name, choice.label, choice.price)
+                    }
+                    className={`px-3 py-1 rounded-xl border text-sm flex-shrink-0 transition ${
+                      selectedOptions[item.name]?.includes(choice.label)
+                        ? "bg-sky-600 text-white border-sky-600 shadow-md"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+                    }`}
+                  >
+                    {choice.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {item.choices?.map((choice) => (
-          <button
-            key={choice.value || choice.label}
-            onClick={() =>
-              handleOptionToggle(item.name, choice.label, choice.price)
-            }
-            className={`px-3 py-1 rounded-xl border text-sm flex-shrink-0 transition ${
-              selectedOptions[item.name]?.includes(choice.label)
-                ? "bg-sky-600 text-white border-sky-600 shadow-md"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-            }`}
-          >
-            {choice.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  ))}
-
-</div>
-
-
+        {/* Bottom Bar */}
         <div className="sticky bottom-0 border-t p-4 flex justify-between items-center bg-gradient-to-r from-sky-200 via-sky-100 to-sky-50 dark:bg-gray-800">
           <span className="text-sm text-gray-600 dark:text-gray-300">
             مجموع: {totalPrice.toLocaleString()} تومان

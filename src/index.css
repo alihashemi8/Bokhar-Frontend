@@ -79,3 +79,11 @@
   content: "";
   animation: dots 1s steps(3, end) infinite;
 }
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.25s ease-out;
+}
