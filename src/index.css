@@ -1,13 +1,8 @@
 @import "tailwindcss";
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0%);
-  }
-}
 
+/* ------------------------------
+   Fade-In + SlideUp (General)
+--------------------------------*/
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -19,55 +14,45 @@
   }
 }
 
-.animate-slideUp {
-  animation: slideUp 0.35s ease-out forwards;
-}
-
 .animate-fadeIn {
   animation: fadeIn 0.25s ease-out forwards;
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* انیمیشن ساده slide-up برای استفاده اختیاری */
-@keyframes slideUp {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+/* ------------------------------
+   Slide-Up Base Animation
+--------------------------------*/
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
+
 .animate-slide-up {
-  animation: slideUp 280ms cubic-bezier(.2,.9,.2,1) both;
+  animation: slide-up 0.35s ease-out forwards;
 }
 
-/* برخی برداشت‌های ظریف برای glass feel (اختیاری) */
-:root {
-  --glass-bg: rgba(255,255,255,0.06);
+/* ------------------------------
+   iOS Bottom Sheet Animation
+--------------------------------*/
+@keyframes slide-up-ios {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
-@theme {
---color-bouquet-50: #f9f6f8;
---color-bouquet-100: #f5eef3;
---color-bouquet-200: #ecdee8;
---color-bouquet-300: #ddc4d5;
---color-bouquet-400: #c79fb9;
---color-bouquet-500: #af7a9b;
---color-bouquet-600: #9d6585;
---color-bouquet-700: #84526d;
---color-bouquet-800: #6f455b;
---color-bouquet-900: #5e3d4e;
---color-bouquet-950: #37202c;
---color-deepgreen-50:  #F2F7F6;
---color-deepgreen-100: #E4EFEC;
---color-deepgreen-200: #C6DED8;
---color-deepgreen-300: #9AC5BB;
---color-deepgreen-400: #6EA99C;
---color-deepgreen-500: #4F877B;
---color-deepgreen-600: #35655A;
---color-deepgreen-700: #274D44;
---color-deepgreen-800: #1F3D37; 
---color-deepgreen-900: #0F2622; 
---color-deepgreen-950: #091412;
 
-
+.animate-slide-up-ios {
+  animation: slide-up-ios 0.28s cubic-bezier(.32,.72,.21,1) forwards;
 }
+
+/* ------------------------------
+   Loading Dots Animation
+--------------------------------*/
 @keyframes dots {
   0% { content: ""; }
   33% { content: "."; }
@@ -79,11 +64,39 @@
   content: "";
   animation: dots 1s steps(3, end) infinite;
 }
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+
+/* ------------------------------
+   Theme Colors (Tailwind v4)
+--------------------------------*/
+:root {
+  --glass-bg: rgba(255,255,255,0.06);
+
+  --color-bouquet-50: #f9f6f8;
+  --color-bouquet-100: #f5eef3;
+  --color-bouquet-200: #ecdee8;
+  --color-bouquet-300: #ddc4d5;
+  --color-bouquet-400: #c79fb9;
+  --color-bouquet-500: #af7a9b;
+  --color-bouquet-600: #9d6585;
+  --color-bouquet-700: #84526d;
+  --color-bouquet-800: #6f455b;
+  --color-bouquet-900: #5e3d4e;
+  --color-bouquet-950: #37202c;
+
+  --color-deepgreen-50:  #F2F7F6;
+  --color-deepgreen-100: #E4EFEC;
+  --color-deepgreen-200: #C6DED8;
+  --color-deepgreen-300: #9AC5BB;
+  --color-deepgreen-400: #6EA99C;
+  --color-deepgreen-500: #4F877B;
+  --color-deepgreen-600: #35655A;
+  --color-deepgreen-700: #274D44;
+  --color-deepgreen-800: #1F3D37;
+  --color-deepgreen-900: #0F2622;
+  --color-deepgreen-950: #091412;
 }
 
-.animate-slide-up {
-  animation: slide-up 0.25s ease-out;
-}
+/* ------------------------------
+   Dark Variant
+--------------------------------*/
+@custom-variant dark (&:where(.dark, .dark *));
