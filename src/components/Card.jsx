@@ -46,14 +46,12 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
           {title}
         </h3>
 
-        <p className="text-sm sm:text-base md:text-lg font-semibold text-center text-amber-500 mb-2 sm:mb-3">
-          {basePrice.toLocaleString()} تومان
-        </p>
+
 
         <button
           onClick={() => setOpen(true)}
           className="
-            w-full py-1.5 sm:py-2
+            w-full py-1.5 sm:py-2 mt-4
             rounded-lg font-medium
             text-sm sm:text-base
             bg-sky-600 text-white
