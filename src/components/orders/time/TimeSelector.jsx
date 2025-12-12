@@ -63,7 +63,7 @@ export default function TimeSelector({
                 <div
                   key={idx}
                   onClick={() => setSelectedDate(day)}
-                  className={`border rounded-2xl p-3 my-2  text-center cursor-pointer transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-auto
+                  className={`border rounded-2xl p-3 my-4  text-center cursor-pointer transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-0.5
               ${
                 isSelected
                   ? "bg-pink-50 border-pink-600 shadow-md shadow-pink-900 scale-105"
