@@ -76,7 +76,7 @@ export default function ModalPicker({
 
   return (
     <div dir="rtl" className="fixed inset-0 z-50 bg-black/40 flex items-end" onClick={onClose}>
-      <div className="bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 w-full rounded-t-3xl p-4 h-[85%] overflow-y-auto animate-slide-up-ios" onClick={e => e.stopPropagation()}>
+      <div className="bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 w-full rounded-t-3xl p-4 max-h-[87vh] overflow-y-auto animate-slide-up-ios" onClick={e => e.stopPropagation()}>
         {/* header */}
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold text-pink-500">{title}</h3>
