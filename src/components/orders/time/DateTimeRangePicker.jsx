@@ -1,227 +1,140 @@
-
 import React, { useState, useEffect } from "react";
-import TimeSelector from "./TimeSelector";
-import ModalPicker from "./ModalPicker";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import TimeSelector from "./TimeSelector";
+import ModalPicker from "./ModalPicker";
 
 export default function DateTimeRangePicker({ value, onChange, onComplete, onGoLocation }) {
-  const [pickupDate, setPickupDate] = useState(null);
-  const [pickupTime, setPickupTime] = useState(null);
   const [deliveryDate, setDeliveryDate] = useState(null);
   const [deliveryTime, setDeliveryTime] = useState(null);
+  const [pickupDate, setPickupDate] = useState(null);
+  const [pickupTime, setPickupTime] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
 
-  // مقداردهی اولیه فقط یک‌بار هنگام mount
+  // مقداردهی اولیه
   useEffect(() => {
     if (!value) return;
     try {
-      if (value.pickup?.date)
-        setPickupDate(
-          new DateObject({
-            date: value.pickup.date,
-            calendar: persian,
-            locale: persian_fa,
-          })
-        );
       if (value.delivery?.date)
-        setDeliveryDate(
-          new DateObject({
-            date: value.delivery.date,
-            calendar: persian,
-            locale: persian_fa,
-          })
-        );
-      if (value.pickup?.time) setPickupTime(value.pickup.time);
+        setDeliveryDate(new DateObject({ date: value.delivery.date, calendar: persian, locale: persian_fa }));
+      if (value.pickup?.date)
+        setPickupDate(new DateObject({ date: value.pickup.date, calendar: persian, locale: persian_fa }));
       if (value.delivery?.time) setDeliveryTime(value.delivery.time);
+      if (value.pickup?.time) setPickupTime(value.pickup.time);
     } catch (e) {
-      console.warn("❌ خطا در مقداردهی اولیه تاریخ:", e);
+      console.warn("❌ خطا در مقداردهی اولیه:", e);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // فقط یک‌بار اجرا شود
+  }, [value]);
 
-  // تابع امن برای ارسال به والد
-  const triggerOnChange = (newState = {}) => {
+  // حداقل تاریخ پیک‌آپ = تحویل + ۲ روز
+  const pickupMinDate = deliveryDate ? new DateObject(deliveryDate).add(2, "days") : null;
+
+  // sync با parent
+  const triggerOnChange = (state = {}) => {
     if (!onChange) return;
-
-    const updated = {
-      pickup: {
-        date: newState.pickupDate !== undefined ? newState.pickupDate : pickupDate,
-        time: newState.pickupTime !== undefined ? newState.pickupTime : pickupTime,
-      },
-      delivery: {
-        date: newState.deliveryDate !== undefined ? newState.deliveryDate : deliveryDate,
-        time: newState.deliveryTime !== undefined ? newState.deliveryTime : deliveryTime,
-      },
-    };
-
+    const dDate = state.deliveryDate ?? deliveryDate;
+    const pDate = state.pickupDate ?? pickupDate;
     onChange({
-      pickup: {
-        date: updated.pickup.date
-          ? new DateObject(updated.pickup.date).format("YYYY-MM-DD")
-          : null,
-        time: updated.pickup.time || null,
-      },
       delivery: {
-        date: updated.delivery.date
-          ? new DateObject(updated.delivery.date).format("YYYY-MM-DD")
-          : null,
-        time: updated.delivery.time || null,
+        date: dDate ? new DateObject(dDate).format("YYYY-MM-DD") : null,
+        time: state.deliveryTime ?? deliveryTime ?? null,
+      },
+      pickup: {
+        date: pDate ? new DateObject(pDate).format("YYYY-MM-DD") : null,
+        time: state.pickupTime ?? pickupTime ?? null,
       },
     });
   };
 
-  // هر بار که state تغییر کرد، onChange مستقیم فراخوانی می‌شود
-  const handlePickupDateChange = (date) => {
-    setPickupDate(date);
-    triggerOnChange({ pickupDate: date });
-  };
-  const handlePickupTimeChange = (time) => {
-    setPickupTime(time);
-    triggerOnChange({ pickupTime: time });
-  };
+  // handlers
   const handleDeliveryDateChange = (date) => {
     setDeliveryDate(date);
     triggerOnChange({ deliveryDate: date });
-  };
-  const handleDeliveryTimeChange = (time) => {
-    setDeliveryTime(time);
-    triggerOnChange({ deliveryTime: time });
-  };
 
-  // کنترل مودال‌ها
+    // پاک کردن پیک‌آپ اگر قبل از minDate باشد
+    if (pickupDate) {
+      const min = new DateObject(date).add(2, "days");
+      if (pickupDate.toJulianDay() < min.toJulianDay()) {
+        setPickupDate(null);
+        setPickupTime(null);
+      }
+    }
+  };
+  const handleDeliveryTimeChange = (time) => { setDeliveryTime(time); triggerOnChange({ deliveryTime: time }); };
+  const handlePickupDateChange = (date) => { setPickupDate(date); triggerOnChange({ pickupDate: date }); };
+  const handlePickupTimeChange = (time) => { setPickupTime(time); triggerOnChange({ pickupTime: time }); };
   const handleConfirm = (type) => {
-    if (type === "delivery") {
-      setActiveModal("pickup");
-    } else {
+    if (type === "delivery") setActiveModal("pickup");
+    else {
       setActiveModal(null);
-      if (onComplete) onComplete();
+      onComplete?.();
     }
   };
 
-  // تابع امن برای فرمت تاریخ
-  const formatSafe = (date) => {
-    if (!date) return "";
-    try {
-      const d =
-        date instanceof DateObject
-          ? date
-          : new DateObject({ date, calendar: persian, locale: persian_fa });
-      return d.format("dddd DD MMMM");
-    } catch {
-      return "";
-    }
-  };
+  const formatSafe = (date) => { if (!date) return ""; try { return date.format("dddd DD MMMM"); } catch { return ""; } };
 
   return (
-    <div
-      dir="rtl"
-      className="w-full max-w-4xl mx-auto bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-2xl shadow-md shadow-pink-300 border border-pink-200 p-6 "
-    >
-      <h2 className="text-xl font-semibold mb-4 text-center text-gray-800">
-        انتخاب بازه‌های زمانی
-      </h2>
+    <div dir="rtl" className="w-full max-w-4xl mx-auto bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-2xl p-6 shadow-md border border-pink-200">
+      <h2 className="text-xl font-semibold text-center mb-6">انتخاب بازه زمانی</h2>
 
       {/* دسکتاپ */}
       <div className="hidden md:block space-y-10">
         <section>
-          <h3 className="text-md font-medium text-gray-700 mb-2">
-            📦 تحویل دادن به مشتری
-          </h3>
-          <TimeSelector
-            selectedDate={deliveryDate}
-            setSelectedDate={handleDeliveryDateChange}
-            selectedTime={deliveryTime}
-            setSelectedTime={handleDeliveryTimeChange}
-          />
+          <h3 className="mb-2">📦 تحویل دادن</h3>
+          <TimeSelector selectedDate={deliveryDate} setSelectedDate={handleDeliveryDateChange} selectedTime={deliveryTime} setSelectedTime={handleDeliveryTimeChange} />
         </section>
 
         <section>
-          <h3 className="text-md font-medium text-gray-700 mb-2">
-            🕒 تحویل گرفتن از فروشنده
-          </h3>
-          <TimeSelector
-            selectedDate={pickupDate}
-            setSelectedDate={handlePickupDateChange}
-            selectedTime={pickupTime}
-            setSelectedTime={handlePickupTimeChange}
-          />
+          <h3 className="mb-2">🕒 تحویل گرفتن</h3>
+          <TimeSelector selectedDate={pickupDate} setSelectedDate={handlePickupDateChange} selectedTime={pickupTime} setSelectedTime={handlePickupTimeChange} minDate={pickupMinDate} />
         </section>
 
-        {/* دکمه انتخاب موقعیت مکانی - فقط دسکتاپ */}
-        <div className="hidden md:flex justify-center mt-8">
-          <button
-            disabled={
-              !(deliveryDate && deliveryTime && pickupDate && pickupTime)
-            }
-            className={`px-6 py-3 rounded-xl font-semibold transition
-      ${
-        deliveryDate &&
-        deliveryTime &&
-        pickupDate &&
-        pickupTime
-          ? "bg-sky-200 text-gray-800 cursor-pointer border border-pink-300 shadow-md shadow-pink-300  hover:bg-sky-300"
-          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-      }
-    `}
-            onClick={() => {
-              if (deliveryDate && deliveryTime && pickupDate && pickupTime) {
-                onGoLocation && onGoLocation();
-              }
-            }}
-          >
-            انتخاب موقعیت مکانی
-          </button>
-        </div>
-      </div>
-
-      {/* موبایل */}
-      <div className="md:hidden flex flex-col gap-2 mt-2">
         <button
-          onClick={() => setActiveModal("delivery")}
-          className="block bg-pink-500 text-white px-5 py-2 rounded-xl mx-auto"
+          disabled={!(deliveryDate && deliveryTime && pickupDate && pickupTime)}
+          onClick={() => onGoLocation?.()}
+          className={`mx-auto block px-6 py-3 rounded-xl mt-6 ${deliveryDate && deliveryTime && pickupDate && pickupTime ? "bg-pink-500 text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}
         >
-          انتخاب زمان تحویل
+          انتخاب موقعیت مکانی
         </button>
       </div>
 
-      {/* مودال انتخاب */}
-      {activeModal && (
+      {/* موبایل */}
+      <div className="md:hidden">
+        <button onClick={() => setActiveModal("delivery")} className="w-full bg-pink-500 text-white py-3 rounded-xl">
+          انتخاب زمان تحویل و دریافت
+        </button>
+      </div>
+
+      {activeModal === "delivery" && (
         <ModalPicker
-          type={activeModal}
+          type="delivery"
           onClose={() => setActiveModal(null)}
           onConfirm={handleConfirm}
-          selectedDate={activeModal === "pickup" ? pickupDate : deliveryDate}
-          setSelectedDate={
-            activeModal === "pickup" ? handlePickupDateChange : handleDeliveryDateChange
-          }
-          selectedTime={activeModal === "pickup" ? pickupTime : deliveryTime}
-          setSelectedTime={
-            activeModal === "pickup" ? handlePickupTimeChange : handleDeliveryTimeChange
-          }
+          selectedDate={deliveryDate}
+          setSelectedDate={handleDeliveryDateChange}
+          selectedTime={deliveryTime}
+          setSelectedTime={handleDeliveryTimeChange}
         />
       )}
 
-      {/* خلاصه انتخاب */}
-      {(pickupDate || deliveryDate) && (
-        <div className="mt-5 text-center text-gray-700 space-y-2">
-          {deliveryDate && deliveryTime && (
-            <p>
-              📦 تحویل دادن: {" "}
-              <span className="text-pink-500 font-semibold">{formatSafe(deliveryDate)}</span>{" "}
-              ساعت {" "}
-              <span className="text-pink-500  font-semibold">{deliveryTime}</span>
-            </p>
-          )}
-          {pickupDate && pickupTime && (
-            <p>
-              🕒 تحویل گرفتن: {" "}
-              <span className="text-pink-500 font-semibold">{formatSafe(pickupDate)}</span>{" "}
-              ساعت {" "}
-              <span className="text-pink-500 font-semibold">{pickupTime}</span>
-            </p>
-          )}
+      {activeModal === "pickup" && (
+        <ModalPicker
+          type="pickup"
+          onClose={() => setActiveModal(null)}
+          onConfirm={handleConfirm}
+          selectedDate={pickupDate}
+          setSelectedDate={handlePickupDateChange}
+          selectedTime={pickupTime}
+          setSelectedTime={handlePickupTimeChange}
+          minDate={pickupMinDate}
+        />
+      )}
+
+      {(deliveryDate || pickupDate) && (
+        <div className="mt-6 text-center space-y-2 text-sm">
+          {deliveryDate && deliveryTime && <p>📦 {formatSafe(deliveryDate)} – {deliveryTime}</p>}
+          {pickupDate && pickupTime && <p>🕒 {formatSafe(pickupDate)} – {pickupTime}</p>}
         </div>
       )}
     </div>

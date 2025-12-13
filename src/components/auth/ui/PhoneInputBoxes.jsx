@@ -29,7 +29,7 @@ export default function PhoneInputBoxes({ value, onChange }) {
   };
 
   return (
-    <div dir="ltr" className="flex justify-center items-center gap-1 max-w-xs mx-auto">
+    <div dir="ltr" className="flex justify-center items-center gap-0.5 max-w-xs mx-auto">
 
       <div className="flex gap-1">
         <div className="w-6 h-10 border-b-2 border-gray-400 flex items-center justify-center text-gray-600 font-semibold">

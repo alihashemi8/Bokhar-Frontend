@@ -8,38 +8,54 @@ export default function TimeSelector({
   setSelectedDate,
   selectedTime,
   setSelectedTime,
+  minDate,
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // شبیه‌سازی لودینگ برای UX بهتر
+  const toDateObj = (date) =>
+    date instanceof DateObject
+      ? date
+      : new DateObject({ date, calendar: persian, locale: persian_fa });
+
+  const baseDate = minDate
+    ? toDateObj(minDate)
+    : new DateObject({ calendar: persian, locale: persian_fa });
+
+  useEffect(() => {
+    setWeekOffset(0);
+  }, [minDate]);
+
   useEffect(() => {
     setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 700);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setIsLoading(false), 200);
+    return () => clearTimeout(t);
   }, [weekOffset]);
 
   const days = Array.from({ length: 7 }, (_, i) =>
-    new DateObject({ calendar: persian, locale: persian_fa }).add(
-      weekOffset * 7 + i,
-      "days"
-    )
+    new DateObject(baseDate).add(weekOffset * 7 + i, "days")
   );
+
+  const minDateObj = minDate ? toDateObj(minDate) : null;
 
   const timeSlots = ["۹ تا ۱۳", "۱۳ تا ۱۷", "۱۷ تا ۲۳"];
 
   return (
     <div>
-      {/* ناوبری هفته */}
+      {/* navigator */}
       <div className="flex justify-between items-center mb-3">
         <button
+          disabled={weekOffset === 0}
           onClick={() => setWeekOffset((p) => Math.max(0, p - 1))}
           className="text-pink-500 disabled:text-gray-300"
-          disabled={weekOffset <= 0}
         >
           ← هفته قبل
         </button>
-        <span className="font-medium text-gray-700">هفته {weekOffset + 1}</span>
+
+        <span className="font-medium text-gray-700">
+          هفته {weekOffset + 1}
+        </span>
+
         <button
           onClick={() => setWeekOffset((p) => p + 1)}
           className="text-pink-500"
@@ -48,49 +64,62 @@ export default function TimeSelector({
         </button>
       </div>
 
-      <div className="md:grid md:grid-cols-7 gap-1 flex overflow-x-auto scrollbar-hide">
+      <div className="flex md:grid md:grid-cols-7 gap-1 overflow-x-auto scrollbar-hide">
         {isLoading
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 w-20 bg-pink-100/50 animate-pulse rounded-xl flex-shrink-0 "
+                className="h-24 w-20 bg-pink-100/60 animate-pulse rounded-xl flex-shrink-0"
               />
             ))
           : days.map((day, idx) => {
+              const d = toDateObj(day);
+
+              const isDisabled =
+                minDateObj &&
+                d.toJulianDay() < minDateObj.toJulianDay();
+
               const isSelected =
-                selectedDate?.format("YYYY/MM/DD") === day.format("YYYY/MM/DD");
+                selectedDate &&
+                toDateObj(selectedDate).format("YYYY/MM/DD") ===
+                  d.format("YYYY/MM/DD");
+
               return (
                 <div
                   key={idx}
-                  onClick={() => setSelectedDate(day)}
-                  className={`border rounded-2xl p-3 my-4  text-center cursor-pointer transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-0.5
-              ${
-                isSelected
-                  ? "bg-pink-50 border-pink-600 shadow-md shadow-pink-900 scale-105"
-                  : " border-pink-400 hover:bg-pink-50 shadow-md shadow-pink-400"
-              }`}
+                  onClick={() => !isDisabled && setSelectedDate(d)}
+                  className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition ${
+                    isDisabled
+                      ? "opacity-40 cursor-not-allowed"
+                      : isSelected
+                      ? "bg-pink-50 border-pink-600 shadow-md scale-105"
+                      : "border-pink-400 hover:bg-pink-50 cursor-pointer"
+                  }`}
                 >
-                  <p className="text-sm font-medium text-pink-500">
-                    {day.weekDay.name}
+                  <p className="text-sm text-pink-500">
+                    {d.weekDay.name}
                   </p>
-                  <p className="text-2xl font-bold text-gray-800">{day.day}</p>
-                  <p className="text-xs text-gray-500">{day.month.name}</p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {d.day}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {d.month.name}
+                  </p>
                 </div>
               );
             })}
       </div>
 
-      {/* بازه‌های زمانی */}
       {selectedDate && (
-<div className="mt-5 flex justify-center gap-3 flex-wrap animate-fadeInUp">
-          {timeSlots.map((slot, idx) => (
+        <div className="mt-4 flex justify-center gap-3 flex-wrap">
+          {timeSlots.map((slot) => (
             <button
-              key={idx}
+              key={slot}
               onClick={() => setSelectedTime(slot)}
-              className={`px-5 py-3 rounded-xl text-sm border transition ${
+              className={`px-5 py-3 rounded-xl border transition ${
                 selectedTime === slot
-                  ? "bg-pink-500/80 text-white border-pink-600 shadow-md shadow-pink-400 scale-105"
-                  : "bg-sky-50 border-pink-400 text-gray-700 hover:bg-pink-300 shadow-xl shadow-pink-100 "
+                  ? "bg-pink-500 text-white border-pink-600 scale-105"
+                  : "bg-sky-50 border-pink-400 hover:bg-pink-100"
               }`}
             >
               {slot}

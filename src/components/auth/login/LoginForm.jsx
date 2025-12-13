@@ -3,6 +3,7 @@ import PhoneInputBoxes from "../ui/PhoneInputBoxes";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import OtpInput from "../ui/OtpInput"; // کامپوننت وارد کردن OTP
+import { PhoneIcon } from "@heroicons/react/24/solid";
 
 export default function LoginForm({ onSwitchRegister, onClose }) {
   const [mode, setMode] = useState("login"); // login | forgot-phone | forgot-otp | forgot-newpass
@@ -103,47 +104,106 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
   // ==================== رندر فرم‌ها ====================
   return (
     <div className="max-w-md mx-auto p-6" dir="rtl">
- {mode === "login" && (
+      {mode === "login" && (
+        <>
+          <h2 className="text-2xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100">
+            ورود به حساب کاربری
+          </h2>
+
+      <div className="flex items-center gap-2 mb-3">
+        <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+        <span className="text-gray-600 dark:text-gray-300 text-sm">
+          شماره موبایل خود را وارد کنید
+        </span>
+      </div>
+          <PhoneInputBoxes
+            value={phone}
+            onChange={(val) => setPhone(val.replace(/\D/g, ""))}
+          />
+
+          <div className="mt-8">رمز عبور خود را وارد کنید:</div>
+
+          <div className="relative">
+            <input
+              type={showPass ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border-b p-1 pr-2 bg-transparent text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:border-blue-600 outline-none transition"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass(!showPass)}
+              className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-500"
+            >
+              {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
+          {/* ⭐ دکمه ورود با شرط معتبر بودن شماره و رمز عبور */}
+          <button
+            onClick={handleLogin}
+            disabled={
+              loading ||
+              !/^09\d{9}$/.test(phone) ||
+              password.trim().length === 0
+            }
+            className={`
+        w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition shadow-lg
+        ${
+          loading || !/^09\d{9}$/.test(phone) || password.trim().length === 0
+            ? "bg-blue-300 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        }
+      `}
+          >
+            {loading && (
+              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            )}
+            {loading ? "در حال ورود..." : "ورود"}
+          </button>
+
+          <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
+            <button
+              onClick={() => setMode("forgot-phone")}
+              className="text-blue-600 hover:underline"
+            >
+              ورود با رمز یک بار مصرف
+            </button>
+
+            <button
+              onClick={onSwitchRegister}
+              className="text-blue-600 hover:underline"
+            >
+              ثبت‌نام
+            </button>
+          </div>
+        </>
+      )}
+
+{mode === "forgot-phone" && (
   <>
-    <h2 className="text-2xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100">
-      ورود به حساب کاربری
+    <h2 className="text-xl font-bold mb-4 text-center">
+      فراموشی رمز عبور
     </h2>
 
-    <p className="mb-1">شماره موبایل خود را وارد کنید:</p>
+    <div className="flex items-center gap-2 mb-3 mt-8">
+      <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+      <span className="text-gray-600 dark:text-gray-300 text-sm">
+        شماره موبایل خود را وارد کنید
+      </span>
+    </div>
 
     <PhoneInputBoxes
       value={phone}
       onChange={(val) => setPhone(val.replace(/\D/g, ""))}
     />
 
-    <div className="mt-8">رمز عبور خود را وارد کنید:</div>
-
-    <div className="relative">
-      <input
-        type={showPass ? "text" : "password"}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full border-b p-1 pr-2 bg-transparent text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:border-blue-600 outline-none transition"
-      />
-      <button
-        type="button"
-        onClick={() => setShowPass(!showPass)}
-        className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-500"
-      >
-        {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
-      </button>
-    </div>
-
-    {/* ⭐ دکمه ورود با شرط معتبر بودن شماره و رمز عبور */}
     <button
-      onClick={handleLogin}
-      disabled={
-        loading || !/^09\d{9}$/.test(phone) || password.trim().length === 0
-      }
-      className={`
-        w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition shadow-lg
+      onClick={handleSendOtp}
+      disabled={loading || !/^09\d{9}$/.test(phone)}
+      className={`w-full mt-8 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition
         ${
-          loading || !/^09\d{9}$/.test(phone) || password.trim().length === 0
+          loading || !/^09\d{9}$/.test(phone)
             ? "bg-blue-300 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
         }
@@ -152,55 +212,18 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
       {loading && (
         <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
       )}
-      {loading ? "در حال ورود..." : "ورود"}
+      {loading ? "در حال ارسال..." : "ارسال کد یک بار مصرف"}
     </button>
 
-    <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
-      <button
-        onClick={() => setMode("forgot-phone")}
-        className="text-blue-600 hover:underline"
-      >
-        ورود با رمز یک بار مصرف
-      </button>
-
-      <button onClick={onSwitchRegister} className="text-blue-600 hover:underline">
-        ثبت‌نام
-      </button>
-    </div>
+    <button
+      onClick={() => setMode("login")}
+      className="mt-6 w-full text-center text-gray-600 hover:underline"
+    >
+      بازگشت
+    </button>
   </>
 )}
 
-      {mode === "forgot-phone" && (
-        <>
-          <h2 className="text-xl font-bold mb-4 text-center">
-            فراموشی رمز عبور
-          </h2>
-          <PhoneInputBoxes
-            value={phone}
-            onChange={(val) => setPhone(val.replace(/\D/g, ""))}
-          />
-          <p className="text-gray-500 text-sm mt-2 mb-4 text-center">
-            شماره موبایل خود را وارد کنید تا کد تایید ارسال شود
-          </p>
-          <button
-            onClick={handleSendOtp}
-            disabled={loading}
-            className={`w-full py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 ${
-              loading
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            ارسال کد یک بار مصرف 
-          </button>
-          <button
-            onClick={() => setMode("login")}
-            className="mt-6 w-full text-center  text-gray-600 hover:underline"
-          >
-            بازگشت
-          </button>
-        </>
-      )}
 
       {mode === "forgot-otp" && (
         <>
