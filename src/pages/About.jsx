@@ -74,16 +74,13 @@ export default function PickupInfo() {
 
   return (
     <div dir="rtl" className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* هدر */}
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
-        تحویل حضوری
-      </h1>
-      <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base">
+
+      <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base md:mt-16">
         شما می‌توانید سفارش خود را مستقیماً از فروشگاه دریافت کنید. آدرس و موقعیت مغازه را مشاهده کنید و ادامه خرید را انجام دهید.
       </p>
 
 {/* کارت فروشگاه */}
-<div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative z-0 mt-20 sm:mt-24">
+<div className="bg-white dark:bg-gray-800 mb-20 md:mb-0 shadow-lg rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative z-0">
   {/* عکس مغازه */}
   <img
     src={store.image}
@@ -139,14 +136,6 @@ export default function PickupInfo() {
   </div>
 </div>
 
-
-      {/* دکمه ادامه خرید */}
-      <button
-        onClick={() => navigate("/order")}
-        className="w-full mb-20 md:mb-0 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-full font-semibold text-lg transition shadow-lg"
-      >
-        ادامه فرایند خرید
-      </button>
     </div>
   );
 }

@@ -17,7 +17,7 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
       dir="rtl"
       className="
         bg-sky-100/40 dark:bg-gray-800
-        rounded-2xl shadow-lg hover:shadow-xl shadow-pink-200
+        rounded-2xl shadow-lg hover:shadow-xl shadow-pink-300
         border border-sky-100
         transition-transform hover:scale-[1.02]
         flex flex-col
