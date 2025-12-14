@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { X } from "lucide-react";
+import { useCart } from "../context/CartContext";
 
-export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
+export default function ServiceModal({ onClose, cardOptions }) {
+  const { addToCart } = useCart();
+
   const [isMobile, setIsMobile] = useState(false);
   const [selectedMain, setSelectedMain] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -18,7 +21,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
   const cardServices =
     cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
 
-  // Detect Mobile
+  /* ---------------- Detect Mobile ---------------- */
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 768);
     checkScreen();
@@ -26,7 +29,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // 🔒 Disable scroll when modal open
+  /* ---------------- Lock Scroll ---------------- */
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -34,7 +37,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     };
   }, []);
 
-  // iOS Style Drag Bottom Sheet
+  /* ---------------- iOS Drag ---------------- */
   const handleDragStart = (e) => {
     if (!isMobile) return;
 
@@ -56,6 +59,7 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
     window.addEventListener("touchend", end);
   };
 
+  /* ---------------- Handlers ---------------- */
   const handleMainSelect = (service) => {
     setSelectedMain(service);
     setQuantity(1);
@@ -68,18 +72,17 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
   const handleOptionToggle = (groupName, value, price = 0) => {
     setSelectedOptions((prev) => {
       const prevSet = prev[groupName] || [];
-      if (prevSet.includes(value)) {
-        return { ...prev, [groupName]: prevSet.filter((v) => v !== value) };
-      } else {
-        return {
-          ...prev,
-          [groupName]: [...prevSet, value],
-          [`${groupName}_price_${value}`]: price,
-        };
-      }
+      return prevSet.includes(value)
+        ? { ...prev, [groupName]: prevSet.filter((v) => v !== value) }
+        : {
+            ...prev,
+            [groupName]: [...prevSet, value],
+            [`${groupName}_price_${value}`]: price,
+          };
     });
   };
 
+  /* ---------------- Price ---------------- */
   const totalPrice =
     (selectedMain?.price || 0) * quantity +
     Object.entries(selectedOptions).reduce((sum, [key, value]) => {
@@ -93,28 +96,46 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
       );
     }, 0);
 
+  /* ---------------- Add To Cart ---------------- */
   const handleAdd = () => {
     if (!selectedMain) return;
 
-    const items = [
-      { name: selectedMain.name, qty: quantity, price: selectedMain.price },
-      ...Object.entries(selectedOptions).flatMap(([key, vals]) => {
-        if (key.includes("_price_")) return [];
-        return vals.map((val) => ({
-          name: `${key}: ${val}`,
-          qty: 1,
-          price: selectedOptions[`${key}_price_${val}`] || 0,
-        }));
-      }),
-    ];
+    const options = {};
+    Object.entries(selectedOptions).forEach(([key, val]) => {
+      if (!key.includes("_price_")) options[key] = val;
+    });
 
-    onAddToCart(items);
+    // سرویس اصلی
+    addToCart({
+      id: selectedMain.name,
+      name: selectedMain.name,
+      price: selectedMain.price,
+      qty: quantity,
+      options,
+    });
+
+    // آپشن‌ها (هرکدوم آیتم جدا)
+    Object.entries(selectedOptions).forEach(([key, vals]) => {
+      if (key.includes("_price_")) return;
+
+      vals.forEach((val) => {
+        addToCart({
+          id: `${key}-${val}`,
+          name: `${key}: ${val}`,
+          price: selectedOptions[`${key}_price_${val}`] || 0,
+          qty: 1,
+          options: {},
+        });
+      });
+    });
+
     setSelectedMain(null);
     setQuantity(1);
     setSelectedOptions({});
     onClose();
   };
 
+  /* ---------------- Render ---------------- */
   return ReactDOM.createPortal(
     <div
       className="fixed inset-0 bg-black/40 z-[9999] flex justify-center md:items-center backdrop-blur-[1px]"
@@ -144,29 +165,27 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
 
         {/* Header */}
         <div dir="rtl" className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-            خدمات قابل انتخاب
-          </h2>
+          <h2 className="text-lg font-semibold">خدمات قابل انتخاب</h2>
           <button onClick={onClose}>
-            <X className="text-gray-500 dark:text-gray-300" />
+            <X />
           </button>
         </div>
 
         {/* Content */}
         <div
           dir="rtl"
-          className="flex-1 overflow-y-auto space-y-4 pb-2 px-1 overscroll-none"
+          className="flex-1 overflow-y-auto space-y-4 pb-2 px-1"
         >
           {/* Main Services */}
-          <div className="flex gap-2 flex-wrap justify-center text-center">
+          <div className="flex gap-2 flex-wrap justify-center">
             {defaultServices.map((service) => (
               <button
                 key={service.name}
                 onClick={() => handleMainSelect(service)}
-                className={`px-4 py-2 rounded-2xl text-sm font-medium transition-all ${
+                className={`px-4 py-2 rounded-2xl text-sm font-medium ${
                   selectedMain?.name === service.name
-                    ? "bg-sky-600 text-white shadow-md scale-105"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"
+                    ? "bg-sky-600 text-white"
+                    : "bg-gray-100 dark:bg-gray-700"
                 }`}
               >
                 {service.name}
@@ -174,48 +193,51 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
             ))}
           </div>
 
-          {/* Quantity Selector */}
+          {/* Quantity */}
           {selectedMain && (
-            <div className="flex items-center gap-4 justify-center mt-2">
+            <div className="flex items-center gap-4 justify-center">
               <button
                 onClick={() => handleQuantityChange(-1)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-lg"
+                className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
               >
                 -
               </button>
-              <span className="w-10 text-center text-lg font-semibold">
+              <span className="w-10 text-center font-semibold">
                 {quantity}
               </span>
               <button
                 onClick={() => handleQuantityChange(1)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 text-lg"
+                className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
               >
                 +
               </button>
             </div>
           )}
 
-          {/* Extra Options */}
+          {/* Options */}
           {cardServices.map((item) => (
             <div
               key={item.name}
-              className="rounded-xl p-3 bg-white/60 dark:bg-gray-700/40 shadow-sm border border-gray-200/50 dark:border-gray-600/40"
+              className="rounded-xl p-3 bg-white/60 dark:bg-gray-700/40 border"
             >
-              <span className="block font-semibold text-gray-800 dark:text-gray-200 mb-3 text-sm">
+              <span className="block font-semibold mb-2 text-sm">
                 {item.name}
               </span>
-
               <div className="flex gap-2 flex-wrap">
                 {item.choices?.map((choice) => (
                   <button
                     key={choice.label}
                     onClick={() =>
-                      handleOptionToggle(item.name, choice.label, choice.price)
+                      handleOptionToggle(
+                        item.name,
+                        choice.label,
+                        choice.price
+                      )
                     }
-                    className={`px-3 py-1.5 rounded-xl text-sm transition ${
+                    className={`px-3 py-1.5 rounded-xl text-sm ${
                       selectedOptions[item.name]?.includes(choice.label)
-                        ? "bg-sky-600 text-white shadow-md"
-                        : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600"
+                        ? "bg-sky-600 text-white"
+                        : "bg-gray-100 dark:bg-gray-700"
                     }`}
                   >
                     {choice.label}
@@ -226,15 +248,15 @@ export default function ServiceModal({ onClose, onAddToCart, cardOptions }) {
           ))}
         </div>
 
-        {/* Bottom Bar */}
-        <div className="sticky bottom-0 border-t p-4 flex justify-between items-center bg-gradient-to-r from-sky-200 via-sky-100 to-sky-50 dark:bg-gray-800">
-          <span className="text-sm text-gray-700 dark:text-gray-300">
+        {/* Bottom */}
+        <div className="border-t p-4 flex justify-between items-center">
+          <span className="text-sm">
             مجموع: {totalPrice.toLocaleString()} تومان
           </span>
           <button
             onClick={handleAdd}
-            className="px-4 py-2 rounded-xl bg-sky-600 text-white font-medium hover:bg-sky-700 transition disabled:opacity-40"
             disabled={!selectedMain}
+            className="px-4 py-2 rounded-xl bg-sky-600 text-white disabled:opacity-40"
           >
             افزودن به سبد
           </button>

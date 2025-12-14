@@ -139,10 +139,20 @@ export default function ModalPicker({
         )}
 
         {/* confirm */}
-        <button disabled={!selectedTime} onClick={() => onConfirm(type)}
-          className={`block mx-auto mt-6 px-6 py-2 rounded-xl ${selectedTime ? "bg-pink-500 text-white" : "bg-gray-300 text-gray-500 cursor-not-allowed"}`}>
-          تایید
-        </button>
+<button
+  disabled={!selectedTime}
+  onClick={() => onConfirm(type)}
+  className={`block mx-auto mt-6 px-6 py-2 rounded-xl ${
+    selectedTime
+      ? "bg-pink-500 text-white"
+      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+  }`}
+>
+  {type === "delivery"
+    ? "انتخاب زمان تحویل گرفتن"
+    : "تایید نهایی"}
+</button>
+
       </div>
     </div>
   );
