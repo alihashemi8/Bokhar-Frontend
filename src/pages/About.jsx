@@ -80,7 +80,7 @@ export default function PickupInfo() {
       </p>
 
 {/* کارت فروشگاه */}
-<div className="bg-white dark:bg-gray-800 mb-20 md:mb-0 shadow-lg rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative z-0">
+<div className="bg-white  mb-20 md:mb-0 shadow-lg rounded-2xl overflow-hidden border border-gray-200  relative z-0">
   {/* عکس مغازه */}
   <img
     src={store.image}

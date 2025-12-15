@@ -164,18 +164,17 @@ export default function ServiceModal({ onClose, cardOptions }) {
         <div className="w-12 h-1.5 bg-gray-300/70 dark:bg-gray-500/50 rounded-full mx-auto mb-4" />
 
         {/* Header */}
-        <div dir="rtl" className="flex justify-between items-center mb-4">
+        <div dir="rtl" className="flex justify-between items-center mb-4 ">
           <h2 className="text-lg font-semibold">خدمات قابل انتخاب</h2>
-          <button onClick={onClose}>
-            <X />
-          </button>
+          {!isMobile && (
+            <button onClick={onClose}>
+              <X />
+            </button>
+          )}
         </div>
 
         {/* Content */}
-        <div
-          dir="rtl"
-          className="flex-1 overflow-y-auto space-y-4 pb-2 px-1"
-        >
+        <div dir="rtl" className="flex-1 overflow-y-auto space-y-4 pb-2 px-1">
           {/* Main Services */}
           <div className="flex gap-2 flex-wrap justify-center">
             {defaultServices.map((service) => (
@@ -202,9 +201,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
               >
                 -
               </button>
-              <span className="w-10 text-center font-semibold">
-                {quantity}
-              </span>
+              <span className="w-10 text-center font-semibold">{quantity}</span>
               <button
                 onClick={() => handleQuantityChange(1)}
                 className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
@@ -228,11 +225,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
                   <button
                     key={choice.label}
                     onClick={() =>
-                      handleOptionToggle(
-                        item.name,
-                        choice.label,
-                        choice.price
-                      )
+                      handleOptionToggle(item.name, choice.label, choice.price)
                     }
                     className={`px-3 py-1.5 rounded-xl text-sm ${
                       selectedOptions[item.name]?.includes(choice.label)

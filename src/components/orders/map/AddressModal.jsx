@@ -15,64 +15,116 @@ export default function AddressModal({
   setTitle,
 }) {
   const [show, setShow] = useState(open);
+  const [isMobile, setIsMobile] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const [description, setDescription] = useState("");
 
+  /* ---------------- open / close ---------------- */
   useEffect(() => {
     if (open) setShow(true);
   }, [open]);
 
   const handleClose = () => {
     setShow(false);
-    setTimeout(onClose, 250); // زمان انیمیشن
+    setTimeout(onClose, 250);
   };
 
+  /* ---------------- detect mobile ---------------- */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  /* ---------------- lock scroll ---------------- */
+  useEffect(() => {
+    if (!show) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => (document.body.style.overflow = prev);
+  }, [show]);
+
+  /* ---------------- drag to close ---------------- */
+  const handleDragStart = (e) => {
+    if (!isMobile) return;
+
+    const startY = e.touches[0].clientY;
+
+    const move = (ev) => {
+      const diff = ev.touches[0].clientY - startY;
+      setDragY(Math.max(0, diff));
+    };
+
+    const end = () => {
+      if (dragY > 120) handleClose();
+      setDragY(0);
+      window.removeEventListener("touchmove", move);
+      window.removeEventListener("touchend", end);
+    };
+
+    window.addEventListener("touchmove", move);
+    window.addEventListener("touchend", end);
+  };
+
+  /* ---------------- validation ---------------- */
   const isPlaqueValid = /^\d+$/.test(plaque);
   const isUnitValid = /^\d+$/.test(unit);
   const isFormValid = isPlaqueValid && isUnitValid;
 
   const handleSubmit = () => {
     if (!isFormValid) return;
-    onSubmit({ plaque, unit, title });
+    onSubmit({ plaque, unit, title, description });
   };
-
-  useEffect(() => {
-    if (!show) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = originalOverflow; };
-  }, [show]);
 
   if (!show) return null;
 
   return ReactDOM.createPortal(
     <div
       dir="rtl"
-      className="fixed inset-0 bg-black/40 z-50 flex justify-center items-end md:items-start md:justify-center"
-      onClick={handleClose} // کلیک بیرون → بستن مودال
+      className="fixed inset-0 bg-black/40 z-[9999] flex justify-center md:items-center backdrop-blur-[1px]"
+      onClick={handleClose}
     >
       <div
-        className="bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200
-          rounded-t-3xl md:rounded-xl
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleDragStart}
+        style={{
+          transform: `translateY(${dragY}px)`,
+          transition: dragY === 0 ? "transform 0.25s ease-out" : "none",
+        }}
+        className={`
+          bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200
+          rounded-t-[32px] md:rounded-2xl
           w-full md:w-[380px]
-          max-h-[100vh]
+          max-h-[90vh]
+          mt-auto
           overflow-y-auto
           p-4
-          animate-slide-up md:animate-fade-in
-          md:mt-[290px]"
-        onClick={(e) => e.stopPropagation()}
+          shadow-[0_-8px_20px_rgba(0,0,0,0.15)]
+          ${isMobile ? "animate-slide-up-ios" : "animate-fade-in"}
+        `}
       >
-        {/* header */}
-        <div className="flex justify-between items-center mb-10">
+        {/* Drag Handle */}
+        <div className="w-12 h-1.5 bg-gray-300/70 rounded-full mx-auto mb-4" />
+
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h3 className="text-lg font-semibold text-pink-500">📍 اطلاعات تکمیلی</h3>
+            <h3 className="text-lg font-semibold text-pink-500">
+              📍 اطلاعات تکمیلی
+            </h3>
             <p className="text-xs text-gray-600 mt-1">{address}</p>
           </div>
-          <button onClick={handleClose}>
-            <X size={22} className="text-gray-500" />
-          </button>
+
+          {!isMobile && (
+            <button onClick={handleClose}>
+              <X size={22} className="text-gray-500" />
+            </button>
+          )}
         </div>
 
-        {/* inputs */}
-        <div className="flex gap-4 mt-5 justify-center">
+        {/* Inputs */}
+        <div className="flex gap-4 justify-center">
           <input
             type="number"
             placeholder="پلاک"
@@ -89,25 +141,41 @@ export default function AddressModal({
           />
         </div>
 
-        {/* title */}
+        {/* Title */}
         <div className="flex flex-col mt-6">
           <label className="text-xs text-gray-600 mb-1">
-            برای ذخیره آدرس، عنوان آدرس را بنویسید
+            عنوان آدرس
           </label>
           <input
-            placeholder="عنوان آدرس"
+            placeholder="مثلاً خانه، محل کار"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border rounded-xl px-3 py-2 mt-2 bg-white"
+            className="border rounded-xl px-3 py-2 bg-white"
           />
         </div>
 
-        {/* submit */}
+        {/* Extra Description */}
+        <div className="flex flex-col mt-4">
+          <label className="text-xs text-gray-600 mb-1">
+            توضیحات اضافی (اختیاری)
+          </label>
+          <textarea
+            placeholder="مثلاً زنگ خراب است، طبقه دوم..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="border rounded-xl px-3 py-2 bg-white resize-none"
+          />
+        </div>
+
+        {/* Submit */}
         <button
           onClick={handleSubmit}
           disabled={!isFormValid}
-          className={`block w-auto mt-6 p-2 rounded-xl mx-auto text-white transition ${
-            isFormValid ? "bg-pink-500 hover:bg-pink-600" : "bg-gray-300 cursor-not-allowed"
+          className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition ${
+            isFormValid
+              ? "bg-pink-500 hover:bg-pink-600"
+              : "bg-gray-300 cursor-not-allowed"
           }`}
         >
           ثبت اطلاعات

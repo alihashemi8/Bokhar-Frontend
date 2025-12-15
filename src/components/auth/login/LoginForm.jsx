@@ -103,18 +103,18 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
   // ==================== رندر فرم‌ها ====================
   return (
-    <div className="max-w-md mx-auto p-6" dir="rtl">
+    <div className="max-w-md mx-auto p-1" dir="rtl">
       {mode === "login" && (
         <>
-          <h2 className="text-2xl font-bold text-center mb-10 text-gray-800 dark:text-gray-100">
+          <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
             ورود به حساب کاربری
           </h2>
 
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-1">
         <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
-        <span className="text-gray-600 dark:text-gray-300 text-sm">
-          شماره موبایل خود را وارد کنید
-        </span>
+        <p className="text-gray-800 dark:text-gray-300 text-sm">
+          شماره موبایل خود را وارد کنید:
+        </p>
       </div>
           <PhoneInputBoxes
             value={phone}

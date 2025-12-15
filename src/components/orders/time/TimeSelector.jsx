@@ -49,7 +49,7 @@ export default function TimeSelector({
           onClick={() => setWeekOffset((p) => Math.max(0, p - 1))}
           className="text-pink-500 disabled:text-gray-300"
         >
-          ← هفته قبل
+         →  هفته قبل
         </button>
 
         <span className="font-medium text-gray-700">
@@ -60,7 +60,7 @@ export default function TimeSelector({
           onClick={() => setWeekOffset((p) => p + 1)}
           className="text-pink-500"
         >
-          هفته بعد →
+          هفته بعد ←
         </button>
       </div>
 

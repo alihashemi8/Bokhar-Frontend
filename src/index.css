@@ -46,10 +46,10 @@
   }
 }
 
-.animate-slide-up-ios {
-  animation: slide-up-ios 0.28s cubic-bezier(.32,.72,.21,1) forwards;
-}
 
+.animate-slide-up-ios {
+  animation: slide-down-ios 0.65s cubic-bezier(.32,.72,.21,1) forwards;
+}
 /* ------------------------------
    Loading Dots Animation
 --------------------------------*/

@@ -38,6 +38,7 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
 
   return (
     <motion.div
+    dir="rtl"
       className="w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800/80 backdrop-blur-xl border border-pink-200 dark:border-gray-700 rounded-3xl p-6 shadow-md shadow-pink-300 overflow-hidden"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
