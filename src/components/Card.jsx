@@ -1,14 +1,18 @@
 import { useState } from "react";
-import ServiceModal from "./ServiceModal";
+import ServiceModal from "./services_modal/ServiceModal";
 
-export default function Card({ id, image, title, basePrice, options, onAddToCart }) {
+export default function Card({
+  id,
+  image,
+  title,
+  basePrice,
+  options,
+  onAddToCart,
+}) {
   const [open, setOpen] = useState(false);
 
   const handleAddToCart = (items) => {
-    const cartItems = [
-      { name: title, qty: 1, price: basePrice },
-      ...items,
-    ];
+    const cartItems = [{ name: title, qty: 1, price: basePrice }, ...items];
     if (onAddToCart) onAddToCart(cartItems);
   };
 
@@ -45,8 +49,6 @@ export default function Card({ id, image, title, basePrice, options, onAddToCart
         <h3 className="text-sm sm:text-base md:text-lg font-bold mb-1 sm:mb-2 text-center">
           {title}
         </h3>
-
-
 
         <button
           onClick={() => setOpen(true)}

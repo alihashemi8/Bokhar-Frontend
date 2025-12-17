@@ -292,6 +292,7 @@ export default function Order() {
 {modalOpen && (
   <ModalPicker
     type={modalType}
+    isOpen={modalOpen}
     selectedDate={selectedDateStr}
     setSelectedDate={(dateObj) => {
       handleSetModalDate(dateObj); // ثبت تاریخ

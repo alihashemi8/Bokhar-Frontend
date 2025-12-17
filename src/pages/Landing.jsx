@@ -114,7 +114,7 @@ export default function Landing() {
       <section className="p-8 text-center">
         <h1 className="text-3xl font-bold md:mt-10">خشکشویی</h1>
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-          خدمات خشکشویی ، سفیدشویی ، اتو و تعمیر رنگ
+          خدمات خشکشویی، سفیدشویی، اتو و تعمیر رنگ
         </p>
       </section>
 

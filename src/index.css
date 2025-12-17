@@ -37,7 +37,7 @@
 /* ------------------------------
    iOS Bottom Sheet Animation
 --------------------------------*/
-@keyframes slide-up-ios {
+/*@keyframes slide-up-ios {
   0% {
     transform: translateY(100%);
   }
@@ -46,10 +46,26 @@
   }
 }
 
-
 .animate-slide-up-ios {
-  animation: slide-down-ios 0.65s cubic-bezier(.32,.72,.21,1) forwards;
+  animation: slide-up-ios 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}*/
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
+
+.animate-scale-in {
+  animation: scale-in 0.25s ease-out;
+}
+
+
 /* ------------------------------
    Loading Dots Animation
 --------------------------------*/

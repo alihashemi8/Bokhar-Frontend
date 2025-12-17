@@ -106,7 +106,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
     <div className="max-w-md mx-auto p-1" dir="rtl">
       {mode === "login" && (
         <>
-          <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
+          <h2 className="text-2xl font-bold text-center mb-6 md:my-6 text-gray-800 dark:text-gray-100">
             ورود به حساب کاربری
           </h2>
 
@@ -182,7 +182,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
 {mode === "forgot-phone" && (
   <>
-    <h2 className="text-xl font-bold mb-4 text-center">
+    <h2 className="text-xl font-bold md:my-6 text-center">
       فراموشی رمز عبور
     </h2>
 

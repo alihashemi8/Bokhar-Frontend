@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MapView from "./MapView";
 import SearchLocation from "./SearchLocation";
 import AddressModal from "./AddressModal";
@@ -8,15 +8,22 @@ export default function MapSelector({
   initialPosition,
   initialAddress,
   onLocationSelect,
-  goToNextStep, // اضافه شد: تابع رفتن به مرحله بعد
+  goToNextStep,
 }) {
   const [coords, setCoords] = useState(initialPosition || null);
   const [address, setAddress] = useState(initialAddress || "");
   const [plaque, setPlaque] = useState("");
   const [unit, setUnit] = useState("");
   const [open, setOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const isMobile = window.innerWidth < 768;
+  /* ---------------- Detect mobile ---------------- */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const handleSubmit = () => {
     if (!plaque || !unit) return;
@@ -24,7 +31,6 @@ export default function MapSelector({
     onLocationSelect({ coords, address, plaque, unit });
     setOpen(false);
 
-    // رفتن مستقیم به مرحله بعد
     goToNextStep?.();
   };
 
@@ -42,12 +48,11 @@ export default function MapSelector({
         />
 
         {/* سرچ روی نقشه */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-11/12 md:w-3/4 z-500">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-11/12 md:w-3/4 z-50">
           <SearchLocation
             onSelect={(loc) => {
               setCoords({ lat: loc.lat, lng: loc.lng });
               setAddress(loc.address);
-              // ❗ مودال باز نشود
             }}
           />
         </div>
@@ -66,7 +71,7 @@ export default function MapSelector({
       {/* موبایل → AddressModal */}
       {isMobile && (
         <AddressModal
-          open={open}
+          isOpen={open}
           onClose={() => setOpen(false)}
           onSubmit={handleSubmit}
           plaque={plaque}
@@ -74,6 +79,8 @@ export default function MapSelector({
           unit={unit}
           setUnit={setUnit}
           address={address}
+          title=""
+          setTitle={() => {}}
         />
       )}
 
