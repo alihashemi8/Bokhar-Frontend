@@ -50,13 +50,30 @@ export default function Order() {
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false
   );
+  const [mounted, setMounted] = useState(false); // اضافه کردن mounted
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("delivery");
+
+  // قبل از mount قفل اسکرول موبایل
+  if (typeof window !== "undefined" && !mounted && isMobile) {
+    document.body.style.overflow = "hidden";
+  }
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // پاک کردن overflow بعد از unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "auto";
+    };
   }, []);
 
   useEffect(() => {
@@ -266,6 +283,7 @@ export default function Order() {
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.3 }}
           >
+            {/* بقیه رندر بدون تغییر */}
             {step === 1 && (
               <Factor
                 onTotalChange={(value) =>
@@ -289,50 +307,25 @@ export default function Order() {
                   انتخاب زمان
                 </button>
 
-{modalOpen && (
-  <ModalPicker
-    type={modalType}
-    isOpen={modalOpen}
-    selectedDate={selectedDateStr}
-    setSelectedDate={(dateObj) => {
-      handleSetModalDate(dateObj); // ثبت تاریخ
-    }}
-    selectedTime={
-      modalType === "delivery"
-        ? orderData.datetime.delivery?.time || null
-        : orderData.datetime.pickup?.time || null
-    }
-    setSelectedTime={(timeStr) => {
-      handleSetModalTime(timeStr); // ثبت زمان
-    }}
-    onConfirm={() => {
-      const dt = orderData.datetime || {};
-      if (modalType === "delivery") {
-        if (!dt.delivery?.date || !dt.delivery?.time) {
-          toast.error("لطفاً زمان تحویل دادن را کامل انتخاب کنید.");
-          return;
-        }
-        setModalType("pickup");
-        return;
-      }
-      if (modalType === "pickup") {
-        if (!dt.pickup?.date || !dt.pickup?.time) {
-          toast.error("لطفاً زمان تحویل گرفتن را انتخاب کنید.");
-          return;
-        }
-        // اینجا قبل از بستن modal حتما orderData با زمان pickup آپدیت می‌شه
-        setModalOpen(false);
-        setModalType("delivery");
-        if (step !== 2) dispatch({ type: "SET_STEP", payload: 2 });
-      }
-    }}
-    onClose={() => {
-      setModalOpen(false);
-      setModalType("delivery");
-    }}
-  />
-)}
-
+                {modalOpen && (
+                  <ModalPicker
+                    type={modalType}
+                    isOpen={modalOpen}
+                    selectedDate={selectedDateStr}
+                    setSelectedDate={handleSetModalDate}
+                    selectedTime={
+                      modalType === "delivery"
+                        ? orderData.datetime.delivery?.time || null
+                        : orderData.datetime.pickup?.time || null
+                    }
+                    setSelectedTime={handleSetModalTime}
+                    onConfirm={handleModalConfirm}
+                    onClose={() => {
+                      setModalOpen(false);
+                      setModalType("delivery");
+                    }}
+                  />
+                )}
               </div>
             )}
 

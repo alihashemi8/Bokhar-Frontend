@@ -6,7 +6,12 @@ import ServiceModalDesktop from "./ServiceModalDesktop";
 export default function ServiceModal({ onClose, cardOptions }) {
   const { addToCart } = useCart();
 
-  const [isMobile, setIsMobile] = useState(false);
+  // ---------- Detect mobile immediately ----------
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") return window.innerWidth < 768;
+    return false;
+  });
+
   const [selectedMain, setSelectedMain] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -17,24 +22,23 @@ export default function ServiceModal({ onClose, cardOptions }) {
     { name: "خشکشویی ویژه", price: 90000 },
   ];
 
-  const cardServices =
-    cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
+  const cardServices = cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
 
-  /* -------- Detect Mobile -------- */
+  // ---------- Handle resize ----------
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
-    check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  /* -------- Lock Scroll -------- */
+  // ---------- Lock scroll ----------
   useEffect(() => {
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => (document.body.style.overflow = "auto");
+    return () => (document.body.style.overflow = prev);
   }, []);
 
-  /* -------- Handlers -------- */
+  // ---------- Handlers ----------
   const handleMainSelect = (service) => {
     setSelectedMain(service);
     setQuantity(1);
@@ -63,10 +67,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
       if (key.includes("_price_")) return sum;
       return (
         sum +
-        val.reduce(
-          (s, v) => s + (selectedOptions[`${key}_price_${v}`] || 0),
-          0
-        )
+        val.reduce((s, v) => s + (selectedOptions[`${key}_price_${v}`] || 0), 0)
       );
     }, 0);
 
@@ -119,6 +120,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
     handleAdd,
   };
 
+  // ---------- Render Mobile or Desktop ----------
   return isMobile ? (
     <ServiceModalMobile {...sharedProps} />
   ) : (

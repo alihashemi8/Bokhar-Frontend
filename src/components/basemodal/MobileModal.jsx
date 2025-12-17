@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 
-/* -------- Timing & Easing -------- */
-const OPEN_TRANSITION =
-  "transform 0.65s cubic-bezier(0.16,1,0.3,1)";
-const CLOSE_TRANSITION =
-  "transform 0.55s cubic-bezier(0.4,0,0.2,1)";
-
+const OPEN_TRANSITION = "transform 0.65s cubic-bezier(0.16,1,0.3,1)";
+const CLOSE_TRANSITION = "transform 0.55s cubic-bezier(0.4,0,0.2,1)";
 const BACKDROP_OPEN = "opacity 0.55s ease-out";
 const BACKDROP_CLOSE = "opacity 0.35s ease-in";
 
@@ -26,9 +22,14 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
   const [mounted, setMounted] = useState(false);
   const portalRoot = document.getElementById("modal-root");
 
-  /* ---------------- Mount ---------------- */
+  /* ---------------- Mount after isOpen ---------------- */
   useEffect(() => {
-    if (isOpen) setMounted(true);
+    if (isOpen) {
+      const id = setTimeout(() => setMounted(true), 10); // small delay for animation
+      return () => clearTimeout(id);
+    } else {
+      setMounted(false);
+    }
   }, [isOpen]);
 
   /* ---------------- Body scroll lock ---------------- */
@@ -39,33 +40,35 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
     return () => (document.body.style.overflow = prev);
   }, [mounted]);
 
-  /* ---------------- Open Animation ---------------- */
+  /* ---------------- Init ---------------- */
   useEffect(() => {
-    if (!isOpen || !mounted || !modalRef.current) return;
-
-    // مرحله اول: transform اولیه بدون transition
+    if (!modalRef.current) return;
+    modalRef.current.style.willChange = "transform";
     modalRef.current.style.transform = "translateY(100%)";
     modalRef.current.style.transition = "none";
+
     if (backdropRef.current) {
       backdropRef.current.style.opacity = "0";
       backdropRef.current.style.transition = "none";
     }
+  }, []);
 
-    // مرحله دوم: اعمال transition در فریم بعد
+  /* ---------------- Open ---------------- */
+  useEffect(() => {
+    if (!isOpen || !mounted || !modalRef.current) return;
+
+    modalRef.current.style.transition = OPEN_TRANSITION;
+    if (backdropRef.current) backdropRef.current.style.transition = BACKDROP_OPEN;
+
     const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!modalRef.current || !backdropRef.current) return;
-        modalRef.current.style.transition = OPEN_TRANSITION;
-        backdropRef.current.style.transition = BACKDROP_OPEN;
-        modalRef.current.style.transform = "translateY(0)";
-        backdropRef.current.style.opacity = "1";
-      });
+      modalRef.current.style.transform = "translateY(0)";
+      if (backdropRef.current) backdropRef.current.style.opacity = "1";
     });
 
     return () => cancelAnimationFrame(id);
   }, [isOpen, mounted]);
 
-  /* ---------------- Close Animation ---------------- */
+  /* ---------------- Close ---------------- */
   const closeWithAnim = () => {
     if (!modalRef.current || !backdropRef.current) return;
 
@@ -81,15 +84,16 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
     }, 420);
   };
 
-  /* ---------------- Drag Helpers ---------------- */
+  /* ---------------- Drag helpers ---------------- */
   const setTranslate = (y) => {
     dragDistance.current = y;
     if (!modalRef.current || !backdropRef.current) return;
+
     modalRef.current.style.transform = `translateY(${y}px)`;
     backdropRef.current.style.opacity = `${1 - y / window.innerHeight}`;
   };
 
-  /* ---------------- Touch Events ---------------- */
+  /* ---------------- Touch events ---------------- */
   const onTouchStart = (e) => {
     startY.current = e.touches[0].clientY;
     lastY.current = startY.current;
@@ -160,7 +164,6 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Handle */}
         <div className="pt-3 pb-2">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto" />
         </div>
