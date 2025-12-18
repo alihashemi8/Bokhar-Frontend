@@ -78,10 +78,11 @@ export default function ModalPicker({
   }, [minDateObj, selectedDate, setSelectedDate]);
 
   return (
-    <MobileModal isOpen={isOpen} onClose={onClose} title={title}>
+    <MobileModal  isOpen={isOpen} onClose={onClose} >
+      <h2 className="text-center text-md mb-2 font-bold">{title}</h2>
       {/* Preview */}
       {(selectedDate || selectedTime) && (
-        <div className="text-center mb-3 text-sm text-gray-700">
+        <div className=" my-3 text-sm text-gray-700">
           {selectedDate && (
             <span className="font-semibold">{formatSafe(selectedDate)}</span>
           )}
@@ -136,8 +137,8 @@ export default function ModalPicker({
                     isDisabled
                       ? "opacity-40 cursor-not-allowed"
                       : isSelected
-                      ? "bg-pink-50 border-pink-600 shadow-md shadow-pink-900 scale-105 cursor-pointer"
-                      : "border-pink-400 hover:bg-pink-50 shadow-md shadow-pink-400 cursor-pointer"
+                      ? "bg-pink-100 border-pink-600 shadow-md shadow-pink-900 scale-105 cursor-pointer"
+                      : "bg-white/70 border-pink-400 hover:bg-pink-50 shadow-md shadow-pink-400 cursor-pointer"
                   }`}
                 >
                   <p className="text-sm font-medium text-pink-500">

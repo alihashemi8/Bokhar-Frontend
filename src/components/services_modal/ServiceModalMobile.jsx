@@ -13,19 +13,22 @@ export default function ServiceModalMobile({
   handleOptionToggle,
   handleAdd,
 }) {
+
+    const title = "خدمات قابل انتخاب";
   return (
-    <MobileModal isOpen={true} onClose={onClose} title="خدمات قابل انتخاب">
-      <div className="flex-1 overflow-y-auto space-y-4 px-4 pb-3">
+    <MobileModal isOpen={true} onClose={onClose} >
+      <h2 className="text-center text-md mb-4 font-bold">{title}</h2>
+      <div className="flex-1 overflow-y-auto space-y-4 px-4 pb-3 ">
         {/* انتخاب سرویس اصلی */}
         <div className="flex gap-2 flex-wrap justify-center">
           {defaultServices.map((service, idx) => (
             <button
               key={`${service.name}-${idx}`} // 🔑 unique key
               onClick={() => handleMainSelect(service)}
-              className={`px-4 py-2 rounded-2xl text-sm font-medium transition ${
+              className={`px-4 py-2 rounded-2xl text-sm font-medium transition shadow-lg ${
                 selectedMain?.name === service.name
-                  ? "bg-sky-600 text-white"
-                  : "bg-gray-100 dark:bg-gray-700"
+                  ? "bg-sky-600 border border-sky-700 text-white"
+                  : "bg-gray-100 border border-sky-50 dark:bg-gray-700"
               }`}
             >
               {service.name}
@@ -38,14 +41,14 @@ export default function ServiceModalMobile({
           <div className="flex items-center gap-4 justify-center">
             <button
               onClick={() => handleQuantityChange(-1)}
-              className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
+              className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
             >
               −
             </button>
             <span className="w-10 text-center font-semibold">{quantity}</span>
             <button
               onClick={() => handleQuantityChange(1)}
-              className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
+              className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
             >
               +
             </button>
@@ -55,8 +58,8 @@ export default function ServiceModalMobile({
         {/* گزینه‌های اضافه */}
         {cardServices.map((item, idx) => (
           <div
-            key={`${item.name}-${idx}`} // 🔑 unique key for each group
-            className="rounded-xl p-3 bg-white/60 dark:bg-gray-700/40 border"
+            key={`${item.name}-${idx}`} 
+            className="rounded-xl p-3 bg-white dark:bg-gray-700/40 border border-sky-200 shadow-lg"
           >
             <span className="block font-semibold mb-2 text-sm">{item.name}</span>
             <div className="flex gap-2 flex-wrap">
@@ -81,8 +84,8 @@ export default function ServiceModalMobile({
       </div>
 
       {/* Bottom */}
-      <div className="border-t p-4 flex justify-between items-center bg-white/80 dark:bg-gray-800">
-        <span className="text-sm font-medium">
+      <div dir="ltr" className="border-t p-4 flex justify-between items-center bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:bg-gray-800">
+        <span className="text-sm  font-bold">
           مجموع: {totalPrice.toLocaleString()} تومان
         </span>
         <button

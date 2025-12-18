@@ -25,20 +25,28 @@ export default function MapSelector({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const handleSubmit = () => {
-    if (!plaque || !unit) return;
+const handleSubmit = ({ plaque, unit, title, description }) => {
+  setPlaque(plaque);
+  setUnit(unit);
 
-    onLocationSelect({ coords, address, plaque, unit });
-    setOpen(false);
+  onLocationSelect({
+    coords,
+    address,
+    plaque,
+    unit,
+    title,
+    description,
+  });
 
-    goToNextStep?.();
-  };
+  setOpen(false);
+  goToNextStep?.();
+};
 
   return (
     <div className="relative flex flex-col gap-5">
       {/* نقشه */}
       <div
-        className="relative rounded-xl border border-pink-200 overflow-hidden shadow-md shadow-pink-300 z-0 w-[90%] md:w-[75%] mx-auto"
+        className="relative rounded-2xl border border-pink-200 overflow-hidden shadow-md shadow-pink-300 z-0 w-[90%] md:w-[75%] mx-auto"
         style={{ height: "300px" }}
       >
         <MapView

@@ -12,20 +12,18 @@ export default function DesktopNavbar() {
 
   return (
     <>
-<nav
-  dir="rtl"
-  className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 
+      <nav
+        dir="rtl"
+        className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 
              w-[92%] max-w-6xl justify-between items-center
              backdrop-blur-md bg-sky-50/60
              border border-white/20 text-gray-800 px-6 py-2 
              shadow-lg rounded-full z-50"
->
-
+      >
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
         <div className="flex items-center gap-6">
+          {/* لوگو */}
 
-         {/* لوگو */}
-          
           <div
             onClick={() => navigate("/")}
             className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
@@ -34,7 +32,6 @@ export default function DesktopNavbar() {
               Logo
             </span>
           </div>
-          
 
           {/* پیام‌ها */}
           <div
@@ -66,17 +63,14 @@ export default function DesktopNavbar() {
           <div className="hidden md:flex items-center gap-4">
             <DarkMode />
           </div>
-
           {/* پروفایل یا ورود/ثبت‌نام */}
- (
-            <div
-              onClick={() => setOpenModal(true)}
-              className="text-gray-800 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
-            >
-              ورود / ثبت نام
-            </div>
-          )
 
+          <div
+            onClick={() => setOpenModal(true)}
+            className="text-gray-800 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+          >
+            ورود / ثبت نام
+          </div>
         </div>
       </nav>
 

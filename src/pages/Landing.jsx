@@ -126,19 +126,21 @@ export default function Landing() {
   >
      <h className="flex mr-2 my-1">چی میخوای پیدا کنی؟</h>
     <div className="flex rounded-full text-black font-semibold border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
-      <input
-        type="text"
-        placeholder="پتو ،مانتو، شلوار ..."
-        value={searchQuery}
-        onChange={(e) => {
-          setSearchQuery(e.target.value);
-          setShowSuggestions(true);
-        }}
-        onFocus={() => {
-          if (searchQuery.trim()) setShowSuggestions(true);
-        }}
-        className="flex-1 px-4 py-2 bg-transparent focus:outline-none text-sm md:text-base"
-      />
+<input
+  type="text"
+  placeholder="پتو ،مانتو، شلوار ..."
+  value={searchQuery}
+  onChange={(e) => {
+    setSearchQuery(e.target.value);
+    setShowSuggestions(true);
+  }}
+  onFocus={() => {
+    if (searchQuery.trim()) setShowSuggestions(true);
+  }}
+  className="flex-1 px-4 py-2 bg-transparent focus:outline-none
+             text-base md:text-base"
+/>
+
       <button
         onClick={handleSearch}
         className="px-4 py-2 bg-sky-300/90 hover:bg-sky-600/60 text-white flex items-center justify-center transition"

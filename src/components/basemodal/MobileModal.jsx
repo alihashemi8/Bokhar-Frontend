@@ -157,8 +157,9 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
       onClick={closeWithAnim}
     >
       <div
+        dir="rtl"
         ref={modalRef}
-        className="absolute bottom-0 w-full bg-white rounded-t-[32px]"
+        className="absolute bottom-0 w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-t-[32px]"
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
