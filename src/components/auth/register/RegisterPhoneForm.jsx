@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PhoneIcon } from "@heroicons/react/24/solid";
 import PhoneInputBoxes from "../ui/PhoneInputBoxes";
 import toast from "react-hot-toast";
+import { sendRegisterOtp } from "../../../api/apiClient"; // ← ایمپورت تابع
 
 export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
   const [phone, setPhone] = useState("");
@@ -10,7 +11,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
   const handleNext = async () => {
     if (loading) return;
 
-    // اعتبارسنجی
+    // اعتبارسنجی شماره
     if (!/^09\d{9}$/.test(phone)) {
       return toast.error("شماره موبایل باید با 09 شروع شده و 11 رقم باشد");
     }
@@ -18,18 +19,12 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
     setLoading(true);
 
     try {
-      const res = await apiPost("/send-register-otp/", { phone }).catch(() => {
-        throw new Error("عدم ارتباط با سرور");
-      });
-
-      if (!res?.ok) {
-        throw new Error(res?.message || "خطا در ارسال کد");
-      }
+      const res = await sendRegisterOtp(phone); // ← استفاده از تابع apiClient
 
       toast.success("کد تایید ارسال شد");
       onNext(phone);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err?.message || "خطا در ارسال کد");
     } finally {
       setLoading(false);
     }
@@ -64,14 +59,11 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
       <button
         onClick={handleNext}
         disabled={loading || phone.length < 11}
-        className={`
-          w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition
-          ${
-            loading || phone.length < 11
-              ? "bg-blue-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          }
-        `}
+        className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
+          loading || phone.length < 11
+            ? "bg-blue-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
         {loading && (
           <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

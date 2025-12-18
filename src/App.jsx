@@ -5,7 +5,6 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { AuthProvider } from "./context/AuthContext";
 
 import DesktopNavbar from "./components/DesktopNavbar";
 import MobileNavbar from "./components/MobileNavbar";
@@ -116,10 +115,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
+
       <Router>
         <AppContent />
       </Router>
-    </AuthProvider>
+
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import OtpInput from "../ui/OtpInput";
 import toast from "react-hot-toast";
+import { verifyRegisterOtp, sendRegisterOtp } from "../../../api/apiClient";
 
 export default function RegisterOtpForm({ phone, onNext, onBack }) {
   const [otp, setOtp] = useState("");
@@ -20,18 +21,18 @@ export default function RegisterOtpForm({ phone, onNext, onBack }) {
 
   const handleVerify = async () => {
     if (loading) return;
-    if (!/^\d{5,6}$/.test(otp)) return toast.error("کد تایید معتبر نیست");
+    if (!/^\d{5,6}$/.test(otp)) {
+      toast.error("کد تایید معتبر نیست");
+      return;
+    }
 
     setLoading(true);
     try {
-      const res = await apiPost("/verify-register-otp/", { phone, otp }).catch(() => {
-        throw new Error("عدم ارتباط با سرور");
-      });
-      if (!res?.ok) throw new Error(res?.message || "خطا در تایید کد");
+      const res = await verifyRegisterOtp(phone, otp);
       toast.success("کد تایید موفق ✅");
       onNext();
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err?.message || "خطا در تایید کد");
     } finally {
       setLoading(false);
     }
@@ -41,15 +42,12 @@ export default function RegisterOtpForm({ phone, onNext, onBack }) {
     if (resendLoading) return;
     setResendLoading(true);
     try {
-      const res = await apiPost("/send-register-otp/", { phone }).catch(() => {
-        throw new Error("عدم ارتباط با سرور");
-      });
-      if (!res?.ok) throw new Error(res?.message || "خطا در ارسال مجدد کد");
+      await sendRegisterOtp(phone);
       toast.success("کد تایید دوباره ارسال شد ✅");
       setTimer(60);
       setCanResend(false);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err?.message || "خطا در ارسال مجدد کد");
     } finally {
       setResendLoading(false);
     }
@@ -70,7 +68,9 @@ export default function RegisterOtpForm({ phone, onNext, onBack }) {
           loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {loading && <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+        {loading && (
+          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        )}
         {loading ? "در حال بررسی..." : "تایید"}
       </button>
 

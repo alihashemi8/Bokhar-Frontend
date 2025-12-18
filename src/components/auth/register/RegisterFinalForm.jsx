@@ -1,38 +1,38 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { finalizeRegister } from "../../../api/apiClient"; 
 
 export default function RegisterFinalForm({ phone, onSuccess }) {
   const [fullname, setFullname] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
-    if (loading) return;
+const handleSubmit = async () => {
+  if (loading) return;
 
-    if (!fullname.trim()) {
-      return toast.error("نام و نام خانوادگی الزامی است");
-    }
+  if (!fullname.trim()) {
+    return toast.error("نام و نام خانوادگی الزامی است");
+  }
 
-    if (password.length < 6) {
-      return toast.error("رمز عبور باید حداقل 6 کاراکتر باشد");
-    }
+  if (password.length < 6) {
+    return toast.error("رمز عبور باید حداقل 6 کاراکتر باشد");
+  }
 
-    setLoading(true);
-    try {
-      const res = await apiPost("/register/", { fullname, phone, password }).catch(() => {
-        throw new Error("عدم ارتباط با سرور");
-      });
+  setLoading(true);
+  try {
+    const res = await finalizeRegister(phone, fullname, password);
 
-      if (!res?.ok) throw new Error(res?.message || "ثبت‌نام با خطا مواجه شد");
+    if (!res?.ok) throw new Error(res?.message || "ثبت‌نام با خطا مواجه شد");
 
-      toast.success("ثبت‌نام موفق ✅");
-      onSuccess();
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.success("ثبت‌نام موفق ✅");
+    onSuccess();
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="max-w-md mx-auto p-2 sm:p-6">

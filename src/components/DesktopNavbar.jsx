@@ -4,13 +4,11 @@ import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { AuthContext } from "../context/AuthContext";
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
   const { totalItems } = useCart();
-  const { user } = useContext(AuthContext);
 
   return (
     <>
@@ -70,28 +68,20 @@ export default function DesktopNavbar() {
           </div>
 
           {/* پروفایل یا ورود/ثبت‌نام */}
-          {user ? (
-            <div
-              onClick={() => navigate("/profile")}
-              className="flex items-center gap-2 cursor-pointer text-gray-800 hover:text-amber-300 transition"
-            >
-              <User size={22} />
-              <span>{user.name || "پروفایل"}</span>
-            </div>
-          ) : (
+ (
             <div
               onClick={() => setOpenModal(true)}
               className="text-gray-800 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
             >
               ورود / ثبت نام
             </div>
-          )}
+          )
 
         </div>
       </nav>
 
       {/* مودال ورود */}
-      <AuthModal isOpen={!user && openModal} onClose={() => setOpenModal(false)} />
+      <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );
 }
