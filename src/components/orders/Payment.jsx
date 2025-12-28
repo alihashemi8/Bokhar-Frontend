@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Tag,
-  ShieldCheck,
   CreditCard,
+  Tag,
   CheckCircle,
   XCircle,
   Loader2,
@@ -19,7 +18,7 @@ export default function Payment({
   handlePayment,
 }) {
   const [loading, setLoading] = useState(false);
-  const [discountStatus, setDiscountStatus] = useState(null); // success | error | null
+  const [discountStatus, setDiscountStatus] = useState(null);
 
   const onApplyDiscount = async () => {
     const ok = await applyDiscount();
@@ -35,111 +34,118 @@ export default function Payment({
 
   return (
     <motion.div
-    dir="rtl"
-      className="w-full max-w-2xl mx-auto mt-10 space-y-8 px-4 sm:px-6 lg:px-0"
-      initial={{ opacity: 0, y: 15 }}
+      dir="rtl"
+      className="w-full max-w-xl mx-auto mt-12 mb-17 pb-4 px-4"
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
     >
-      {/* خلاصه پرداخت */}
-      <motion.div
-        className="relative bg-white dark:bg-gray-800 backdrop-blur-xl border border-gray-100 dark:border-gray-700 rounded-3xl p-6 sm:p-8 shadow-xl transition-all duration-300"
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
-          <CreditCard className="size-6 text-purple-500" />
-          خلاصه پرداخت
-        </h2>
+      <div className="bg-sky-50 dark:bg-gray-900 border border-sky-200 dark:border-sky-500 rounded-3xl  p-6 shadow-xl shadow-sky-200/40 space-y-7">
 
-        <div className="space-y-3 text-gray-700 dark:text-gray-300">
-          <div className="flex justify-between text-sm sm:text-base">
-            <span>جمع خرید:</span>
-            <span>{subtotal.toLocaleString()} تومان</span>
+        {/* Header */}
+        <div className="flex items-center gap-3 ">
+          <div className="size-11 rounded-2xl bg-sky-100 flex items-center justify-center">
+            <CreditCard className="text-sky-600" />
           </div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+            پرداخت نهایی
+          </h2>
+        </div>
+
+        {/* Summary */}
+        <div className="space-y-3 text-sm">
+          <Row label="جمع خرید" value={`${subtotal.toLocaleString()} تومان`} />
 
           {discountAmount > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-between text-green-600 dark:text-green-400 text-sm sm:text-base"
-            >
-              <span>تخفیف:</span>
-              <span>-{discountAmount.toLocaleString()} تومان</span>
-            </motion.div>
+            <Row
+              label="تخفیف"
+              value={`-${discountAmount.toLocaleString()} تومان`}
+              valueClass="text-emerald-600"
+            />
           )}
 
-          <div className="border-t border-gray-200 dark:border-gray-700 my-3"></div>
+          <div className="h-px bg-sky-200 dark:bg-sky-500 my-2" />
 
-          <div className="flex justify-between text-lg sm:text-xl font-semibold text-purple-700 dark:text-purple-300">
-            <span>مبلغ نهایی:</span>
-            <span>{total.toLocaleString()} تومان</span>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600 dark:text-gray-300">
+              مبلغ نهایی
+            </span>
+            <span className="text-2xl font-bold text-sky-700 dark:text-sky-300">
+              {total.toLocaleString()} تومان
+            </span>
           </div>
         </div>
 
-        {/* پیام تخفیف */}
-        <AnimatePresence>
-          {discountStatus && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`absolute -top-6 left-0 right-0 text-center text-sm sm:text-base font-medium flex items-center justify-center gap-1 ${
-                discountStatus === "success"
-                  ? "text-green-600"
-                  : "text-red-500"
-              }`}
-            >
-              {discountStatus === "success" ? (
-                <>
-                  <CheckCircle className="size-4" />
-                  کد تخفیف اعمال شد
-                </>
-              ) : (
-                <>
-                  <XCircle className="size-4" />
-                  کد تخفیف معتبر نیست
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+        {/* Discount */}
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+              <input
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                placeholder="کد تخفیف"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sky-300 bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-sky-400 outline-none"
+              />
+            </div>
 
-      {/* فرم تخفیف */}
-      <motion.div
-        className="flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-gray-800 backdrop-blur-xl border border-gray-100 dark:border-gray-700 rounded-2xl p-5 sm:p-6 shadow-md transition-all duration-300"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="relative w-full sm:flex-1">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-5" />
-          <input
-            type="text"
-            placeholder="کد تخفیف را وارد کنید"
-            value={discountCode}
-            onChange={(e) => setDiscountCode(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base transition"
-          />
+            <button
+              onClick={onApplyDiscount}
+              className="px-4 rounded-xl bg-sky-100 hover:bg-sky-200 text-gray-800 font-semibold transition"
+            >
+              اعمال
+            </button>
+          </div>
+
+          <AnimatePresence>
+            {discountStatus && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className={`flex items-center gap-1 text-sm ${
+                  discountStatus === "success"
+                    ? "text-emerald-600"
+                    : "text-red-500"
+                }`}
+              >
+                {discountStatus === "success" ? (
+                  <>
+                    <CheckCircle className="size-4" />
+                    کد تخفیف اعمال شد
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="size-4" />
+                    کد تخفیف نامعتبر است
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
+        {/* Pay */}
         <button
-          onClick={onApplyDiscount}
-          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-semibold text-sm sm:text-base transition-all shadow-md"
+          onClick={onPay}
+          disabled={loading}
+          className="w-full h-12 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold flex items-center justify-center gap-2 transition disabled:opacity-70"
         >
-          اعمال کد
+          {loading ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            "پرداخت و ثبت سفارش"
+          )}
         </button>
-      </motion.div>
-
-      {/* دکمه پرداخت */}
-      <motion.div
-        className="flex justify-center sm:justify-end"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-
-      </motion.div>
+      </div>
     </motion.div>
+  );
+}
+
+function Row({ label, value, valueClass = "" }) {
+  return (
+    <div className="flex justify-between text-gray-700 dark:text-gray-300">
+      <span>{label}</span>
+      <span className={valueClass}>{value}</span>
+    </div>
   );
 }
