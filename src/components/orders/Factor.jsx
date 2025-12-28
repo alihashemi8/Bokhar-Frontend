@@ -117,7 +117,7 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
             >
               انتخاب زمان
             </button>
-          </div>
+          </div> 
         )}
       </div>
 

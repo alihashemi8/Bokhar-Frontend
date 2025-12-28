@@ -298,7 +298,7 @@ export default function Order() {
             {isMobile && step === 1 && (
               <div className="mt-6 text-center">
                 <button
-                  className="bg-pink-500 text-white w-[100%] px-5 py-2 mb-20 rounded-xl"
+                  className="bg-sky-300 border border-sky-300 shadow-lg shadow-sky-200 text-gray-600 hover:bg-sky-700 w-[100%] px-5 py-2 mb-20 rounded-xl"
                   onClick={() => {
                     setModalType("delivery");
                     setModalOpen(true);

@@ -34,7 +34,7 @@ export default function SearchLocation({ onSelect }) {
       } finally {
         setLoading(false);
       }
-    }, 400); // debounce
+    }, 400);
 
     return () => clearTimeout(timeout);
   }, [query]);
@@ -44,62 +44,76 @@ export default function SearchLocation({ onSelect }) {
       {/* input box */}
       <div
         dir="rtl"
-        className="flex items-center gap-2 bg-sky-50 border border-pink-200 px-3 py-2 rounded-2xl shadow-sm shadow-pink-200 focus-within:ring-1 focus-within:ring-pink-300 transition-all"
+        className="
+          flex items-center gap-2
+          bg-sky-50 border border-sky-300
+          px-3 py-2 rounded-2xl
+          shadow-sm shadow-sky-200/60
+          focus-within:ring-1 focus-within:ring-sky-400
+          transition-all
+        "
       >
-        <Search className="text-gray-500 " size={20} />
+        <Search className="text-gray-500" size={20} />
         <input
           type="text"
           placeholder="جستجوی آدرس..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 bg-transparent outline-none text-sm"
+          className="flex-1 bg-transparent outline-none text-sm text-gray-700"
         />
       </div>
 
-{/* Results dropdown */}
-{results.length > 0 && (
-  <ul
-    dir="rtl"
-    className="
-      absolute w-full 
-      bg-sky-50 to-sky-200 
-      border border-pink-300 
-      rounded-2xl mt-2 shadow-xl z-50
-      max-h-36 overflow-y-auto  /* فقط ۳ آیتم */
-      animate-fadeIn
-    "
-  >
-    {results.map((r) => (
-      <li
-        key={r.place_id}
-        onClick={() => {
-          onSelect({
-            lat: parseFloat(r.lat),
-            lng: parseFloat(r.lon),
-            address: r.display_name,
-          });
-          setQuery(r.display_name);
-          setResults([]);
-        }}
-        className="
-          flex items-start gap-3 px-4 py-3 
-          hover:bg-sky-100 cursor-pointer transition
-        "
-      >
-        <MapPin className="text-pink-500 shrink-0 mt-0.5" size={20} />
-        <span
+      {/* Results dropdown */}
+      {results.length > 0 && (
+        <ul
+          dir="rtl"
           className="
-            text-gray-700 text-sm leading-5 
-            overflow-hidden text-ellipsis whitespace-nowrap 
-            block max-w-full
+            absolute w-full
+            bg-sky-50
+            border border-sky-300
+            rounded-2xl mt-2
+            shadow-xl shadow-sky-200/60
+            z-50
+            max-h-36 overflow-y-auto
+            animate-fadeIn
           "
         >
-          {r.display_name}
-        </span>
-      </li>
-    ))}
-  </ul>
-)}
+          {results.map((r) => (
+            <li
+              key={r.place_id}
+              onClick={() => {
+                onSelect({
+                  lat: parseFloat(r.lat),
+                  lng: parseFloat(r.lon),
+                  address: r.display_name,
+                });
+                setQuery(r.display_name);
+                setResults([]);
+              }}
+              className="
+                flex items-start gap-3 px-4 py-3
+                hover:bg-sky-100
+                cursor-pointer transition
+              "
+            >
+              <MapPin
+                className="text-sky-500 shrink-0 mt-0.5"
+                size={20}
+              />
+              <span
+                className="
+                  text-gray-700 text-sm leading-5
+                  overflow-hidden text-ellipsis whitespace-nowrap
+                  block max-w-full
+                "
+              >
+                {r.display_name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {loading && (
         <div className="absolute left-5 top-1/2 -translate-y-1/2 text-xs text-gray-400 loading-dots">
           در حال جستجو

@@ -17,7 +17,7 @@ export default function AddressModal({
   const [localPlaque, setLocalPlaque] = useState(plaque || "");
   const [localUnit, setLocalUnit] = useState(unit || "");
   const [localTitle, setLocalTitle] = useState(title || "");
-  const [ready, setReady] = useState(false); // برای اطمینان از mount بعد از open
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,7 +26,6 @@ export default function AddressModal({
       setLocalTitle(title || "");
       setDescription("");
 
-      // کمی تاخیر برای trigger انیمیشن
       const id = setTimeout(() => setReady(true), 10);
       return () => {
         clearTimeout(id);
@@ -52,7 +51,7 @@ export default function AddressModal({
     onClose();
   };
 
-  if (!ready) return null; // فقط وقتی آماده شد render کن
+  if (!ready) return null;
 
   return (
     <MobileModal isOpen={isOpen} onClose={onClose} title="📍 اطلاعات تکمیلی">
@@ -64,14 +63,14 @@ export default function AddressModal({
           placeholder="پلاک"
           value={localPlaque}
           onChange={(e) => setLocalPlaque(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-white"
+          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
         />
         <input
           type="number"
           placeholder="واحد"
           value={localUnit}
           onChange={(e) => setLocalUnit(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-white"
+          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
         />
       </div>
 
@@ -81,7 +80,7 @@ export default function AddressModal({
           placeholder="مثلاً خانه، محل کار"
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="border rounded-xl px-3 py-2 bg-white"
+          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
         />
       </div>
 
@@ -94,7 +93,7 @@ export default function AddressModal({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="border rounded-xl px-3 py-2 bg-white resize-none"
+          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
         />
       </div>
 
@@ -103,7 +102,7 @@ export default function AddressModal({
         disabled={!isFormValid}
         className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition ${
           isFormValid
-            ? "bg-pink-500 hover:bg-pink-600"
+            ? "bg-sky-600 hover:bg-sky-700"
             : "bg-gray-300 cursor-not-allowed"
         }`}
       >

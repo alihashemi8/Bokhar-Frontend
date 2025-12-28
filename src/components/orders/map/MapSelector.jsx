@@ -25,28 +25,28 @@ export default function MapSelector({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-const handleSubmit = ({ plaque, unit, title, description }) => {
-  setPlaque(plaque);
-  setUnit(unit);
+  const handleSubmit = ({ plaque, unit, title, description }) => {
+    setPlaque(plaque);
+    setUnit(unit);
 
-  onLocationSelect({
-    coords,
-    address,
-    plaque,
-    unit,
-    title,
-    description,
-  });
+    onLocationSelect({
+      coords,
+      address,
+      plaque,
+      unit,
+      title,
+      description,
+    });
 
-  setOpen(false);
-  goToNextStep?.();
-};
+    setOpen(false);
+    goToNextStep?.();
+  };
 
   return (
     <div className="relative flex flex-col gap-5">
       {/* نقشه */}
       <div
-        className="relative rounded-2xl border border-pink-200 overflow-hidden shadow-md shadow-pink-300 z-0 w-[90%] md:w-[75%] mx-auto"
+        className="relative rounded-2xl border border-sky-200 overflow-hidden shadow-md shadow-sky-300/50 z-0 w-[90%] md:w-[75%] mx-auto"
         style={{ height: "300px" }}
       >
         <MapView
@@ -69,9 +69,9 @@ const handleSubmit = ({ plaque, unit, title, description }) => {
       {/* دکمه تایید موقعیت */}
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-2 mb-20 md:mb-0 bg-sky-100 border border-pink-300 text-gray-700 font-bold rounded-xl  
-                   hover:bg-sky-200 hover:text-gray-800 shadow-md shadow-pink-300  
-                   hover:shadow-pink-400 w-[75%] mx-auto"
+        className="px-3 py-2 mb-20 md:mb-0 bg-sky-100 border border-sky-300 text-gray-700 font-bold rounded-xl  
+                   hover:bg-sky-200 hover:text-gray-800 shadow-md shadow-sky-300/60  
+                   hover:shadow-sky-400 transition w-[75%] mx-auto"
       >
         تایید موقعیت
       </button>

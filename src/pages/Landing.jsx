@@ -125,7 +125,7 @@ export default function Landing() {
     className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col"
   >
      <h className="flex mr-2 my-1">چی میخوای پیدا کنی؟</h>
-    <div className="flex rounded-full text-black font-semibold border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
+    <div className="flex rounded-full text-black font-normal border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
 <input
   type="text"
   placeholder="پتو ،مانتو، شلوار ..."
