@@ -2,16 +2,20 @@ import { useState } from "react";
 import { PhoneIcon } from "@heroicons/react/24/solid";
 import PhoneInputBoxes from "../ui/PhoneInputBoxes";
 import toast from "react-hot-toast";
-import { sendRegisterOtp } from "../../../api/apiClient"; // ← ایمپورت تابع
+import { sendRegisterOtp } from "../../../api/apiClient";
 
 export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
+  const [fullname, setFullname] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleNext = async () => {
     if (loading) return;
 
-    // اعتبارسنجی شماره
+    if (!fullname.trim()) {
+      return toast.error("نام و نام خانوادگی را وارد کنید");
+    }
+
     if (!/^09\d{9}$/.test(phone)) {
       return toast.error("شماره موبایل باید با 09 شروع شده و 11 رقم باشد");
     }
@@ -19,10 +23,13 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
     setLoading(true);
 
     try {
-      const res = await sendRegisterOtp(phone); // ← استفاده از تابع apiClient
-
+      await sendRegisterOtp(phone);
       toast.success("کد تایید ارسال شد");
-      onNext(phone);
+
+      onNext({
+        phone,
+        fullname,
+      });
     } catch (err) {
       toast.error(err?.message || "خطا در ارسال کد");
     } finally {
@@ -32,20 +39,31 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
 
   return (
     <div className="max-w-md mx-auto p-2 sm:p-6">
-      {/* عنوان */}
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
         ثبت‌نام
       </h2>
 
-      {/* متن راهنما */}
       <div className="flex items-center gap-2 mb-3">
         <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
         <span className="text-gray-600 dark:text-gray-300 text-sm">
-          شماره موبایل خود را وارد کنید
+          اطلاعات خود را وارد کنید
         </span>
       </div>
 
-      {/* ورودی شماره موبایل */}
+      {/* Fullname */}
+      <input
+        value={fullname}
+        onChange={(e) => setFullname(e.target.value)}
+        placeholder="نام و نام خانوادگی"
+        className="
+          w-full border-b p-2 mb-6
+          bg-transparent
+          text-gray-800 dark:text-gray-100
+          focus:border-blue-500 outline-none
+        "
+      />
+
+      {/* Phone */}
       <PhoneInputBoxes
         value={phone}
         onChange={(val) => setPhone(val.replace(/\D/g, ""))}
@@ -55,23 +73,21 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
         شماره باید با 09 شروع شود و 11 رقم باشد
       </p>
 
-      {/* دکمه ارسال */}
       <button
         onClick={handleNext}
-        disabled={loading || phone.length < 11}
+        disabled={loading || phone.length < 11 || !fullname.trim()}
         className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
-          loading || phone.length < 11
+          loading || phone.length < 11 || !fullname.trim()
             ? "bg-blue-400 cursor-not-allowed"
             : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
         {loading && (
-          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         )}
         {loading ? "در حال ارسال..." : "ارسال کد تأیید"}
       </button>
 
-      {/* لینک ورود */}
       <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
         حساب دارید؟{" "}
         <button

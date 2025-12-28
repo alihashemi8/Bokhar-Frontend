@@ -26,7 +26,7 @@ export default function DesktopModal({
       <div
         onClick={(e) => e.stopPropagation()}
         className={`
-          bg-white rounded-3xl shadow-xl w-full
+          bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-3xl shadow-xl w-full
           ${maxWidth === "sm" ? "max-w-sm" : ""}
           ${maxWidth === "md" ? "max-w-md" : ""}
           ${maxWidth === "lg" ? "max-w-lg" : ""}

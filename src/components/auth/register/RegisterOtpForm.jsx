@@ -3,51 +3,75 @@ import OtpInput from "../ui/OtpInput";
 import toast from "react-hot-toast";
 import { verifyRegisterOtp, sendRegisterOtp } from "../../../api/apiClient";
 
-export default function RegisterOtpForm({ phone, onNext, onBack }) {
+export default function RegisterOtpForm({
+  phone,
+  fullname,
+  onBack,
+  onSuccess,
+}) {
   const [otp, setOtp] = useState("");
-  const [timer, setTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
+  const [timer, setTimer] = useState(60);
+  const canResend = timer === 0;
+
+  /* ---------------- Countdown timer ---------------- */
   useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer((t) => t - 1), 1000);
-      return () => clearInterval(interval);
-    } else {
-      setCanResend(true);
-    }
+    if (timer === 0) return;
+    const interval = setInterval(() => setTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
   }, [timer]);
 
+  /* ---------------- Verify OTP + Register ---------------- */
   const handleVerify = async () => {
     if (loading) return;
+
     if (!/^\d{5,6}$/.test(otp)) {
-      toast.error("کد تایید معتبر نیست");
-      return;
+      return toast.error("کد تأیید معتبر نیست");
     }
 
     setLoading(true);
     try {
-      const res = await verifyRegisterOtp(phone, otp);
-      toast.success("کد تایید موفق ✅");
-      onNext();
+      await verifyRegisterOtp({ phone, otp, fullname });
+
+      // ✅ نوتیف ثبت‌نام موفق
+      toast.success(`🎉 خوش آمدی ${fullname}! ثبت‌نام با موفقیت انجام شد`, {
+        duration: 4000, // یا 5000
+        position: "top-center",
+      });
+      setTimeout(() => onSuccess(), 3000); 
+
     } catch (err) {
-      toast.error(err?.message || "خطا در تایید کد");
+      // اصلاح نمایش خطا
+      let message = "خطا در تأیید کد";
+      if (err?.message) message = err.message;
+      else if (err?.detail) message = err.detail;
+      else if (typeof err === "object") {
+        message = Object.values(err).flat().join(" | ");
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------- Resend OTP ---------------- */
   const handleResend = async () => {
-    if (resendLoading) return;
+    if (!canResend || resendLoading) return;
+
     setResendLoading(true);
     try {
       await sendRegisterOtp(phone);
-      toast.success("کد تایید دوباره ارسال شد ✅");
+      toast.success("کد تأیید دوباره ارسال شد ✅");
       setTimer(60);
-      setCanResend(false);
     } catch (err) {
-      toast.error(err?.message || "خطا در ارسال مجدد کد");
+      let message = "خطا در ارسال مجدد کد";
+      if (err?.message) message = err.message;
+      else if (typeof err === "object") {
+        message = Object.values(err).flat().join(" | ");
+      }
+      toast.error(message);
     } finally {
       setResendLoading(false);
     }
@@ -56,27 +80,37 @@ export default function RegisterOtpForm({ phone, onNext, onBack }) {
   return (
     <div className="max-w-md mx-auto p-2 sm:p-6">
       <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
-        کد تایید
+        کد تأیید
       </h2>
 
-      <OtpInput value={otp} onChange={(val) => setOtp(val.replace(/\D/g, ""))} />
+      <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
+        کد ارسال‌شده به شماره <span className="font-medium">{phone}</span> را
+        وارد کنید
+      </p>
+
+      <OtpInput
+        value={otp}
+        onChange={(val) => setOtp(val.replace(/\D/g, ""))}
+      />
 
       <button
         onClick={handleVerify}
         disabled={loading || otp.length < 5}
-        className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 ${
-          loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+        className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
+          loading || otp.length < 5
+            ? "bg-blue-400 cursor-not-allowed"
+            : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
         {loading && (
-          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         )}
-        {loading ? "در حال بررسی..." : "تایید"}
+        {loading ? "در حال بررسی..." : "تأیید و ثبت‌نام"}
       </button>
 
       <p className="text-center mt-4 text-sm text-gray-500">
         {!canResend ? (
-          <>ارسال مجدد کد تا {timer} ثانیه دیگر</>
+          <>ارسال مجدد تا {timer} ثانیه دیگر</>
         ) : (
           <button
             onClick={handleResend}

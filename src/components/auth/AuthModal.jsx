@@ -4,12 +4,13 @@ import { X } from "lucide-react";
 import BaseModal from "../basemodal/BaseModal";
 import RegisterPhoneForm from "./register/RegisterPhoneForm";
 import RegisterOtpForm from "./register/RegisterOtpForm";
-import RegisterFinalForm from "./register/RegisterFinalForm";
 import LoginForm from "./login/LoginForm";
 
 export default function AuthModal({ isOpen, onClose }) {
   const [mode, setMode] = useState("register-phone");
+
   const [registerPhone, setRegisterPhone] = useState("");
+  const [registerFullname, setRegisterFullname] = useState("");
 
   if (!isOpen) return null;
 
@@ -17,15 +18,9 @@ export default function AuthModal({ isOpen, onClose }) {
     <>
       <Toaster position="top-right" />
 
-      <BaseModal
-        isOpen={isOpen}
-        onClose={onClose}
-        maxWidth="sm"
-
-      >
-        {/* FORM WRAPPER */}
-        <div className="relative">
-          {/* Close button – only desktop & inside form */}
+      <BaseModal isOpen={isOpen} onClose={onClose} maxWidth="sm">
+        <div dir="rtl" className="relative">
+          {/* Close button */}
           <button
             onClick={onClose}
             aria-label="Close auth modal"
@@ -42,32 +37,32 @@ export default function AuthModal({ isOpen, onClose }) {
             <X className="w-5 h-5" />
           </button>
 
-          {/* فرم‌ها */}
+          {/* REGISTER – PHONE */}
           {mode === "register-phone" && (
             <RegisterPhoneForm
-              onNext={(phone) => {
+              onNext={({ phone, fullname }) => {
                 setRegisterPhone(phone);
+                setRegisterFullname(fullname);
                 setMode("register-otp");
               }}
               onSwitchLogin={() => setMode("login")}
             />
           )}
 
+          {/* REGISTER – OTP */}
           {mode === "register-otp" && (
             <RegisterOtpForm
               phone={registerPhone}
-              onNext={() => setMode("register-final")}
+              fullname={registerFullname}
               onBack={() => setMode("register-phone")}
+              onSuccess={() => {
+                // ثبت‌نام / لاگین موفق
+                onClose();
+              }}
             />
           )}
 
-          {mode === "register-final" && (
-            <RegisterFinalForm
-              phone={registerPhone}
-              onSuccess={onClose}
-            />
-          )}
-
+          {/* LOGIN */}
           {mode === "login" && (
             <LoginForm
               onSwitchRegister={() => setMode("register-phone")}

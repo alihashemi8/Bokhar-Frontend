@@ -56,7 +56,7 @@ const handleSubmit = ({ plaque, unit, title, description }) => {
         />
 
         {/* سرچ روی نقشه */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-11/12 md:w-3/4 z-50">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-11/12 md:w-3/4 z-500">
           <SearchLocation
             onSelect={(loc) => {
               setCoords({ lat: loc.lat, lng: loc.lng });
