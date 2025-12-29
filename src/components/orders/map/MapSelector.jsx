@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MapView from "./MapView";
 import SearchLocation from "./SearchLocation";
 import AddressModal from "./AddressModal";
@@ -17,6 +17,8 @@ export default function MapSelector({
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  const historyLock = useRef(false); // برای مدیریت pushState موبایل
+
   /* ---------------- Detect mobile ---------------- */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -24,6 +26,26 @@ export default function MapSelector({
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
+
+  /* ---------------- Handle mobile back button for modal ---------------- */
+  useEffect(() => {
+    if (!isMobile) return;
+
+    if (open && !historyLock.current) {
+      window.history.pushState({ modal: true }, "");
+      historyLock.current = true;
+    }
+
+    const onPopState = () => {
+      if (open) {
+        setOpen(false);
+        historyLock.current = false;
+      }
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [open, isMobile]);
 
   const handleSubmit = ({ plaque, unit, title, description }) => {
     setPlaque(plaque);
@@ -39,7 +61,14 @@ export default function MapSelector({
     });
 
     setOpen(false);
+    historyLock.current = false;
     goToNextStep?.();
+  };
+
+  const closeModalSafely = () => {
+    if (open) {
+      window.history.back(); // trigger popstate
+    }
   };
 
   return (
@@ -80,7 +109,7 @@ export default function MapSelector({
       {isMobile && (
         <AddressModal
           isOpen={open}
-          onClose={() => setOpen(false)}
+          onClose={closeModalSafely}
           onSubmit={handleSubmit}
           plaque={plaque}
           setPlaque={setPlaque}
