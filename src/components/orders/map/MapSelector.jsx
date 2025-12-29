@@ -17,9 +17,8 @@ export default function MapSelector({
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  const historyLock = useRef(false); // برای مدیریت pushState موبایل
+  const historyLock = useRef(false);
 
-  /* ---------------- Detect mobile ---------------- */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -27,7 +26,6 @@ export default function MapSelector({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  /* ---------------- Handle mobile back button for modal ---------------- */
   useEffect(() => {
     if (!isMobile) return;
 
@@ -62,18 +60,16 @@ export default function MapSelector({
 
     setOpen(false);
     historyLock.current = false;
-    goToNextStep?.();
+
+    goToNextStep?.(); // ✅ حتماً اجرا می‌شود
   };
 
   const closeModalSafely = () => {
-    if (open) {
-      window.history.back(); // trigger popstate
-    }
+    if (open) window.history.back();
   };
 
   return (
     <div className="relative flex flex-col gap-5">
-      {/* نقشه */}
       <div
         className="relative rounded-2xl border border-sky-200 overflow-hidden shadow-md shadow-sky-300/50 z-0 w-[90%] md:w-[75%] mx-auto"
         style={{ height: "300px" }}
@@ -84,7 +80,6 @@ export default function MapSelector({
           onMarkerClick={() => setOpen(true)}
         />
 
-        {/* سرچ روی نقشه */}
         <div className="absolute top-3 left-1/2 -translate-x-1/2 w-11/12 md:w-3/4 z-500">
           <SearchLocation
             onSelect={(loc) => {
@@ -95,33 +90,25 @@ export default function MapSelector({
         </div>
       </div>
 
-      {/* دکمه تایید موقعیت */}
       <button
         onClick={() => setOpen(true)}
-        className="px-3 py-2 mb-20 md:mb-0 bg-sky-100 border border-sky-300 text-gray-700 font-bold rounded-xl  
-                   hover:bg-sky-200 hover:text-gray-800 shadow-md shadow-sky-300/60  
-                   hover:shadow-sky-400 transition w-[75%] mx-auto"
+        className="px-3 py-2 mb-20 md:mb-0 bg-sky-100 border border-sky-300 text-gray-700 font-bold rounded-xl hover:bg-sky-200 shadow-md w-[75%] mx-auto"
       >
         تایید موقعیت
       </button>
 
-      {/* موبایل → AddressModal */}
       {isMobile && (
         <AddressModal
           isOpen={open}
           onClose={closeModalSafely}
           onSubmit={handleSubmit}
           plaque={plaque}
-          setPlaque={setPlaque}
           unit={unit}
-          setUnit={setUnit}
           address={address}
           title=""
-          setTitle={() => {}}
         />
       )}
 
-      {/* دسکتاپ → AddressDropdown */}
       {!isMobile && (
         <AddressDropdown
           open={open}
@@ -132,7 +119,7 @@ export default function MapSelector({
           unit={unit}
           setUnit={setUnit}
           address={address}
-          fullScreen={true}
+          fullScreen
         />
       )}
     </div>
