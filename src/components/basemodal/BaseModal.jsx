@@ -25,12 +25,19 @@ export default function BaseModal({ isOpen, onClose, children, maxWidth = "md", 
     // push state وقتی مودال باز شد
     window.history.pushState({ modal: true }, "");
 
-    const onPopState = () => {
-      onClose(); // وقتی Back موبایل زده شد، مودال بسته شود
+    const onPopState = (event) => {
+      if (event.state && event.state.modal) {
+        onClose();
+        // اضافه کردن state خنثی برای جلوگیری از رفتن ناخواسته به صفحه قبل
+        window.history.pushState({ modal: false }, "");
+      }
     };
 
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
   }, [isMobile, isOpen, onClose]);
 
   if (!isOpen) return null;
