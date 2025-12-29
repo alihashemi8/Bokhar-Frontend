@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState, useCallback } from "react";
+import { useReducer, useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +53,7 @@ export default function Order() {
   const [mounted, setMounted] = useState(false); // اضافه کردن mounted
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("delivery");
+  const historyLock = useRef(false);
 
   // قبل از mount قفل اسکرول موبایل
   if (typeof window !== "undefined" && !mounted && isMobile) {
@@ -62,6 +63,25 @@ export default function Order() {
   useEffect(() => {
     setMounted(true);
   }, []);
+  useEffect(() => {
+    if (!isMobile) return;
+
+    if (modalOpen && !historyLock.current) {
+      window.history.pushState({ modal: true }, "");
+      historyLock.current = true;
+    }
+
+    const onPopState = () => {
+      if (modalOpen) {
+        setModalOpen(false);
+        setModalType("delivery");
+        historyLock.current = false;
+      }
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [modalOpen, isMobile]);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -147,7 +167,8 @@ export default function Order() {
     if (step < stepsCount) {
       const nextStep = step + 1;
       dispatch({ type: "SET_STEP", payload: nextStep });
-      if (nextStep > maxStep) dispatch({ type: "SET_MAX_STEP", payload: nextStep });
+      if (nextStep > maxStep)
+        dispatch({ type: "SET_MAX_STEP", payload: nextStep });
     }
   }, [step, maxStep, orderData, isMobile, stepType]);
 
@@ -157,7 +178,8 @@ export default function Order() {
 
   const handleStepClick = useCallback(
     (clickedStep) => {
-      if (clickedStep <= maxStep) dispatch({ type: "SET_STEP", payload: clickedStep });
+      if (clickedStep <= maxStep)
+        dispatch({ type: "SET_STEP", payload: clickedStep });
     },
     [maxStep]
   );
@@ -169,7 +191,9 @@ export default function Order() {
       await axios.post(`${API_URL}/orders/`, payload);
 
       toast.success("سفارش با موفقیت ثبت شد ✅");
-      ["orderData", "orderStep", "orderMaxStep"].forEach(localStorage.removeItem);
+      ["orderData", "orderStep", "orderMaxStep"].forEach(
+        localStorage.removeItem
+      );
       dispatch({ type: "RESET_ORDER" });
     } catch (error) {
       toast.error("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
@@ -254,7 +278,8 @@ export default function Order() {
 
   const goToLocationStep = useCallback(() => {
     dispatch({ type: "SET_STEP", payload: isMobile ? 2 : 3 });
-    if ((isMobile ? 2 : 3) > maxStep) dispatch({ type: "SET_MAX_STEP", payload: isMobile ? 2 : 3 });
+    if ((isMobile ? 2 : 3) > maxStep)
+      dispatch({ type: "SET_MAX_STEP", payload: isMobile ? 2 : 3 });
   }, [isMobile, maxStep]);
 
   const isLastStep = step === steps.length;
@@ -262,6 +287,11 @@ export default function Order() {
     modalType === "delivery"
       ? orderData.datetime.delivery?.date
       : orderData.datetime.pickup?.date;
+  const closeModalSafely = () => {
+    if (modalOpen) {
+      window.history.back();
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -320,10 +350,7 @@ export default function Order() {
                     }
                     setSelectedTime={handleSetModalTime}
                     onConfirm={handleModalConfirm}
-                    onClose={() => {
-                      setModalOpen(false);
-                      setModalType("delivery");
-                    }}
+                    onClose={closeModalSafely}
                   />
                 )}
               </div>
