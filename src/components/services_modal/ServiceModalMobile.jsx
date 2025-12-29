@@ -1,4 +1,4 @@
-import MobileModal from "../basemodal/MobileModal";
+import MobileModal from "../basemodal/BaseModal";
 
 export default function ServiceModalMobile({
   onClose,
