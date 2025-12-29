@@ -39,7 +39,7 @@ export default function Landing() {
 
   const { data: activeData } = categoryComponents[activeCategory];
 
-  // ✅ جمع کردن همه داده‌ها برای سرچ
+  // جمع کردن همه داده‌ها برای سرچ
   const allItems = useMemo(() => {
     return [
       ...shirtsPantsData.map(c => ({ ...c, category: "پیراهن" })),
@@ -55,7 +55,7 @@ export default function Landing() {
     ];
   }, []);
 
-  // ✅ فیلتر ساده و دقیق فارسی (تضمینی)
+  // فیلتر فارسی
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return [];
 
@@ -71,12 +71,10 @@ export default function Landing() {
 
     return allItems.filter((item) => {
       if (!item.title) return false;
-      const title = normalize(item.title);
-      return title.includes(query);
+      return normalize(item.title).includes(query);
     });
   }, [searchQuery, allItems]);
 
-  // ✅ انتخاب آیتم از ساجست‌ها
   const handleSelectSuggestion = (card) => {
     setSearchQuery(card.title);
     setSelectedCard(card);
@@ -91,15 +89,15 @@ export default function Landing() {
     setShowSuggestions(false);
   };
 
-  // بستن ساجست‌ها با کلیک بیرون
+  // بستن ساجست‌ها با کلیک بیرون (امن‌تر)
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setShowSuggestions(false);
       }
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -109,7 +107,7 @@ export default function Landing() {
   }, [searchQuery]);
 
   return (
-    <div dir="rtl" className="min-h-screen  text-gray-900 dark:text-gray-100">
+    <div dir="rtl" className="min-h-dvh w-full text-gray-900 dark:text-gray-100">
       {/* هدر */}
       <section className="p-8 text-center">
         <h1 className="text-3xl font-bold md:mt-10">خشکشویی</h1>
@@ -118,63 +116,60 @@ export default function Landing() {
         </p>
       </section>
 
-{/* سرچ */}
-<div className="px-4 mt-4 flex justify-center relative">
-  <div
-    ref={searchRef}
-    className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col"
-  >
-     <h className="flex mr-2 my-1">چی میخوای پیدا کنی؟</h>
-    <div className="flex rounded-full text-black font-normal border-1 border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
-<input
-  type="text"
-  placeholder="پتو ،مانتو، شلوار ..."
-  value={searchQuery}
-  onChange={(e) => {
-    setSearchQuery(e.target.value);
-    setShowSuggestions(true);
-  }}
-  onFocus={() => {
-    if (searchQuery.trim()) setShowSuggestions(true);
-  }}
-  className="flex-1 px-4 py-2 bg-transparent focus:outline-none
-             text-base md:text-base"
-/>
+      {/* سرچ */}
+      <div className="px-4 mt-4 flex justify-center relative">
+        <div ref={searchRef} className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col">
+          <span className="flex mr-2 my-1">چی میخوای پیدا کنی؟</span>
 
-      <button
-        onClick={handleSearch}
-        className="px-4 py-2 bg-sky-300/90 hover:bg-sky-600/60 text-white flex items-center justify-center transition"
-        
-      >
-        <Search size={18} />
-      </button>
-    </div>
+          <div className="flex rounded-full border border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
+            <input
+              type="text"
+              placeholder="پتو ،مانتو، شلوار ..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                if (searchQuery.trim()) setShowSuggestions(true);
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowSuggestions(false), 100);
+              }}
+              className="flex-1 px-4 py-2 bg-transparent focus:outline-none text-base"
+            />
 
-{/* ✅ لیست پیشنهاد ساده زیر اینپوت */}
-{showSuggestions && searchQuery.trim() && (
-  <ul className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md z-50">
-    {filteredItems.length > 0 ? (
-      filteredItems.slice(0, 6).map((s) => (
-        <li
-          key={`${s.category}-${s.id}`}
-          onClick={() => handleSelectSuggestion(s)}
-          className="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-        >
-          {s.title}
-        </li>
-      ))
-    ) : (
-      <li className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 cursor-default">
-        گزینه‌ای یافت نشد
-      </li>
-    )}
-  </ul>
-)}
-  </div>
-</div>
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 bg-sky-300/90 hover:bg-sky-600/60 text-white flex items-center justify-center transition"
+            >
+              <Search size={18} />
+            </button>
+          </div>
 
+          {showSuggestions && searchQuery.trim() && (
+            <ul className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md z-50">
+              {filteredItems.length > 0 ? (
+                filteredItems.slice(0, 6).map((s) => (
+                  <li
+                    key={`${s.category}-${s.id}`}
+                    onClick={() => handleSelectSuggestion(s)}
+                    className="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  >
+                    {s.title}
+                  </li>
+                ))
+              ) : (
+                <li className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                  گزینه‌ای یافت نشد
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      </div>
 
-      {/* تب دسته‌بندی */}
+      {/* تب‌ها */}
       <div className="mt-4 px-4 overflow-x-auto">
         <CategoryTabs
           onCategoryChange={(cat) => {
@@ -185,14 +180,14 @@ export default function Landing() {
         />
       </div>
 
-      {/* نمایش کارت انتخاب شده یا همه کارت‌های دسته */}
-      <section dir="rtl" className="p-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 mb-18 md:mb-0">
+      {/* کارت‌ها */}
+      <section className="p-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 mb-16">
           {selectedCard ? (
-            <Card key={`${selectedCard.category}-${selectedCard.id}`} {...selectedCard} />
+            <Card {...selectedCard} />
           ) : (
             activeData.map((card) => (
-              <Card key={`${card.category}-${card.id}`} {...card} />
+              <Card key={`${activeCategory}-${card.id}`} {...card} />
             ))
           )}
         </div>

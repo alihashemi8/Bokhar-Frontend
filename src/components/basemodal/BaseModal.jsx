@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import MobileModal from "./MobileModal";
 import DesktopModal from "./DesktopModal";
 
-export default function BaseModal({ isOpen, onClose, children, maxWidth = "md", title }) {
-  // تعیین وضعیت موبایل هنگام mount فوری
+export default function BaseModal({
+  isOpen,
+  onClose,
+  children,
+  maxWidth = "md",
+  title,
+}) {
+  /* ---------------- Detect mobile ---------------- */
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== "undefined") {
-      return window.innerWidth < 800;
+      return window.innerWidth < 768;
     }
-    return false; // fallback برای SSR
+    return false;
   });
 
-  /* ---------------- Detect mobile on resize ---------------- */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", check);
@@ -22,15 +27,11 @@ export default function BaseModal({ isOpen, onClose, children, maxWidth = "md", 
   useEffect(() => {
     if (!isMobile || !isOpen) return;
 
-    // push state وقتی مودال باز شد
+    // ثبت state مودال
     window.history.pushState({ modal: true }, "");
 
-    const onPopState = (event) => {
-      if (event.state && event.state.modal) {
-        onClose();
-        // اضافه کردن state خنثی برای جلوگیری از رفتن ناخواسته به صفحه قبل
-        window.history.pushState({ modal: false }, "");
-      }
+    const onPopState = () => {
+      onClose();
     };
 
     window.addEventListener("popstate", onPopState);
@@ -40,12 +41,21 @@ export default function BaseModal({ isOpen, onClose, children, maxWidth = "md", 
     };
   }, [isMobile, isOpen, onClose]);
 
+  /* ---------------- Unified close handler ---------------- */
+  const handleClose = useCallback(() => {
+    if (isMobile && window.history.state?.modal) {
+      window.history.back(); // باعث trigger شدن popstate میشه
+    } else {
+      onClose();
+    }
+  }, [isMobile, onClose]);
+
   if (!isOpen) return null;
 
   /* ---------------- Mobile → Bottom Sheet ---------------- */
   if (isMobile) {
     return (
-      <MobileModal isOpen={isOpen} onClose={onClose} title={title}>
+      <MobileModal isOpen={isOpen} onClose={handleClose} title={title}>
         {children}
       </MobileModal>
     );
@@ -53,7 +63,12 @@ export default function BaseModal({ isOpen, onClose, children, maxWidth = "md", 
 
   /* ---------------- Desktop → Center Modal ---------------- */
   return (
-    <DesktopModal isOpen={isOpen} onClose={onClose} maxWidth={maxWidth} title={title}>
+    <DesktopModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth={maxWidth}
+      title={title}
+    >
       {children}
     </DesktopModal>
   );
