@@ -66,7 +66,7 @@ export default function AdminServices() {
   const activeServices = filteredServices.filter(s => s.status === "active");
 
   return (
-    <div dir="rtl" className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div dir="rtl" className="flex min-h-screen">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}

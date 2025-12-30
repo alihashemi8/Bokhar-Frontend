@@ -200,7 +200,7 @@ export default function AdminReports() {
   const goNextWeek = () => setActiveWeek(prev => Math.min(prev + 1, Math.max(0, series.length - 1)));
 
   return (
-    <div dir="RTL" className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div dir="RTL" className="flex flex-col min-h-screen transition-colors duration-300">
       <div className="flex flex-1">
         <Sidebar
           activeMenu={activeMenu}

@@ -68,8 +68,14 @@ function AppContent() {
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/customer-dashboard/edit" element={<EditProfile />} />
         <Route path="/customer-dashboard/wallet" element={<WalletPage />} />
-        <Route path="/customer-dashboard/orders-tracking" element={<OrderTracking />} />
-        <Route path="/customer-dashboard/privacy" element={<SecurityPrivacy />} />
+        <Route
+          path="/customer-dashboard/orders-tracking"
+          element={<OrderTracking />}
+        />
+        <Route
+          path="/customer-dashboard/privacy"
+          element={<SecurityPrivacy />}
+        />
         <Route path="/customer-dashboard/support" element={<Support />} />
 
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
@@ -115,10 +121,8 @@ function AppContent() {
 
 export default function App() {
   return (
-
-      <Router>
-        <AppContent />
-      </Router>
-
+    <Router>
+      <AppContent />
+    </Router>
   );
 }

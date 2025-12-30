@@ -1,45 +1,74 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { useState, useMemo } from "react";
 import Sidebar from "./Sidebar";
 import OrderModal from "./OrderModal";
-import KPICard from "./reports/KPICard"; 
-import jalaali from "jalaali-js";
+import KPICard from "./reports/KPICard";
+import Search from "./Search";
 
 export default function AdminOrders() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("orders");
 
   const [orders, setOrders] = useState([
-    { id: 1, city: "تهران", date: "2025-11-01", price: 450000, status: "انجام شده", phone: "09121234567", address: "خیابان ولیعصر", name: "علی", deliveryDate: "2025-11-03" },
-    { id: 2, city: "مشهد", date: "2025-10-28", price: 200000, status: "انجام نشده", phone: "09129876543", address: "خیابان امام رضا", name: "سارا", deliveryDate: "2025-11-02" },
-    { id: 3, city: "اصفهان", date: "2025-10-30", price: 300000, status: "انجام نشده", phone: "09122334455", address: "چهارباغ", name: "مهدی", deliveryDate: "2025-11-04" },
-    { id: 4, city: "تهران", date: "2025-10-31", price: 150000, status: "انجام شده", phone: "09123456789", address: "تهرانپارس", name: "نرگس", deliveryDate: "2025-11-05" },
+    {
+      id: 1,
+      city: "تهران",
+      date: "2025-11-01",
+      price: 450000,
+      status: "انجام شده",
+      phone: "09381234567",
+      address: "خیابان ولیعصر",
+      name: "علی",
+      deliveryDate: "2025-11-03",
+    },
+    {
+      id: 2,
+      city: "مشهد",
+      date: "2025-10-28",
+      price: 200000,
+      status: "انجام نشده",
+      phone: "09129876543",
+      address: "خیابان امام رضا",
+      name: "سارا",
+      deliveryDate: "2025-11-02",
+    },
+    {
+      id: 3,
+      city: "اصفهان",
+      date: "2025-10-30",
+      price: 300000,
+      status: "انجام نشده",
+      phone: "09122334455",
+      address: "چهارباغ",
+      name: "مهدی",
+      deliveryDate: "2025-11-04",
+    },
+    {
+      id: 4,
+      city: "تهران",
+      date: "2025-10-31",
+      price: 150000,
+      status: "انجام شده",
+      phone: "09123456789",
+      address: "تهرانپارس",
+      name: "نرگس",
+      deliveryDate: "2025-11-05",
+    },
   ]);
 
   const [sortKey, setSortKey] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
   const [cityFilter, setCityFilter] = useState("");
-  const [cityDropdownOpen, setCityDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const cities = Array.from(new Set(orders.map((o) => o.city)));
 
-  const dropdownRef = useRef();
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setCityDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const toggleSort = (key) => {
-    if (sortKey === key) setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    else {
+    if (sortKey === key) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
       setSortKey(key);
       setSortOrder("asc");
     }
@@ -48,14 +77,34 @@ export default function AdminOrders() {
   const toggleStatus = (id) => {
     setOrders((prev) =>
       prev.map((o) =>
-        o.id === id ? { ...o, status: o.status === "انجام شده" ? "انجام نشده" : "انجام شده" } : o
+        o.id === id
+          ? {
+              ...o,
+              status:
+                o.status === "انجام شده" ? "انجام نشده" : "انجام شده",
+            }
+          : o
       )
     );
   };
 
   const sortedOrders = useMemo(() => {
     let copy = [...orders];
-    if (cityFilter) copy = copy.filter((o) => o.city === cityFilter);
+
+    if (cityFilter) {
+      copy = copy.filter((o) => o.city === cityFilter);
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.trim();
+
+      copy = copy.filter(
+        (o) =>
+          o.name.includes(q) ||
+          o.address.includes(q) ||
+          o.phone.includes(q)
+      );
+    }
 
     copy.sort((a, b) => {
       let valA = a[sortKey];
@@ -75,12 +124,14 @@ export default function AdminOrders() {
     });
 
     return copy;
-  }, [orders, sortKey, sortOrder, cityFilter]);
+  }, [orders, sortKey, sortOrder, cityFilter, searchQuery]);
 
   const remainingDays = (date) => {
     const today = new Date();
     const delivery = new Date(date);
-    const diff = Math.ceil((delivery - today) / (1000 * 60 * 60 * 24));
+    const diff = Math.ceil(
+      (delivery - today) / (1000 * 60 * 60 * 24)
+    );
     return diff >= 0 ? diff : 0;
   };
 
@@ -88,22 +139,18 @@ export default function AdminOrders() {
     setSelectedOrder(order);
     setIsModalOpen(true);
   };
+
   const closeModal = () => {
     setSelectedOrder(null);
     setIsModalOpen(false);
   };
 
-  // ------------------------
-  //      KPI CALCULATIONS
-  // ------------------------
+  // KPI
   const today = new Date().toISOString().slice(0, 10);
-
-  const todayOrders = orders.filter(o => o.date === today).length;
-
+  const todayOrders = orders.filter((o) => o.date === today).length;
   const todayUndelivered = orders.filter(
-    o => o.deliveryDate === today && o.status !== "انجام شده"
+    (o) => o.deliveryDate === today && o.status !== "انجام شده"
   ).length;
-
   const totalOrders = orders.length;
 
   return (
@@ -115,112 +162,125 @@ export default function AdminOrders() {
         setActiveMenu={setActiveMenu}
       />
 
-      <main
-        className={`flex-1 p-4 transition-all duration-300 
-        ${isSidebarOpen ? "lg:mr-64 md:mr-56" : "lg:mr-64 md:mr-56 mr-0"}`}
-      >
+      <main className="flex-1 p-4 lg:mr-64 md:mr-56 mr-0 max-w-full">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+          مدیریت سفارش‌ها
+        </h1>
 
-        <div className="flex justify-between items-center mt-10">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">مدیریت سفارش‌ها</h1>
-        </div>
-
-        {/* KPI CARDS */}
+        {/* KPI */}
         <div className="grid grid-cols-3 gap-4 mt-6">
           <KPICard title="سفارش‌های امروز" value={todayOrders} />
           <KPICard title="تحویل‌نشده‌های امروز" value={todayUndelivered} />
           <KPICard title="کل سفارش‌ها" value={totalOrders} />
         </div>
 
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden mt-6">
-          <div className="p-4 flex flex-wrap items-center gap-3">
-            <div ref={dropdownRef} className="relative">
-              <button
-                onClick={() => setCityDropdownOpen(!cityDropdownOpen)}
-                className="flex items-center gap-1 px-3 py-2 border rounded-md dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
-              >
-                {cityFilter || "همه شهرها"}
-                {cityDropdownOpen ? <FiChevronUp /> : <FiChevronDown />}
-              </button>
-
-              {cityDropdownOpen && (
-                <ul className="absolute mt-1 right-0 z-50 bg-white dark:bg-gray-800 shadow-lg rounded-md w-44 max-h-60 overflow-y-auto border dark:border-gray-700">
-                  <li
-                    className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                    onClick={() => { setCityFilter(""); setCityDropdownOpen(false); }}
-                  >
-                    همه شهرها
-                  </li>
-                  {cities.map((city) => (
-                    <li
-                      key={city}
-                      className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                      onClick={() => { setCityFilter(city); setCityDropdownOpen(false); }}
-                    >
-                      {city}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          <table className="min-w-full text-sm text-right dark:text-gray-200">
-            <thead className="bg-gray-100 dark:bg-gray-700">
-              <tr>
-                <th className="p-3 cursor-pointer select-none" onClick={() => toggleSort("id")}>
-                  شماره سفارش {sortKey === "id" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
-                </th>
-                <th className="p-3">نام مشتری</th>
-                <th className="p-3 cursor-pointer select-none" onClick={() => toggleSort("city")}>شهر</th>
-                <th className="p-3 cursor-pointer select-none" onClick={() => toggleSort("deliveryDate")}>مهلت باقی‌مانده</th>
-                <th className="p-3 cursor-pointer select-none" onClick={() => toggleSort("price")}>مبلغ</th>
-                <th className="p-3">وضعیت</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {sortedOrders.map((order) => (
-                <tr
-                  key={order.id}
-                  className={`transition-colors duration-200 cursor-pointer hover:shadow-md ${
-                    order.status === "انجام شده"
-                      ? "bg-green-50 dark:bg-green-900"
-                      : "bg-red-50 dark:bg-red-900"
-                  }`}
-                  onClick={() => openModal(order)}
-                >
-                  <td className="p-3">{order.id}</td>
-                  <td className="p-3">{order.name}</td>
-                  <td className="p-3">{order.city}</td>
-                  <td className="p-3">{remainingDays(order.deliveryDate)} روز</td>
-                  <td className="p-3">{order.price.toLocaleString()} تومان</td>
-
-                  <td className="p-3">
-                    <input
-                      type="checkbox"
-                      checked={order.status === "انجام شده"}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleStatus(order.id);
-                      }}
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                    />
-                  </td>
-                </tr>
-              ))}
-
-              {sortedOrders.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="p-4 text-center text-gray-500 dark:text-gray-400">
-                    هیچ سفارشی یافت نشد
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+        {/* Search */}
+        <div className="mt-4 max-w-md mx-auto">
+          <Search
+            value={searchQuery}
+            onChange={setSearchQuery}
+            items={searchQuery ? sortedOrders : []}
+            placeholder="نام، آدرس یا شماره همراه"
+            onSelect={(order) => openModal(order)}
+            renderItem={(order) => (
+              <div className="flex flex-col text-sm">
+                <span className="font-medium">{order.name}</span>
+                <span className="text-xs text-gray-500">
+                  {order.phone} — {order.address}
+                </span>
+              </div>
+            )}
+          />
         </div>
 
-        <OrderModal order={selectedOrder} isOpen={isModalOpen} onClose={closeModal} />
+        {/* Table */}
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl mt-6 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-right">
+              <thead className="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                  <th className="p-3">شماره سفارش</th>
+                  <th className="p-3">نام مشتری</th>
+                  <th className="p-3">
+                    <select
+                      value={cityFilter}
+                      onChange={(e) => setCityFilter(e.target.value)}
+                      className="p-1 rounded border dark:bg-gray-700"
+                    >
+                      <option value="">محله</option>
+                      {cities.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </th>
+                  <th
+                    className="p-3 cursor-pointer"
+                    onClick={() => toggleSort("deliveryDate")}
+                  >
+                    مهلت
+                  </th>
+                  <th
+                    className="p-3 cursor-pointer"
+                    onClick={() => toggleSort("price")}
+                  >
+                    مبلغ
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {sortedOrders.map((order) => (
+                  <tr
+                    key={order.id}
+                    onClick={() => openModal(order)}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                  >
+                    <td className="p-3">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStatus(order.id);
+                        }}
+                        className={`px-4 py-2 rounded-xl font-bold transition
+                          ${
+                            order.status === "انجام شده"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                      >
+                        {order.id}
+                      </button>
+                    </td>
+                    <td className="p-3">{order.name}</td>
+                    <td className="p-3">{order.city}</td>
+                    <td className="p-3">
+                      {remainingDays(order.deliveryDate)} روز
+                    </td>
+                    <td className="p-3">
+                      {order.price.toLocaleString()} تومان
+                    </td>
+                  </tr>
+                ))}
+
+                {sortedOrders.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="p-4 text-center text-gray-400">
+                      هیچ سفارشی یافت نشد
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <OrderModal
+          order={selectedOrder}
+          isOpen={isModalOpen}
+          onClose={closeModal}
+        />
       </main>
     </div>
   );
