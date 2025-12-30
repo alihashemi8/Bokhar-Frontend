@@ -78,8 +78,8 @@ export default function AdminDashboard() {
               <div
                 key={i}
                 onClick={() => card.link && navigate(card.link)}
-                className={`p-5 rounded-2xl bg-white/50 dark:bg-white/10 backdrop-blur-lg 
-                border border-white/20 hover:bg-white/20 transition-all cursor-pointer shadow-lg 
+                className={`p-5 rounded-2xl bg-white/30 dark:bg-white/10 backdrop-blur-lg 
+                border border-sky-200/50 hover:bg-white/70 transition-all cursor-pointer shadow-xl 
                 hover:scale-[1.03] active:scale-[0.98]`}
               >
                 <div
@@ -95,13 +95,13 @@ export default function AdminDashboard() {
           </div>
 
           {/* جدول سفارش‌ها */}
-          <div className="bg-white/50 dark:bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-lg">
+          <div className="bg-white/50 dark:bg-white/30 backdrop-blur-lg border border-sky-200/50 rounded-2xl p-6 shadow-xl">
             <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-2">
               آخرین سفارش‌ها
             </h2>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm text-right">
-                <thead className="text-gray-300 border-b border-white/10">
+                <thead className="text-black border-b border-white/10">
                   <tr>
                     <th className="p-3">شماره سفارش</th>
                     <th className="p-3">نام مشتری</th>

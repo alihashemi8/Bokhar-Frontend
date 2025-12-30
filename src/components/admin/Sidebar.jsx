@@ -91,7 +91,7 @@ export default function Sidebar({
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  flex items-center gap-2 w-full px-3 py-3 rounded text-right transition-all duration-200
+                  flex items-center gap-2 w-full px-3 py-3 my-3 rounded text-right transition-all duration-200
                   ${activeMenu === item.key
                     ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
                     : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"

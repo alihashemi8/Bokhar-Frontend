@@ -13,7 +13,7 @@ export default function Search({
     <div className="relative w-full">
       <div
         dir="rtl"
-        className="flex items-center gap-2 bg-sky-50 border border-sky-300 px-3 py-2 rounded-2xl"
+        className="flex items-center gap-2 bg-white/70 border border-sky-300/50 px-3 py-2 rounded-2xl"
       >
         <SearchIcon className="text-gray-500" size={20} />
         <input
