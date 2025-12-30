@@ -79,7 +79,7 @@ export default function AdminServices() {
 
           {/* دسته‌بندی */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">دسته‌بندی‌ها</h2>
+            <h2 className="text-xl font-bold mb-4 text-center md:text-start text-gray-900 dark:text-white">دسته‌بندی‌ها</h2>
             <div className="flex gap-2 mb-4">
               <input
                 value={newCat}
@@ -109,7 +109,7 @@ export default function AdminServices() {
 
           {/* کارت‌ها */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
-            <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">خدمات</h2>
+            <h2 className="text-xl font-bold mb-6 text-center md:text-start text-gray-900 dark:text-white">خدمات</h2>
 
             <div className="mb-6 relative">
               <FiSearch className="absolute left-3 top-3 text-gray-500 dark:text-gray-400 text-xl" />

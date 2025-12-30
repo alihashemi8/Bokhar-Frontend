@@ -210,7 +210,7 @@ export default function AdminReports() {
         />
 
         <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? 'md:mr-64' : ''}`}>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4 md:mb-6 text-gray-900 dark:text-gray-100 tracking-wide">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center md:text-start mb-4 md:mb-6 text-gray-900 dark:text-gray-100 tracking-wide">
             گزارش‌های مدیریتی
           </h1>
 
@@ -233,7 +233,7 @@ export default function AdminReports() {
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             <KPICard title="فروش کل" value={fmt(summary?.total_revenue)} />
             <KPICard title="تعداد سفارش‌ها" value={fmt(summary?.orders_count)} />
           </div>

@@ -71,13 +71,13 @@ export default function AdminCustomers() {
         />
 
         <main className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}>
-          <h1 className="text-3xl md:text-4xl font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
+          <h1 className="text-3xl md:text-4xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
             مشتریان
           </h1>
 
           {/* تب‌ها و سرچ */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
               {[
                 { key: "all", label: "همه", icon: <FiUsers /> },
                 { key: "active", label: "فعال", icon: <FiUser /> },
@@ -88,7 +88,7 @@ export default function AdminCustomers() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`
-                    flex items-center gap-2 px-5 py-2 rounded-full transition-all duration-300 border font-semibold
+                    flex items-center gap-2 px-2 py-2 rounded-full transition-all duration-300 border font-semibold
                     ${activeTab === tab.key
                       ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
                       : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"

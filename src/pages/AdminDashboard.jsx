@@ -56,7 +56,7 @@ export default function AdminDashboard() {
   return (
     <div
       dir="rtl"
-      className="flex flex-col min-h-screen transition-colors duration-300"
+      className="flex flex-col min-h-screen  transition-colors duration-300"
     >
       <div className="flex flex-1">
         <Sidebar
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
           className={`flex-1 p-6 overflow-y-auto text-gray-800 dark:text-gray-100 transition-all duration-300
             ${!isSidebarOpen ? "md:mr-64" : ""}`}
         >
-          <h1 className="text-2xl font-bold mb-8 text-right">داشبورد مدیریت</h1>
+          <h1 className="text-2xl font-bold text-center md:text-start mb-8">داشبورد مدیریت</h1>
 
           {/* کارت‌ها */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
               <div
                 key={i}
                 onClick={() => card.link && navigate(card.link)}
-                className={`p-5 rounded-2xl bg-white/10 dark:bg-white/10 backdrop-blur-lg 
+                className={`p-5 rounded-2xl bg-white/50 dark:bg-white/10 backdrop-blur-lg 
                 border border-white/20 hover:bg-white/20 transition-all cursor-pointer shadow-lg 
                 hover:scale-[1.03] active:scale-[0.98]`}
               >
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* جدول سفارش‌ها */}
-          <div className="bg-white/10 dark:bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-lg">
+          <div className="bg-white/50 dark:bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 shadow-lg">
             <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-2">
               آخرین سفارش‌ها
             </h2>
