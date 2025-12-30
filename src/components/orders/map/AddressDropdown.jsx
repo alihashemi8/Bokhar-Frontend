@@ -1,111 +1,100 @@
-import { useState, useEffect } from "react";
-import MobileModal from "../../basemodal/MobileModal";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function AddressModal({
-  isOpen,
+export default function AddressDropdown({
+  open,
   onClose,
   onSubmit,
   plaque,
+  setPlaque,
   unit,
+  setUnit,
   address,
   title,
+  setTitle,
+  fullScreen = false,
 }) {
-  const [description, setDescription] = useState("");
-  const [localPlaque, setLocalPlaque] = useState(plaque || "");
-  const [localUnit, setLocalUnit] = useState(unit || "");
-  const [localTitle, setLocalTitle] = useState(title || "");
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setLocalPlaque(plaque || "");
-      setLocalUnit(unit || "");
-      setLocalTitle(title || "");
-      setDescription("");
-
-      const id = setTimeout(() => setReady(true), 10);
-      return () => {
-        clearTimeout(id);
-        setReady(false);
-      };
-    } else {
-      setReady(false);
-    }
-  }, [isOpen, plaque, unit, title]);
-
-  const isPlaqueValid = /^\d+$/.test(localPlaque);
-  const isUnitValid = /^\d+$/.test(localUnit);
-  const isFormValid = isPlaqueValid && isUnitValid;
-
-  const handleSubmit = () => {
-    if (!isFormValid) return;
-
-    onSubmit({
-      plaque: localPlaque,
-      unit: localUnit,
-      title: localTitle,
-      description,
-    });
-    // ❌ onClose اینجا عمداً حذف شده
-  };
-
-  if (!ready) return null;
-
   return (
-    <MobileModal isOpen={isOpen} onClose={onClose} title="📍 اطلاعات تکمیلی">
-      {address && <p className="text-xs text-gray-600 mb-4">{address}</p>}
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          key="dropdown"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className={`absolute inset-0 z-[600] ${
+            fullScreen
+              ? "w-[75%] m-auto -top-1"
+              : "bg-white p-5 rounded-xl shadow-2xl shadow-sky-400"
+          }`}
+        >
+          <div
+            dir="rtl"
+            className={`${
+              fullScreen
+                ? "bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 w-full h-full flex flex-col shadow-md shadow-sky-300 border border-sky-200 rounded-2xl p-4"
+                : "w-[360px]"
+            }`}
+          >
+            {/* header */}
+            <div className="flex justify-between items-center mb-3">
+              <div>
+                <h3 className="text-lg font-semibold text-sky-600">
+                  اطلاعات تکمیلی
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">{address}</p>
+              </div>
+              <button onClick={onClose}>
+                <X size={20} className="text-gray-500 hover:text-gray-700" />
+              </button>
+            </div>
 
-      <div className="flex gap-4 justify-center mb-4">
-        <input
-          type="number"
-          placeholder="پلاک"
-          value={localPlaque}
-          onChange={(e) => setLocalPlaque(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-        />
-        <input
-          type="number"
-          placeholder="واحد"
-          value={localUnit}
-          onChange={(e) => setLocalUnit(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-        />
-      </div>
+            {/* input پلاک */}
+            <div className="flex flex-col mt-3 mx-auto w-[75%]">
+              <input
+                type="number"
+                placeholder="پلاک"
+                value={plaque}
+                onChange={(e) => setPlaque(e.target.value)}
+                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              />
+            </div>
 
-      <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 mb-1">عنوان آدرس</label>
-        <input
-          placeholder="مثلاً خانه، محل کار"
-          value={localTitle}
-          onChange={(e) => setLocalTitle(e.target.value)}
-          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
-        />
-      </div>
+            {/* input واحد */}
+            <div className="flex flex-col mt-3 mx-auto w-[75%]">
+              <input
+                type="number"
+                placeholder="واحد"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              />
+            </div>
 
-      <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 mb-1">
-          توضیحات اضافی (اختیاری)
-        </label>
-        <textarea
-          placeholder="مثلاً زنگ خراب است، طبقه دوم..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
-        />
-      </div>
+            {/* input عنوان آدرس */}
+            <div className="flex flex-col mt-4 mx-auto w-[75%]">
+              <label className="text-xs text-gray-600 mb-1">
+                برای ذخیره آدرس، عنوان آدرس را بنویسید
+              </label>
+              <input
+                placeholder="عنوان آدرس"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              />
+            </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={!isFormValid}
-        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition ${
-          isFormValid
-            ? "bg-sky-600 hover:bg-sky-700"
-            : "bg-gray-300 cursor-not-allowed"
-        }`}
-      >
-        ثبت اطلاعات
-      </button>
-    </MobileModal>
+            {/* submit */}
+            <button
+              onClick={onSubmit}
+              className="mt-4 mx-auto w-[75%] bg-sky-600 border border-sky-600 shadow-lg shadow-sky-300 text-white rounded-xl py-2 hover:bg-sky-700 transition"
+            >
+              ثبت اطلاعات
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

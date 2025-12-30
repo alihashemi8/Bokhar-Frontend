@@ -37,16 +37,9 @@ export default function EditProfile() {
 
           {/* Mobile */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              شماره موبایل
-            </label>
-            <input
-              className="w-full p-3 border rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed"
-              value="09*********"
-              disabled
-            />
+
             <p className="text-xs text-gray-400 mt-1">
-              تغییر شماره موبایل فقط از طریق بخش «امنیت و حریم خصوصی» امکان‌پذیر است
+              تغییر رمز عبور فقط از طریق بخش «امنیت و حریم خصوصی» امکان‌پذیر است
             </p>
           </div>
         </div>

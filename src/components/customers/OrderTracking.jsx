@@ -1,4 +1,6 @@
-import { Package, CheckCircle, Loader2 } from "lucide-react";
+import { Package, CheckCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const orderSteps = [
   { label: "در راه خشکشویی", emoji: "🚚" },
@@ -8,6 +10,8 @@ const orderSteps = [
 ];
 
 export default function OrderTracking() {
+  const navigate = useNavigate();
+
   const orders = [
     { id: 2458, currentStep: 1 },
     { id: 2461, currentStep: 3 },
@@ -19,15 +23,25 @@ export default function OrderTracking() {
       <div className="bg-white rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto md:mt-15 mb-20 md:mb-0">
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-            <Package className="text-orange-600" size={22} />
-          </div>
-          <div>
-            <p className="text-lg font-semibold">پیگیری سفارش‌ها</p>
-            <p className="text-sm text-gray-500">وضعیت سفارش‌های شما</p>
-          </div>
-        </div>
+<div className="flex items-center gap-3 mb-6">
+  <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+    <Package className="text-orange-600" size={22} />
+  </div>
+
+  <div>
+    <p className="text-lg font-semibold">پیگیری سفارش‌ها</p>
+    <p className="text-sm text-gray-500">وضعیت سفارش‌های شما</p>
+  </div>
+
+  {/* Back Button */}
+  <button
+    onClick={() => navigate("/customer-dashboard")}
+    className="ms-auto w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+  >
+    <ArrowRight size={20} className="text-gray-700" />
+  </button>
+</div>
+
 
         {/* Orders List */}
         <div className="space-y-6">
@@ -48,9 +62,12 @@ export default function OrderTracking() {
                       {/* Circle */}
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center text-lg
-                          ${isCompleted ? "bg-green-600 text-white" :
-                            isCurrent ? "border-2 border-green-600 text-green-600 animate-pulse" :
-                            "bg-gray-300 text-gray-500"
+                          ${
+                            isCompleted
+                              ? "bg-green-600 text-white"
+                              : isCurrent
+                              ? "border-2 border-green-600 text-green-600 animate-pulse"
+                              : "bg-gray-300 text-gray-500"
                           }`}
                       >
                         {isCompleted ? <CheckCircle size={18} /> : step.emoji}
@@ -60,7 +77,9 @@ export default function OrderTracking() {
                       {idx < orderSteps.length - 1 && (
                         <div
                           className={`flex-1 h-1 rounded ${
-                            idx < order.currentStep ? "bg-green-600" : "bg-gray-300"
+                            idx < order.currentStep
+                              ? "bg-green-600"
+                              : "bg-gray-300"
                           }`}
                         />
                       )}

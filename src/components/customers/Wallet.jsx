@@ -1,10 +1,17 @@
-import { Wallet } from "lucide-react";
+import { Wallet, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const quickAmounts = [50000, 100000, 200000];
 
+// تابع کمکی برای تبدیل اعداد فارسی به انگلیسی (در صورت نیاز)
+function toEnglishNumber(str) {
+  return str.replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+}
+
 export default function WalletPage() {
   const [amount, setAmount] = useState("");
+  const navigate = useNavigate();
 
   return (
     <div dir="rtl" className="min-h-screen p-4 md:p-8">
@@ -21,6 +28,14 @@ export default function WalletPage() {
               افزایش موجودی کیف پول
             </p>
           </div>
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/customer-dashboard")}
+            className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
+          >
+            <ArrowRight size={20} className="text-gray-700" />
+          </button>
         </div>
 
         {/* Balance */}
@@ -55,20 +70,19 @@ export default function WalletPage() {
           <label className="block text-sm font-medium mb-1">
             مبلغ دلخواه
           </label>
-<input
-  type="text"
-  inputMode="numeric"
-  value={amount}
-  onChange={(e) => {
-    const englishValue = toEnglishNumber(e.target.value);
-    if (/^\d*$/.test(englishValue)) {
-      setAmount(englishValue);
-    }
-  }}
-  placeholder="مثلاً 75000"
-  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
-/>
-
+          <input
+            type="text"
+            inputMode="numeric"
+            value={amount}
+            onChange={(e) => {
+              const englishValue = toEnglishNumber(e.target.value);
+              if (/^\d*$/.test(englishValue)) {
+                setAmount(englishValue);
+              }
+            }}
+            placeholder="مثلاً 75000"
+            className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+          />
         </div>
 
         {/* Pay */}

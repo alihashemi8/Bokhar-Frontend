@@ -1,7 +1,16 @@
-import { Phone, MessageCircle, HelpCircle, ChevronDown } from "lucide-react";
+import {
+  Phone,
+  MessageCircle,
+  HelpCircle,
+  ChevronDown,
+  ArrowRight,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Support() {
+  const navigate = useNavigate();
+
   const [message, setMessage] = useState("");
   const [openFAQ, setOpenFAQ] = useState(null);
   const faqRefs = useRef([]);
@@ -19,7 +28,6 @@ export default function Support() {
   ];
 
   useEffect(() => {
-    // تنظیم ارتفاع داینامیک برای انیمیشن
     faqRefs.current.forEach((ref, idx) => {
       if (ref) {
         ref.style.maxHeight = openFAQ === idx ? `${ref.scrollHeight}px` : "0px";
@@ -32,7 +40,18 @@ export default function Support() {
     <div dir="rtl" className="min-h-screen p-4 md:p-8 bg-gray-50">
       <div className="md:max-w-3xl md:mx-auto space-y-6 md:mt-15 mb-20 md:mb-0">
 
-        <h1 className="text-lg font-semibold text-gray-800">پشتیبانی</h1>
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-semibold text-gray-800">پشتیبانی</h1>
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/customer-dashboard")}
+            className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
+          >
+            <ArrowRight size={20} className="text-gray-700" />
+          </button>
+        </div>
 
         {/* تماس */}
         <div className="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
@@ -45,7 +64,12 @@ export default function Support() {
               <p className="text-sm text-gray-500">همه روزه ۹ تا ۱۸</p>
             </div>
           </div>
-          <a href="tel:02112345678" className="text-green-600 font-medium">تماس</a>
+          <a
+            href="tel:02112345678"
+            className="text-green-600 font-medium"
+          >
+            تماس
+          </a>
         </div>
 
         {/* ارسال پیام */}
@@ -68,7 +92,7 @@ export default function Support() {
           </button>
         </div>
 
-        {/* سوالات متداول با انیمیشن */}
+        {/* سوالات متداول */}
         <div className="bg-white rounded-2xl shadow p-4">
           <div className="flex items-center gap-3 mb-3">
             <HelpCircle className="text-orange-600" />

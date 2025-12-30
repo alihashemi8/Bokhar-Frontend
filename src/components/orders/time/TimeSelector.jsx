@@ -92,8 +92,8 @@ export default function TimeSelector({
                     isDisabled
                       ? "opacity-40 cursor-not-allowed"
                       : isSelected
-                      ? "bg-pink-50 border-pink-600 shadow-md scale-105"
-                      : "border-pink-400 hover:bg-pink-50 cursor-pointer"
+                      ? "bg-pink-100 border-pink-600 shadow-md scale-105"
+                      : "bg-pink-50 border-pink-400 hover:bg-pink-50 cursor-pointer"
                   }`}
                 >
                   <p className="text-sm text-pink-500">

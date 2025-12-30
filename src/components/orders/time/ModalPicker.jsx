@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { X } from "lucide-react";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -18,6 +17,7 @@ export default function ModalPicker({
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasUserSelectedDate, setHasUserSelectedDate] = useState(false); // ✅ فلگ انتخاب کاربر
 
   const title =
     type === "delivery"
@@ -36,10 +36,7 @@ export default function ModalPicker({
       ? formatDate(minDate)
       : new DateObject({ calendar: persian, locale: persian_fa });
 
-    if (type === "pickup") {
-      return deliveryDate.add(2, "days");
-    }
-    return deliveryDate;
+    return type === "pickup" ? deliveryDate.add(2, "days") : deliveryDate;
   }, [minDate, type]);
 
   const minDateObj = useMemo(() => {
@@ -73,13 +70,19 @@ export default function ModalPicker({
     }
   };
 
+  // مقدار اولیه روز (برای نمایش) بدون تاثیر روی شرط Confirm
   useEffect(() => {
-    if (minDateObj && !selectedDate) setSelectedDate(minDateObj);
+    if (minDateObj && !selectedDate) {
+      setSelectedDate(minDateObj);
+    }
   }, [minDateObj, selectedDate, setSelectedDate]);
 
+  const isConfirmDisabled = !hasUserSelectedDate || !selectedTime;
+
   return (
-    <MobileModal  isOpen={isOpen} onClose={onClose} >
+    <MobileModal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-center text-md mb-2 font-bold">{title}</h2>
+
       {/* Preview */}
       {(selectedDate || selectedTime) && (
         <div className=" my-3 text-sm text-gray-700">
@@ -125,14 +128,18 @@ export default function ModalPicker({
                 minDateObj &&
                 dayObj.toJulianDay() < minDateObj.toJulianDay();
               const isSelected =
-                selectedDate &&
+                hasUserSelectedDate &&
                 formatDate(selectedDate).format("YYYY/MM/DD") ===
                   dayObj.format("YYYY/MM/DD");
 
               return (
                 <div
                   key={idx}
-                  onClick={() => !isDisabled && setSelectedDate(dayObj)}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    setSelectedDate(dayObj);
+                    setHasUserSelectedDate(true); // ✅ فقط اینجا
+                  }}
                   className={`border rounded-2xl p-3 my-4 text-center transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-1 ${
                     isDisabled
                       ? "opacity-40 cursor-not-allowed"
@@ -172,10 +179,10 @@ export default function ModalPicker({
 
       {/* Confirm */}
       <button
-        disabled={!selectedTime}
-        onClick={() => onConfirm(type)}
+        disabled={isConfirmDisabled}
+        onClick={() => !isConfirmDisabled && onConfirm(type)}
         className={`block mx-auto mt-6 px-6 py-2 rounded-xl ${
-          selectedTime
+          !isConfirmDisabled
             ? "bg-pink-500 text-white"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
         }`}
