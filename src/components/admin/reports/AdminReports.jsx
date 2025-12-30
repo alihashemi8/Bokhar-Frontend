@@ -220,9 +220,9 @@ export default function AdminReports() {
               <button
                 key={month}
                 onClick={() => setActiveMonth(month)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full font-semibold transition
+                className={`flex-shrink-0 px-4 py-2 my-2 rounded-full font-semibold transition
                   ${activeMonth === month
-                    ? "bg-blue-500 text-white shadow-lg"
+                    ? "bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md"
                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:shadow-md"
                   }`}
                 type="button"

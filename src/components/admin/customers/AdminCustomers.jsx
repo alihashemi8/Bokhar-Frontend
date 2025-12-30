@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar";
-import { FiSearch, FiUser, FiUsers, FiStar } from "react-icons/fi";
+import { FiUser, FiUsers, FiStar } from "react-icons/fi";
+import Search from "../Search"; // مسیر به کامپوننت Search
 
 // ----------- Hook برای داده‌ها ----------
 function useCustomers() {
@@ -71,13 +72,14 @@ export default function AdminCustomers() {
         />
 
         <main className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}>
-          <h1 className="text-3xl md:text-4xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
+          <h1 className="text-2xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
             مشتریان
           </h1>
 
           {/* تب‌ها و سرچ */}
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
-            <div className="flex gap-2 flex-wrap">
+            {/* تب‌ها */}
+            <div className="flex gap-2 md:gap-10 flex-wrap">
               {[
                 { key: "all", label: "همه", icon: <FiUsers /> },
                 { key: "active", label: "فعال", icon: <FiUser /> },
@@ -88,9 +90,9 @@ export default function AdminCustomers() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`
-                    flex items-center gap-2 px-2 py-2 rounded-full transition-all duration-300 border font-semibold
+                    flex items-center gap-2 px-2.5 md:px-6 py-2 md:py-3 rounded-full transition-all duration-300 border font-semibold
                     ${activeTab === tab.key
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
+                      ? "bg-gradient-to-r from-sky-100 to-sky-200 text-gray-800 shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
                       : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
                     }`}
                   aria-pressed={activeTab === tab.key}
@@ -101,14 +103,15 @@ export default function AdminCustomers() {
               ))}
             </div>
 
-            <div className="relative w-full md:w-1/3">
-              <FiSearch className="absolute left-4 top-3.5 text-gray-400 dark:text-gray-500" size={22} />
-              <input
-                type="text"
-                placeholder="جستجو بر اساس نام یا شماره..."
-                className="w-full p-3 pl-12 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 shadow-md focus:ring-2 focus:ring-blue-400 focus:outline-none transition transform duration-200 hover:scale-[1.01]"
+            {/* سرچ */}
+            <div className="w-full md:w-1/3">
+              <Search
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={setSearch}
+                items={[]} // items برای نمایش پیشنهادات فعلا خالی است
+                onSelect={() => {}}
+                renderItem={() => null}
+                placeholder="جستجو بر اساس نام یا شماره..."
               />
             </div>
           </div>
