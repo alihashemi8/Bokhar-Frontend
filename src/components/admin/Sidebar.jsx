@@ -68,7 +68,7 @@ export default function Sidebar({
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden touch-none"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -76,17 +76,18 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 right-0 h-screen w-64
+          fixed top-0 right-0
+          h-[100dvh] w-64
           bg-white dark:bg-gray-800 shadow-xl
           transform transition-transform duration-300 ease-out
-          overscroll-none z-50
+          z-50
           ${isSidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"}
           md:translate-x-0 md:pointer-events-auto
         `}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 text-transparent bg-clip-text">
               خشکشویی افشار
             </h1>
@@ -98,8 +99,15 @@ export default function Sidebar({
             </button>
           </div>
 
-          {/* Menu */}
-          <nav className="flex-1 overflow-y-auto px-4 py-2 text-gray-800 dark:text-gray-200">
+          {/* Menu (Scrollable) */}
+          <nav
+            className="
+              flex-1 overflow-y-auto
+              px-4 py-2
+              text-gray-800 dark:text-gray-200
+              overscroll-contain
+            "
+          >
             {allMenuItems.map((item) => (
               <button
                 key={item.key}
@@ -109,7 +117,7 @@ export default function Sidebar({
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  flex items-center gap-2 w-full px-3 py-3 my-3 rounded text-right
+                  flex items-center gap-2 w-full px-3 py-3 my-2 rounded text-right
                   transition-all duration-200
                   ${
                     activeMenu === item.key
@@ -124,8 +132,8 @@ export default function Sidebar({
             ))}
           </nav>
 
-          {/* Footer */}
-          <div className="border-t px-4 pt-2 pb-3 flex flex-col gap-3">
+          {/* Footer (Always Visible) */}
+          <div className="border-t px-4 pt-3 pb-safe flex flex-col gap-3 shrink-0">
             {/* Theme Toggle */}
             <div className="flex items-center justify-between">
               <span className="font-medium">

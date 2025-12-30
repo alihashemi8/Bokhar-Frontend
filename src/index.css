@@ -116,3 +116,7 @@
    Dark Variant
 --------------------------------*/
 @custom-variant dark (&:where(.dark, .dark *));
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
