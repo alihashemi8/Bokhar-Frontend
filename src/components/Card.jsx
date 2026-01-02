@@ -21,8 +21,8 @@ export default function Card({
       dir="rtl"
       className="
         bg-sky-100/40 dark:bg-gray-800
-        rounded-2xl shadow-lg hover:shadow-xl shadow-pink-300
-        border border-sky-100
+        rounded-2xl shadow-lg hover:shadow-xl shadow-indigo-300
+        border border-indigo-200 ring ring-indigo-200
         transition-transform hover:scale-[1.02]
         flex flex-col
       "

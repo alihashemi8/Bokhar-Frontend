@@ -170,7 +170,7 @@ export default function Landing() {
       </div>
 
       {/* تب‌ها */}
-      <div className="mt-4 px-4 overflow-x-auto">
+      <div className="mt-4 px-4 py-3 overflow-x-auto">
         <CategoryTabs
           onCategoryChange={(cat) => {
             setActiveCategory(cat);

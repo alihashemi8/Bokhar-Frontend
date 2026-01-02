@@ -33,8 +33,8 @@ export default function CategoryTabs({ onCategoryChange }) {
             className={`min-w-[115px] px-1 py-2 my-2 rounded-3xl text-sm font-bold transition-all duration-300 text-center
               ${
                 active === label
-                  ? "bg-sky-800 border border-sky-800 shadow-md shadow-sky-800 text-gray-100 scale-105"
-                  : "bg-sky-100/80 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-300 border border-sky-400/80 shadow-md shadow-sky-200 text-gray-800 dark:text-gray-300"
+                  ? "bg-gradient-to-r from-sky-100 to-sky-200 border border-gray-300 shadow-md shadow-indigo-300 text-gray-800 scale-105"
+                  : "bg-white dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-300 border border-gray-200 shadow-lg text-gray-800 dark:text-gray-300"
               }`}
           >
             <span className="mr-1">{emoji}</span>
@@ -52,8 +52,8 @@ export default function CategoryTabs({ onCategoryChange }) {
             className={` flex-auto px-1 py-2 rounded-3xl text-sm font-bold transition-all duration-300 text-center
               ${
                 active === label
-                  ? "bg-sky-600/80 border border-sky-800 shadow-md shadow-sky-800 text-white scale-105"
-                  : "bg-sky-100/80 dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border border-sky-200/80 shadow-md shadow-sky-200 text-gray-800 dark:text-gray-300"
+                  ? "bg-gradient-to-r from-sky-100 to-sky-200 border border-gray-300 shadow-lg shadow-indigo-300 text-gray-800 scale-105"
+                  : "bg-white dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border border-gray-200 shadow-lg text-gray-800 dark:text-gray-300"
               }`}
           >
             <span className="mr-1">{emoji}</span>

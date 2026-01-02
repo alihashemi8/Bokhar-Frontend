@@ -5,7 +5,7 @@ export const shirtsPantsData = [
   {
     id: 1,
     title: "تیشرت",
-    image: "/images/tshirt.png",
+    image: "/images/zirpirhan.jpg",
     basePrice: 20000,
     category: "پیراهن",
     options: [
@@ -26,7 +26,7 @@ export const shirtsPantsData = [
   {
     id: 2,
     title: "بلوز آستین بلند",
-    image: "/images/longsleeve.png",
+    image: "/images/overcoat.jpg",
     basePrice: 25000,
     category: "پیراهن",
     options: [
@@ -47,7 +47,7 @@ export const shirtsPantsData = [
   {
     id: 3,
     title: "شومیز",
-    image: "/images/blouse.png",
+    image: "/images/pants.png",
     basePrice: 30000,
     category: "پیراهن",
     options: [
@@ -68,7 +68,7 @@ export const shirtsPantsData = [
   {
     id: 4,
     title: "پیراهن",
-    image: "/images/shirt.png",
+    image: "/images/jelighe.jpg",
     basePrice: 30000,
     category: "پیراهن",
     options: [
