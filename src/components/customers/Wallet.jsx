@@ -15,7 +15,7 @@ export default function WalletPage() {
 
   return (
     <div dir="rtl" className="min-h-screen p-4 md:p-8">
-      <div className="bg-white rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto md:mt-15 mb-20 md:mb-0">
+      <div className="bg-white rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto mt-5 md:mt-15 mb-20 md:mb-0">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">

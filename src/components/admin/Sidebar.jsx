@@ -59,7 +59,8 @@ export default function Sidebar({
     <>
       {/* Mobile Menu Button */}
       <button
-        className="md:hidden fixed top-4 right-4 z-50 bg-blue-900 text-white p-2 rounded-lg shadow-lg"
+        className="md:hidden fixed top-4 right-4 z-50  bg-white/30 dark:bg-white/10 backdrop-blur-lg 
+                border border-sky-200/50 hover:bg-white/70 p-2  rounded-lg "
         onClick={() => setIsSidebarOpen(true)}
       >
         <FiMenu size={24} />

@@ -6,18 +6,19 @@ import { useEffect, useState } from "react";
 import { FiShare2 } from "react-icons/fi";
 import { ArrowRight } from "lucide-react";
 
-// آیکون بنفش مغازه
+// آیکون آبی مغازه
 const storeIcon = new L.Icon({
   iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   iconRetinaUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [30, 45],
   iconAnchor: [15, 45],
   popupAnchor: [0, -40],
   shadowSize: [45, 45],
 });
+
 
 // حرکت نرم نقشه به لوکیشن
 function MapUpdater({ position }) {
@@ -122,7 +123,7 @@ export default function PickupInfo() {
           <div className="flex justify-end mb-2">
             <button
               onClick={handleShareLocation}
-              className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-full text-sm font-medium transition"
+              className="flex items-center gap-1 bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-full text-sm font-medium transition"
             >
               <FiShare2 />
             </button>

@@ -102,7 +102,7 @@ export default function CustomersDashboard() {
 
       {/* Logout Desktop */}
       <button
-        onClick={() => navigate("/login")}
+        onClick={() => navigate("/")}
         className="mt-8 mb-20 md:mb-0 hidden md:flex w-full items-center justify-center gap-2 text-red-600 md:max-w-3xl md:mx-auto font-medium"
       >
         <LogOut size={20} />

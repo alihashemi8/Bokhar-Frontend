@@ -37,7 +37,7 @@ export default function Support() {
   }, [openFAQ]);
 
   return (
-    <div dir="rtl" className="min-h-screen p-4 md:p-8 bg-gray-50">
+    <div dir="rtl" className="min-h-screen p-4 md:p-8">
       <div className="md:max-w-3xl md:mx-auto space-y-6 md:mt-15 mb-20 md:mb-0">
 
         {/* Header */}

@@ -1,10 +1,18 @@
-import { Lock, Eye, EyeOff, Smartphone, Monitor, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  Smartphone,
+  Monitor,
+  ArrowRight,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // کامپوننت مستقل برای فیلد رمز با آیکن چشم
 function PasswordInput({ placeholder, value, onChange }) {
   const [show, setShow] = useState(false);
+
   return (
     <div className="relative">
       <input
@@ -29,8 +37,22 @@ function PasswordInput({ placeholder, value, onChange }) {
 export default function SecurityPrivacy() {
   const navigate = useNavigate();
 
-  const [password, setPassword] = useState({ current: "", new: "", confirm: "" });
-  const [otpEnabled, setOtpEnabled] = useState(true);
+  // اسکرول به بالای صفحه
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
+  const [password, setPassword] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
+
+  // ✅ اعتبارسنجی پر بودن هر 3 فیلد
+  const isPasswordFormValid =
+    password.current.trim() !== "" &&
+    password.new.trim() !== "" &&
+    password.confirm.trim() !== "";
 
   const handlePasswordChange = () => {
     alert("رمز عبور با موفقیت تغییر کرد!");
@@ -48,22 +70,22 @@ export default function SecurityPrivacy() {
       case "mobile":
         return <Smartphone size={22} className="text-blue-500" />;
       case "laptop":
-        return <Monitor size={22} className="text-purple-500" />;
       case "desktop":
-        return <Monitor size={22} className="text-green-500" />;
+        return <Monitor size={22} className="text-purple-500" />;
       default:
         return <Lock size={22} className="text-gray-500" />;
     }
   };
 
   return (
-    <div dir="rtl" className="min-h-screen p-4 md:p-8 bg-gray-50">
-      <div className="md:max-w-3xl md:mx-auto space-y-6 md:mt-15 mb-20 md:mb-0">
-
+    <div dir="rtl" className="min-h-screen p-4 md:p-8">
+      <div className="md:max-w-3xl md:mx-auto space-y-6 md:mt-16 mb-20 md:mb-0">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Lock className="text-blue-600" size={26} />
-          <p className="font-semibold text-lg text-gray-800">امنیت و حریم خصوصی</p>
+          <p className="font-semibold text-lg text-gray-800">
+            امنیت و حریم خصوصی
+          </p>
 
           {/* Back Button */}
           <button
@@ -78,7 +100,9 @@ export default function SecurityPrivacy() {
         <div className="bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition">
           <div className="flex items-center gap-3 mb-5">
             <Lock className="text-blue-600" size={24} />
-            <p className="font-medium text-gray-800 text-lg">تغییر رمز عبور</p>
+            <p className="font-medium text-gray-800 text-lg">
+              تغییر رمز عبور
+            </p>
           </div>
 
           <div className="space-y-3">
@@ -103,9 +127,18 @@ export default function SecurityPrivacy() {
                 setPassword({ ...password, confirm: e.target.value })
               }
             />
+
+            {/* دکمه ذخیره */}
             <button
               onClick={handlePasswordChange}
-              className="w-full mt-3 bg-blue-600 text-white rounded-xl p-3 hover:bg-blue-700 transition font-medium"
+              disabled={!isPasswordFormValid}
+              className={`w-full mt-3 rounded-xl p-3 font-medium transition
+                ${
+                  isPasswordFormValid
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }
+              `}
             >
               ذخیره تغییرات
             </button>
@@ -138,7 +171,6 @@ export default function SecurityPrivacy() {
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );

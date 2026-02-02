@@ -46,62 +46,62 @@ export default function ServiceModalDesktop({
               <button
                 key={service.name}
                 onClick={() => handleMainSelect(service)}
-                className={`px-4 py-2 rounded-2xl text-sm font-medium ${
-                  selectedMain?.name === service.name
-                    ? "bg-sky-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700"
-                }`}
+                className={`px-4 py-2 rounded-2xl text-sm font-medium transition shadow-lg ${
+                selectedMain?.name === service.name
+                  ? "bg-sky-600 border border-sky-700 text-white"
+                  : "bg-gray-100 border border-sky-50 dark:bg-gray-700"
+              }`}
               >
                 {service.name}
               </button>
             ))}
           </div>
 
-          {selectedMain && (
-            <div className="flex items-center gap-4 justify-center">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
-              >
-                -
-              </button>
-              <span className="w-10 text-center font-semibold">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-600"
-              >
-                +
-              </button>
-            </div>
-          )}
-
-          {cardServices.map((item) => (
-            <div
-              key={item.name}
-              className="rounded-xl p-3 bg-white/60 dark:bg-gray-700/40 border"
+        {selectedMain && (
+          <div className="flex items-center gap-4 justify-center">
+            <button
+              onClick={() => handleQuantityChange(-1)}
+              className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
             >
-              <span className="block font-semibold mb-2 text-sm">
-                {item.name}
-              </span>
-              <div className="flex gap-2 flex-wrap">
-                {item.choices?.map((choice) => (
-                  <button
-                    key={choice.label}
-                    onClick={() =>
-                      handleOptionToggle(item.name, choice.label, choice.price)
-                    }
-                    className={`px-3 py-1.5 rounded-xl text-sm ${
-                      selectedOptions[item.name]?.includes(choice.label)
-                        ? "bg-sky-600 text-white"
-                        : "bg-gray-100 dark:bg-gray-700"
-                    }`}
-                  >
-                    {choice.label}
-                  </button>
-                ))}
-              </div>
+              −
+            </button>
+            <span className="w-10 text-center font-semibold">{quantity}</span>
+            <button
+              onClick={() => handleQuantityChange(1)}
+              className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
+            >
+              +
+            </button>
+          </div>
+        )}
+
+
+        {/* گزینه‌های اضافه */}
+        {cardServices.map((item, idx) => (
+          <div
+            key={`${item.name}-${idx}`} 
+            className="rounded-xl p-3 bg-white dark:bg-gray-700/40 border border-sky-200 shadow-lg"
+          >
+            <span className="block font-semibold mb-2 text-sm">{item.name}</span>
+            <div className="flex gap-2 flex-wrap">
+              {item.choices?.map((choice, cIdx) => (
+                <button
+                  key={`${item.name}-${choice.label}-${cIdx}`} // 🔑 unique key for each choice
+                  onClick={() =>
+                    handleOptionToggle(item.name, choice.label, choice.price)
+                  }
+                  className={`px-3 py-1.5 rounded-xl text-sm transition ${
+                    selectedOptions[item.name]?.includes(choice.label)
+                      ? "bg-sky-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700"
+                  }`}
+                >
+                  {choice.label}
+                </button>
+              ))}
             </div>
-          ))}
+          </div>
+        ))}
         </div>
 
         {/* Bottom */}

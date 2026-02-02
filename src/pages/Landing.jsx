@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
 import CategoryTabs from "../components/CategoryTabs";
 import Card from "../components/Card";
+import Search from "../components/admin/Search";
 
 // کامپوننت‌ها و داده‌ها
 import ShirtsPants, { shirtsPantsData } from "../components/categories/ShirtsPants";
@@ -34,8 +34,6 @@ export default function Landing() {
   const [activeCategory, setActiveCategory] = useState("پیراهن");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const searchRef = useRef(null);
 
   const { data: activeData } = categoryComponents[activeCategory];
 
@@ -79,27 +77,9 @@ export default function Landing() {
     setSearchQuery(card.title);
     setSelectedCard(card);
     setActiveCategory(card.category);
-    setShowSuggestions(false);
   };
 
-  const handleSearch = () => {
-    if (filteredItems.length === 1) {
-      handleSelectSuggestion(filteredItems[0]);
-    }
-    setShowSuggestions(false);
-  };
-
-  // بستن ساجست‌ها با کلیک بیرون (امن‌تر)
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+  // اگر سرچ خالی شد، کارت انتخاب‌شده ریست شود
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSelectedCard(null);
@@ -117,55 +97,28 @@ export default function Landing() {
       </section>
 
       {/* سرچ */}
-      <div className="px-4 mt-4 flex justify-center relative">
-        <div ref={searchRef} className="relative flex w-full md:w-2/3 lg:w-1/2 flex-col">
+      <div className="px-4 mt-4 flex justify-center ">
+        <div className="w-full md:w-2/3 lg:w-1/2 ">
           <span className="flex mr-2 my-1">چی میخوای پیدا کنی؟</span>
 
-          <div className="flex rounded-full border border-sky-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800 shadow-md overflow-hidden">
-            <input
-              type="text"
-              placeholder="پتو ،مانتو، شلوار ..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => {
-                if (searchQuery.trim()) setShowSuggestions(true);
-              }}
-              onBlur={() => {
-                setTimeout(() => setShowSuggestions(false), 100);
-              }}
-              className="flex-1 px-4 py-2 bg-transparent focus:outline-none text-base"
-            />
-
-            <button
-              onClick={handleSearch}
-              className="px-4 py-2 bg-sky-300/90 hover:bg-sky-600/60 text-white flex items-center justify-center transition"
-            >
-              <Search size={18} />
-            </button>
-          </div>
-
-          {showSuggestions && searchQuery.trim() && (
-            <ul className="absolute top-full left-0 mt-1 w-full max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-md z-50">
-              {filteredItems.length > 0 ? (
-                filteredItems.slice(0, 6).map((s) => (
-                  <li
-                    key={`${s.category}-${s.id}`}
-                    onClick={() => handleSelectSuggestion(s)}
-                    className="px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                  >
-                    {s.title}
-                  </li>
-                ))
-              ) : (
-                <li className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
-                  گزینه‌ای یافت نشد
-                </li>
-              )}
-            </ul>
-          )}
+          <Search
+            value={searchQuery}
+            onChange={(val) => {
+              setSearchQuery(val);
+              if (!val.trim()) setSelectedCard(null);
+            }}
+            items={searchQuery.trim() ? filteredItems.slice(0, 6) : []}
+            onSelect={handleSelectSuggestion}
+            placeholder="پتو، مانتو، شلوار ..."
+            renderItem={(item) => (
+              <div className="flex justify-between text-sm ">
+                <span>{item.title}</span>
+                <span className="text-xs text-gray-400">
+                  {item.category}
+                </span>
+              </div>
+            )}
+          />
         </div>
       </div>
 
