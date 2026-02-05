@@ -1,240 +1,260 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
+import BaseModal from "../../basemodal/BaseModal";
 
-export default function ServicesModal({ onClose, onSave, editItem, categories }) {
-  const emptyForm = {
-    title: "",
-    category: categories[0] || "",
-    materialPrices: {},
-    sizeType: "",
-    singlePrice: "",
-    doublePrice: "",
-    meter: { width: "", height: "" },
-    pricePerMeter: ""
-  };
+const tabs = ["اتو", "خشکشویی", "سفیدشویی", "ویژه"];
+const materials = ["چرم", "مخمل", "نخی", "کتان"];
+const emptyPricing = { materialPrices: {}, sizeType: "" };
 
-  const [form, setForm] = useState(emptyForm);
-
-  const materials = ["چرم", "مخمل", "نخی", "کتان"];
-
-  // همگام‌سازی فرم با editItem
+// Toast با portal و نمایش بالای صفحه
+function Toast({ message, type = "error", onClose }) {
   useEffect(() => {
-    setForm(editItem ? { ...emptyForm, ...editItem } : emptyForm);
-  }, [editItem, categories]);
+    if (!message) return;
+    const timer = setTimeout(() => onClose(), 3000);
+    return () => clearTimeout(timer);
+  }, [message, onClose]);
 
-  const change = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
+  if (!message) return null;
 
-  const handleMaterialPrice = (mat, value) => {
-    setForm((f) => ({
-      ...f,
-      materialPrices: { ...f.materialPrices, [mat]: value }
-    }));
-  };
+  return createPortal(
+    <div className={`fixed top-5 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-xl text-white ${type === "error" ? "bg-red-500" : "bg-green-500"} shadow-lg z-[9999]`}>
+      <div className="flex items-center justify-between gap-4">
+        <span>{message}</span>
+        <button onClick={onClose} className="font-bold">×</button>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
-  const submit = () => {
-    let finalPrice = 0;
-
-    if (form.sizeType === "singleDouble") {
-      finalPrice = Number(form.singlePrice) || 0;
-    } else if (form.sizeType === "meter") {
-      finalPrice =
-        (Number(form.pricePerMeter) || 0) *
-        (Number(form.meter.width) || 0) *
-        (Number(form.meter.height) || 0);
-    }
-
-    onSave({
-      ...form,
-      basePrice: finalPrice,
-      finalArea:
-        form.sizeType === "meter"
-          ? (Number(form.meter.width) || 0) * (Number(form.meter.height) || 0)
-          : null,
-      status: "active"
-    });
-  };
-
+function MaterialPriceInput({ mat, value, onToggle, onChange }) {
+  const active = value !== undefined;
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex justify-center items-end sm:items-center z-50 px-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 p-6 rounded-t-2xl sm:rounded-2xl w-full max-w-md shadow-xl overflow-y-auto max-h-[90vh] relative"
-        onClick={(e) => e.stopPropagation()}
+    <div className="flex gap-3">
+      <button
+        onClick={onToggle}
+        className={`px-3 py-2 rounded-xl transition ${
+          active ? "bg-purple-600 text-white" : "bg-gray-100"
+        }`}
+        aria-label={`toggle ${mat}`}
       >
-        <button
-          className="absolute left-4 top-4 text-gray-500 hover:text-gray-700 text-xl"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+        {mat}
+      </button>
+      {active && (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="قیمت"
+          className="flex-1 p-2 rounded-xl bg-gray-100"
+        />
+      )}
+    </div>
+  );
+}
 
-        <h2 className="text-xl font-bold mb-5 text-right">افزودن / ویرایش سرویس</h2>
-
-        <div className="space-y-5 text-right">
-
-          {/* عنوان */}
-          <input
-            name="title"
-            value={form.title}
-            onChange={change}
-            placeholder="عنوان سرویس"
-            className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-          />
-
-          {/* دسته‌بندی */}
-          <select
-            name="category"
-            value={form.category}
-            onChange={change}
-            className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-          >
-            {categories.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-
-          {/* جنس‌ها */}
-          <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl space-y-4">
-            <p className="font-bold">جنس</p>
-
-            {materials.map((mat) => {
-              const active = form.materialPrices[mat] !== undefined;
-
-              return (
-                <div key={mat} className="flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm((f) => ({
-                        ...f,
-                        materialPrices: active
-                          ? (() => {
-                              const copy = { ...f.materialPrices };
-                              delete copy[mat];
-                              return copy;
-                            })()
-                          : { ...f.materialPrices, [mat]: "" }
-                      }))
-                    }
-                    className={`px-3 py-2 rounded-xl border ${
-                      active ? "bg-purple-600 text-white" : "bg-white dark:bg-gray-600"
-                    }`}
-                  >
-                    {mat}
-                  </button>
-
-                  {active && (
-                    <input
-                      type="number"
-                      value={form.materialPrices[mat]}
-                      onChange={(e) => handleMaterialPrice(mat, e.target.value)}
-                      placeholder="قیمت"
-                      className="flex-1 p-2 rounded-xl bg-white dark:bg-gray-600 text-left"
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* نوع ابعاد */}
-          <div className="space-y-3">
-            <p className="font-bold">ابعاد</p>
-            <select
-              name="sizeType"
-              value={form.sizeType}
-              onChange={change}
-              className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-            >
-              <option value="">نوع ابعاد را انتخاب کنید</option>
-              <option value="singleDouble">تک نفره / دو نفره</option>
-              <option value="meter">متراژی (متر مربع)</option>
-            </select>
-
-            {form.sizeType === "singleDouble" && (
-              <div className="space-y-2">
-                <input
-                  type="number"
-                  name="singlePrice"
-                  value={form.singlePrice}
-                  onChange={change}
-                  placeholder="قیمت تک نفره"
-                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-                />
-
-                <input
-                  type="number"
-                  name="doublePrice"
-                  value={form.doublePrice}
-                  onChange={change}
-                  placeholder="قیمت دو نفره"
-                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-                />
-              </div>
-            )}
-
-            {form.sizeType === "meter" && (
-              <div className="space-y-2">
-                <input
-                  type="number"
-                  value={form.meter.width}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      meter: { ...f.meter, width: e.target.value }
-                    }))
-                  }
-                  placeholder="عرض (متر)"
-                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-                />
-
-                <input
-                  type="number"
-                  value={form.meter.height}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      meter: { ...f.meter, height: e.target.value }
-                    }))
-                  }
-                  placeholder="ارتفاع (متر)"
-                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-                />
-
-                <input
-                  type="number"
-                  name="pricePerMeter"
-                  value={form.pricePerMeter}
-                  onChange={change}
-                  placeholder="قیمت هر متر مربع"
-                  className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-700"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* دکمه‌ها */}
-        <div className="flex justify-between mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-gray-300 dark:bg-gray-700"
-          >
-            انصراف
-          </button>
-
-          <button
-            onClick={submit}
-            className="px-6 py-2 rounded-xl bg-purple-600 text-white"
-          >
-            ذخیره
-          </button>
-        </div>
+function SizeSelector({ value, onChange }) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
+      >
+        <option value="">نوع ابعاد</option>
+        <option value="singleDouble">تک / دو نفره</option>
+        <option value="meter">متراژی</option>
+      </select>
+      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+        ▼
       </div>
     </div>
+  );
+}
+
+export default function ServicesModal({ isOpen, onClose, categories, editItem, onSave }) {
+  const initialPricing = useMemo(
+    () => tabs.reduce((acc, tab) => ({ ...acc, [tab]: { ...emptyPricing } }), {}),
+    []
+  );
+
+  const [activeTab, setActiveTab] = useState(0);
+  const [form, setForm] = useState({
+    title: "",
+    category: categories[0] || "",
+    pricing: initialPricing,
+  });
+
+  const [toast, setToast] = useState({ message: "", type: "error" });
+
+  useEffect(() => {
+    if (editItem) {
+      setForm({
+        title: editItem.title || "",
+        category: editItem.category || categories[0] || "",
+        pricing: { ...initialPricing, ...editItem.pricing },
+      });
+    }
+  }, [editItem, categories, initialPricing]);
+
+  const currentTab = tabs[activeTab];
+  const data = form.pricing[currentTab];
+
+  const setPricingField = useCallback((field, value) => {
+    setForm((f) => ({
+      ...f,
+      pricing: {
+        ...f.pricing,
+        [currentTab]: {
+          ...f.pricing[currentTab],
+          [field]: value,
+        },
+      },
+    }));
+  }, [currentTab]);
+
+  const toggleMaterial = useCallback((mat) => {
+    setForm((f) => {
+      const active = f.pricing[currentTab].materialPrices[mat] !== undefined;
+      const newMaterials = active
+        ? Object.fromEntries(
+            Object.entries(f.pricing[currentTab].materialPrices).filter(([k]) => k !== mat)
+          )
+        : { ...f.pricing[currentTab].materialPrices, [mat]: "" };
+      return {
+        ...f,
+        pricing: {
+          ...f.pricing,
+          [currentTab]: {
+            ...f.pricing[currentTab],
+            materialPrices: newMaterials,
+          },
+        },
+      };
+    });
+  }, [currentTab]);
+
+  const setMaterialPrice = useCallback((mat, value) => {
+    setPricingField("materialPrices", {
+      ...data.materialPrices,
+      [mat]: value,
+    });
+  }, [data.materialPrices, setPricingField]);
+
+  const handleSave = () => {
+    if (!form.title) {
+      setToast({ message: "لطفاً عنوان سرویس را وارد کنید.", type: "error" });
+      return;
+    }
+    if (Object.keys(data.materialPrices).length === 0) {
+      setToast({ message: "حداقل یک جنس را انتخاب کنید.", type: "error" });
+      return;
+    }
+    setToast({ message: "سرویس با موفقیت ذخیره شد!", type: "success" });
+    onSave(form);
+  };
+
+  const isValid = useMemo(() => form.title && Object.keys(data.materialPrices).length > 0, [form.title, data.materialPrices]);
+
+  return (
+    <>
+      <BaseModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title={editItem ? "ویرایش سرویس" : "سرویس جدید"}
+      >
+        <div dir="rtl" className="space-y-4 max-h-[80vh] overflow-y-auto">
+          {/* عنوان و دسته‌بندی */}
+          <div className="flex gap-2 mt-1 mb-2">
+            <input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="عنوان سرویس"
+              className="flex-1 h-10 px-3 text-sm rounded-xl bg-gray-100"
+            />
+            <div className="flex-1 relative">
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+                ▼
+              </div>
+            </div>
+          </div>
+
+          {/* TABS */}
+          <div className="flex relative gap-1 z-10 -mb-0.5">
+            {tabs.map((tab, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveTab(i)}
+                className={`flex-1 py-2 text-sm border rounded-t-xl transition ${
+                  activeTab === i
+                    ? "bg-white border-gray-200 border-b-white z-20 font-semibold"
+                    : "bg-gray-200 border-transparent text-gray-500"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* جنس‌ها و ابعاد */}
+          <div className="bg-white border border-gray-200 rounded-b-xl p-3 max-h-[50vh] overflow-y-auto">
+            <div className="mb-5">
+              <div className="text-sm font-semibold mb-2">جنس‌ها</div>
+              <div className="space-y-3">
+                {materials.map((mat) => (
+                  <MaterialPriceInput
+                    key={mat}
+                    mat={mat}
+                    value={data.materialPrices[mat]}
+                    onToggle={() => toggleMaterial(mat)}
+                    onChange={(v) => setMaterialPrice(mat, v)}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <div className="text-sm font-semibold mb-2">ابعاد</div>
+                <SizeSelector
+                  value={data.sizeType}
+                  onChange={(v) => setPricingField("sizeType", v)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="flex justify-between">
+            <button onClick={onClose} className="px-4 py-2 rounded-xl bg-gray-200">
+              انصراف
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!isValid}
+              className="px-6 py-2 rounded-xl bg-purple-600 text-white disabled:opacity-50"
+            >
+              ذخیره
+            </button>
+          </div>
+        </div>
+      </BaseModal>
+
+      {/* Toast بالای صفحه */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "error" })}
+      />
+    </>
   );
 }
