@@ -49,7 +49,9 @@ export default function AdminServices() {
 
     setServices((prev) =>
       editItem
-        ? prev.map((s) => (s.id === editItem.id ? { ...s, ...serviceData } : s))
+        ? prev.map((s) =>
+            s.id === editItem.id ? { ...s, ...serviceData } : s,
+          )
         : [...prev, { ...serviceData, id: Date.now() }],
     );
 
@@ -65,7 +67,9 @@ export default function AdminServices() {
     s.title?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const activeServices = filteredServices.filter((s) => s.status === "active");
+  const activeServices = filteredServices.filter(
+    (s) => s.status === "active",
+  );
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
@@ -78,6 +82,7 @@ export default function AdminServices() {
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
         <div className="space-y-10 max-w-full">
+
           {/* دسته‌بندی‌ها */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -95,7 +100,10 @@ export default function AdminServices() {
               />
               <button
                 onClick={addCategory}
-                className="px-4 h-12 rounded-xl bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md flex items-center gap-2 shrink-0"
+                className="px-4 h-12 rounded-xl bg-gradient-to-r
+                           from-sky-50 via-sky-100 to-sky-200
+                           shadow-indigo-300 text-gray-800 shadow-md
+                           flex items-center gap-2 shrink-0"
               >
                 <FiPlus /> افزودن
               </button>
@@ -105,7 +113,11 @@ export default function AdminServices() {
               {visibleCategories.map((c) => (
                 <div
                   key={c}
-                  className="truncate px-4 py-2 bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md rounded-xl flex items-center gap-3  dark:text-white"
+                  className="truncate px-4 py-2 bg-gradient-to-r
+                             from-sky-50 via-sky-100 to-sky-200
+                             shadow-indigo-300 text-gray-800 shadow-md
+                             rounded-xl flex items-center gap-3
+                             dark:text-white"
                 >
                   <span className="truncate">{c}</span>
                   <button onClick={() => deleteCategory(c)}>
@@ -114,17 +126,6 @@ export default function AdminServices() {
                 </div>
               ))}
             </div>
-
-            {categories.length > 6 && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={() => setShowAllCategories((v) => !v)}
-                  className="text-purple-600 dark:text-purple-400 text-sm hover:underline"
-                >
-                  {showAllCategories ? "نمایش کمتر" : "نمایش بیشتر"}
-                </button>
-              </div>
-            )}
           </div>
 
           {/* خدمات */}
@@ -133,7 +134,6 @@ export default function AdminServices() {
               خدمات
             </h2>
 
-            {/* سرچ */}
             <div className="mb-6">
               <Search
                 value={search}
@@ -143,14 +143,30 @@ export default function AdminServices() {
               />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* گرید نهایی بدون تداخل */}
+            <div
+              className="
+                grid
+                grid-cols-2
+                md:grid-cols-3
+                lg:grid-cols-4
+                gap-6
+              "
+            >
               {/* افزودن سرویس */}
               <div
                 onClick={() => {
                   setEditItem(null);
                   setModalOpen(true);
                 }}
-                className="flex flex-col items-center justify-center rounded-2xl cursor-pointer bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800  shadow-md hover:scale-105 transition-all p-4 min-h-[250px] aspect-[3/4]"
+                className="
+                  flex flex-col items-center justify-center
+                  rounded-2xl cursor-pointer
+                  bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200
+                  shadow-md hover:scale-105 transition-all
+                  p-4
+                  min-h-[220px]
+                "
               >
                 <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2">
                   <FiPlus className="text-3xl" />
@@ -158,16 +174,23 @@ export default function AdminServices() {
                 <p className="font-semibold text-lg">افزودن سرویس</p>
               </div>
 
+              {/* کارت‌های سرویس */}
               {activeServices.map((srv) => (
                 <div
                   key={srv.id}
-                  className="bg-gray-100 dark:bg-gray-700 rounded-2xl p-4 shadow flex flex-col justify-between aspect-[3/4]"
+                  className="
+                    bg-gray-100 dark:bg-gray-700 rounded-2xl p-4 shadow
+                    flex flex-col justify-between
+                    min-h-[220px]
+                  "
                 >
                   <div>
-                    <img
-                      src={srv.image || "/images/placeholder.png"}
-                      className="w-full h-32 object-cover mb-3 rounded-xl"
-                    />
+                    <div className="w-full aspect-[4/3] mb-3">
+                      <img
+                        src={srv.image || "/images/placeholder.png"}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    </div>
 
                     <h3 className="font-bold text-center truncate text-gray-900 dark:text-white">
                       {srv.title || "بدون عنوان"}
