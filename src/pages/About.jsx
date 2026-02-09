@@ -4,7 +4,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import { FiShare2 } from "react-icons/fi";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 // آیکون آبی مغازه
 const storeIcon = new L.Icon({
@@ -84,7 +84,7 @@ export default function PickupInfo() {
           onClick={() => navigate("/customer-dashboard")}
           className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
         >
-          <ArrowRight size={20} className="text-gray-700" />
+          <ArrowLeft size={20} className="text-gray-700" />
         </button>
       </div>
 

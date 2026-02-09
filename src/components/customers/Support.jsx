@@ -3,7 +3,7 @@ import {
   MessageCircle,
   HelpCircle,
   ChevronDown,
-  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +49,7 @@ export default function Support() {
             onClick={() => navigate("/customer-dashboard")}
             className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
           >
-            <ArrowRight size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-700" />
           </button>
         </div>
 

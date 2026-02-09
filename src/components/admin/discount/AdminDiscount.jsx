@@ -41,7 +41,7 @@ export default function AdminDiscount() {
   return (
     <div
       dir="rtl"
-      className="flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900"
+      className="flex min-h-screen overflow-x-hidden"
     >
       <Sidebar
         isSidebarOpen={isSidebarOpen}

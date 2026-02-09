@@ -1,4 +1,4 @@
-import { Wallet, ArrowRight } from "lucide-react";
+import { Wallet, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,7 +34,7 @@ export default function WalletPage() {
             onClick={() => navigate("/customer-dashboard")}
             className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
           >
-            <ArrowRight size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-700" />
           </button>
         </div>
 

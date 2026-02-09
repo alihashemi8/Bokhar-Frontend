@@ -49,9 +49,7 @@ export default function AdminServices() {
 
     setServices((prev) =>
       editItem
-        ? prev.map((s) =>
-            s.id === editItem.id ? { ...s, ...serviceData } : s,
-          )
+        ? prev.map((s) => (s.id === editItem.id ? { ...s, ...serviceData } : s))
         : [...prev, { ...serviceData, id: Date.now() }],
     );
 
@@ -67,9 +65,7 @@ export default function AdminServices() {
     s.title?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const activeServices = filteredServices.filter(
-    (s) => s.status === "active",
-  );
+  const activeServices = filteredServices.filter((s) => s.status === "active");
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
@@ -81,8 +77,10 @@ export default function AdminServices() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
+        <h1 className="text-2xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
+          خدمات
+        </h1>{" "}
         <div className="space-y-10 max-w-full">
-
           {/* دسته‌بندی‌ها */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -130,10 +128,6 @@ export default function AdminServices() {
 
           {/* خدمات */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
-            <h2 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">
-              خدمات
-            </h2>
-
             <div className="mb-6">
               <Search
                 value={search}
@@ -171,7 +165,9 @@ export default function AdminServices() {
                 <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2">
                   <FiPlus className="text-3xl" />
                 </div>
-                <p className="font-semibold text-lg">افزودن سرویس</p>
+                <p className="font-semibold text-sm md:text-md lg:text-lg">
+                  افزودن سرویس
+                </p>
               </div>
 
               {/* کارت‌های سرویس */}

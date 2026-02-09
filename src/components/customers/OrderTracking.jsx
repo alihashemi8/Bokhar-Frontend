@@ -1,5 +1,5 @@
 import { Package, CheckCircle } from "lucide-react";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const orderSteps = [
@@ -38,7 +38,7 @@ export default function OrderTracking() {
     onClick={() => navigate("/customer-dashboard")}
     className="ms-auto w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
   >
-    <ArrowRight size={20} className="text-gray-700" />
+    <ArrowLeft size={20} className="text-gray-700" />
   </button>
 </div>
 
