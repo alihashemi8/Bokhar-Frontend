@@ -223,7 +223,7 @@ export default function AdminReports() {
                 className={`flex-shrink-0 px-4 py-2 my-2 rounded-full font-semibold transition
                   ${activeMonth === month
                     ? "bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:shadow-md"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-md hover:shadow-xl"
                   }`}
                 type="button"
               >

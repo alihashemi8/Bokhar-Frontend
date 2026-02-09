@@ -3,39 +3,40 @@ import { createContext, useState } from "react";
 export const ServicesContext = createContext();
 
 export function ServicesProvider({ children }) {
-  // بارگذاری اولیه از localStorage با بررسی معتبر بودن JSON
-  const parseJSON = (key, fallback) => {
+  const getCategories = () => {
     try {
-      const item = localStorage.getItem(key);
-      if (!item) return fallback;
-      return JSON.parse(item);
-    } catch (e) {
-      return fallback;
+      const data = localStorage.getItem("categories");
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
     }
   };
 
-  const [categories, setCategories] = useState(parseJSON("categories", []));
-  const [services, setServices] = useState(parseJSON("services", []));
-
-  // helper برای بروزرسانی همزمان state و localStorage
-  const updateCategories = (newCats) => {
-    setCategories(newCats);
-    localStorage.setItem("categories", JSON.stringify(newCats));
+  const getServices = () => {
+    try {
+      const data = localStorage.getItem("services");
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
   };
 
-  const updateServices = (newServices) => {
-    setServices(newServices);
-    localStorage.setItem("services", JSON.stringify(newServices));
+  const [categories, setCategoriesState] = useState(getCategories());
+  const [services, setServicesState] = useState(getServices());
+
+  const setCategories = (cats) => {
+    setCategoriesState(cats);
+    localStorage.setItem("categories", JSON.stringify(cats));
+  };
+
+  const setServices = (svcs) => {
+    setServicesState(svcs);
+    localStorage.setItem("services", JSON.stringify(svcs));
   };
 
   return (
     <ServicesContext.Provider
-      value={{
-        categories,
-        services,
-        setCategories: updateCategories,
-        setServices: updateServices
-      }}
+      value={{ categories, services, setCategories, setServices }}
     >
       {children}
     </ServicesContext.Provider>

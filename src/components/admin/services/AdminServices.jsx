@@ -3,7 +3,7 @@ import { FiPlus, FiTrash2, FiEdit } from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
-import Search from "../Search"; // 👈 استفاده از کامپوننت سرچ خودت
+import Search from "../Search";
 
 export default function AdminServices() {
   const { categories, services, setCategories, setServices } =
@@ -49,10 +49,8 @@ export default function AdminServices() {
 
     setServices((prev) =>
       editItem
-        ? prev.map((s) =>
-            s.id === editItem.id ? { ...s, ...serviceData } : s
-          )
-        : [...prev, { ...serviceData, id: Date.now() }]
+        ? prev.map((s) => (s.id === editItem.id ? { ...s, ...serviceData } : s))
+        : [...prev, { ...serviceData, id: Date.now() }],
     );
 
     setEditItem(null);
@@ -63,14 +61,11 @@ export default function AdminServices() {
     setServices(services.filter((s) => s.id !== id));
   };
 
-  // 🔍 فیلتر خدمات بر اساس سرچ
   const filteredServices = services.filter((s) =>
-    s.title?.toLowerCase().includes(search.toLowerCase())
+    s.title?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const activeServices = filteredServices.filter(
-    (s) => s.status === "active"
-  );
+  const activeServices = filteredServices.filter((s) => s.status === "active");
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
@@ -83,7 +78,6 @@ export default function AdminServices() {
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
         <div className="space-y-10 max-w-full">
-
           {/* دسته‌بندی‌ها */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -95,12 +89,13 @@ export default function AdminServices() {
                 value={newCat}
                 onChange={(e) => setNewCat(e.target.value)}
                 placeholder="نام دسته جدید"
-                className="flex-1 min-w-0 p-3 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 border"
+                className="flex-1 min-w-0 p-3 h-12 bg-white border-sky-300/50
+                           rounded-xl shadow-lg dark:bg-gray-700 border"
                 onKeyDown={(e) => e.key === "Enter" && addCategory()}
               />
               <button
                 onClick={addCategory}
-                className="px-4 h-12 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 shrink-0"
+                className="px-4 h-12 rounded-xl bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md flex items-center gap-2 shrink-0"
               >
                 <FiPlus /> افزودن
               </button>
@@ -110,7 +105,7 @@ export default function AdminServices() {
               {visibleCategories.map((c) => (
                 <div
                   key={c}
-                  className="truncate px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center gap-3 text-gray-900 dark:text-white"
+                  className="truncate px-4 py-2 bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md rounded-xl flex items-center gap-3  dark:text-white"
                 >
                   <span className="truncate">{c}</span>
                   <button onClick={() => deleteCategory(c)}>
@@ -138,7 +133,7 @@ export default function AdminServices() {
               خدمات
             </h2>
 
-            {/* 🔍 سرچ جدید */}
+            {/* سرچ */}
             <div className="mb-6">
               <Search
                 value={search}
@@ -155,9 +150,9 @@ export default function AdminServices() {
                   setEditItem(null);
                   setModalOpen(true);
                 }}
-                className="flex flex-col items-center justify-center rounded-2xl cursor-pointer bg-gradient-to-br from-purple-500 to-indigo-500 text-white shadow-md hover:scale-105 transition-all p-4 min-h-[250px] aspect-[3/4]"
+                className="flex flex-col items-center justify-center rounded-2xl cursor-pointer bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800  shadow-md hover:scale-105 transition-all p-4 min-h-[250px] aspect-[3/4]"
               >
-                <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mb-2">
+                <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2">
                   <FiPlus className="text-3xl" />
                 </div>
                 <p className="font-semibold text-lg">افزودن سرویس</p>

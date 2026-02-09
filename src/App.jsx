@@ -31,7 +31,7 @@ import PickupPage from "./pages/About";
 // Context برای خدمات و تخفیف
 import { ServicesProvider } from "./components/admin/services/ServicesContext";
 import AdminServices from "./components/admin/services/AdminServices";
-import AdminDiscount from "./components/admin/AdminDiscount";
+import AdminDiscount from "./components/admin/discount/AdminDiscount";
 import { OrdersProvider } from "./context/OrdersContext";
 
 function AppContent() {
