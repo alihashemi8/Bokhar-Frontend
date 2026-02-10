@@ -44,8 +44,8 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
       </h2>
 
       <div className="flex items-center gap-2 mb-3">
-        <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
-        <span className="text-gray-600 dark:text-gray-300 text-sm">
+        <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-100" />
+        <span className="text-gray-600 dark:text-gray-100 text-sm">
           اطلاعات خود را وارد کنید
         </span>
       </div>
@@ -59,7 +59,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
           w-full border-b p-2 mb-6
           bg-transparent
           text-gray-800 dark:text-gray-100
-          focus:border-blue-500 outline-none
+          focus:border-purple-600 focus:border-b-2 outline-none
         "
       />
 
@@ -78,8 +78,8 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
         disabled={loading || phone.length < 11 || !fullname.trim()}
         className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
           loading || phone.length < 11 || !fullname.trim()
-            ? "bg-blue-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
         }`}
       >
         {loading && (
@@ -88,11 +88,11 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
         {loading ? "در حال ارسال..." : "ارسال کد تأیید"}
       </button>
 
-      <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
+      <p className="text-center mt-4 text-sm text-gray-600 dark:text-gray-200">
         حساب دارید؟{" "}
         <button
           onClick={onSwitchLogin}
-          className="text-blue-600 hover:underline dark:text-blue-400"
+          className="text-blue-600 hover:underline dark:text-purple-400"
         >
           ورود
         </button>

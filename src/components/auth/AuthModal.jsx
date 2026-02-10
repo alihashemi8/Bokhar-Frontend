@@ -29,7 +29,8 @@ export default function AuthModal({ isOpen, onClose }) {
               absolute top-1 -left-4
               items-center justify-center
               w-9 h-9 rounded-full
-              hover:bg-gray-100 dark:hover:bg-gray-800
+              hover:bg-white text-black
+              dark:hover:bg-gray-200 dark:text-white dark:hover:text-black 
               transition
               z-10
             "

@@ -121,19 +121,21 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
             onChange={(val) => setPhone(val.replace(/\D/g, ""))}
           />
 
-          <div className="mt-8">رمز عبور خود را وارد کنید:</div>
+          <div className="mt-8 text-gray-800 dark:text-gray-100 ">رمز عبور خود را وارد کنید:</div>
 
           <div className="relative">
             <input
               type={showPass ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border-b p-1 pr-2 bg-transparent text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:border-blue-600 outline-none transition"
+              className="w-full border-b p-1 pr-2 bg-transparent outline-none transition
+               text-gray-800 border-gray-300 focus:border-blue-600 
+                 dark:border-gray-100 dark:focus:border-purple-600 dark:focus:border-b-2 dark:text-gray-100 "
             />
             <button
               type="button"
               onClick={() => setShowPass(!showPass)}
-              className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-500"
+              className="absolute top-1/2 -translate-y-1/2 left-2 text-gray-500 dark:text-gray-300"
             >
               {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
@@ -151,8 +153,8 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
         w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition shadow-lg
         ${
           loading || !/^09\d{9}$/.test(phone) || password.trim().length === 0
-            ? "bg-blue-300 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
         }
       `}
           >
@@ -165,14 +167,14 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
           <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
             <button
               onClick={() => setMode("forgot-phone")}
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 hover:underline dark:text-purple-400"
             >
               ورود با رمز یک بار مصرف
             </button>
 
             <button
               onClick={onSwitchRegister}
-              className="text-blue-600 hover:underline"
+              className="text-blue-600 hover:underline dark:text-purple-400"
             >
               ثبت‌نام
             </button>
@@ -204,8 +206,8 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
       className={`w-full mt-8 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition
         ${
           loading || !/^09\d{9}$/.test(phone)
-            ? "bg-blue-300 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
         }
       `}
     >
@@ -217,7 +219,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
     <button
       onClick={() => setMode("login")}
-      className="mt-6 w-full text-center text-gray-600 hover:underline"
+      className="mt-6 w-full text-center text-gray-600 hover:underline dark:text-purple-400 "
     >
       بازگشت
     </button>
@@ -272,7 +274,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
           </button>
           <button
             onClick={() => setMode("login")}
-            className="mt-4 w-full text-center text-gray-600 hover:underline"
+            className="mt-4 w-full text-center text-gray-600 hover:underline "
           >
             بازگشت به ورود
           </button>

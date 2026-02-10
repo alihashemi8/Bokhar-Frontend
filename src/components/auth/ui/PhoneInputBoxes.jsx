@@ -29,13 +29,24 @@ export default function PhoneInputBoxes({ value, onChange }) {
   };
 
   return (
-    <div dir="ltr" className="flex justify-center items-center gap-0.5 max-w-xs mx-auto">
-
+    <div
+      dir="ltr"
+      className="flex justify-center items-center gap-0.5 max-w-xs mx-auto"
+    >
       <div className="flex gap-1">
-        <div className="w-6 h-10 border-b-2 border-gray-400 flex items-center justify-center text-gray-600 font-semibold">
+        <div
+          className="w-6 h-10 border-b-2 border-gray-400 dark:border-gray-400
+    flex items-center justify-center text-gray-600 dark:text-gray-400
+    font-semibold select-none pointer-events-none cursor-not-allowed"
+        >
           0
         </div>
-        <div className="w-6 h-10 border-b-2 border-gray-400 flex items-center justify-center text-gray-600 font-semibold">
+
+        <div
+          className="w-6 h-10 border-b-2 border-gray-400 dark:border-gray-400
+    flex items-center justify-center text-gray-600 dark:text-gray-400
+    font-semibold select-none pointer-events-none cursor-not-allowed"
+        >
           9
         </div>
       </div>
@@ -51,7 +62,9 @@ export default function PhoneInputBoxes({ value, onChange }) {
           value={d}
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
-          className="w-6 h-10 text-center border-b-2 border-gray-400 focus:border-blue-500 outline-none bg-transparent text-gray-800 dark:text-gray-100"
+          className="w-6 h-10 text-center font-semibold border-b-2 outline-none bg-transparent
+           border-gray-400 focus:border-blue-500 text-gray-800 
+           dark:border-gray-100 dark:focus:border-purple-600 dark:text-gray-100"
         />
       ))}
     </div>

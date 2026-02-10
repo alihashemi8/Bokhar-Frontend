@@ -28,7 +28,7 @@ export default function DesktopModal({
         className={`
           rounded-3xl shadow-xl w-full
           bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 
-          
+          dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
           ${maxWidth === "sm" ? "max-w-sm" : ""}
           ${maxWidth === "md" ? "max-w-md" : ""}
           ${maxWidth === "lg" ? "max-w-lg" : ""}
