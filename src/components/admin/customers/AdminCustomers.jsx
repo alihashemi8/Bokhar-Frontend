@@ -2,15 +2,33 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar";
 import { FiUser, FiUsers, FiStar } from "react-icons/fi";
-import Search from "../Search"; // مسیر به کامپوننت Search
+import Search from "../../Search"; // مسیر به کامپوننت Search
 
 // ----------- Hook برای داده‌ها ----------
 function useCustomers() {
   const [customers] = useState([
     { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
-    { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
-    { id: 3, name: "محمد کریمی", phone: "09132223344", type: "inactive", orders: 0 },
-    { id: 4, name: "مهسا سلطانی", phone: "09012225566", type: "active", orders: 5 },
+    {
+      id: 2,
+      name: "سارا محمدی",
+      phone: "09351239811",
+      type: "active",
+      orders: 3,
+    },
+    {
+      id: 3,
+      name: "محمد کریمی",
+      phone: "09132223344",
+      type: "inactive",
+      orders: 0,
+    },
+    {
+      id: 4,
+      name: "مهسا سلطانی",
+      phone: "09012225566",
+      type: "active",
+      orders: 5,
+    },
   ]);
   return customers;
 }
@@ -19,9 +37,11 @@ function useCustomers() {
 function CustomerCard({ customer, onClick }) {
   const { name, phone, type, orders } = customer;
   const typeColor =
-    type === "vip" ? "bg-yellow-100 text-yellow-700" :
-    type === "active" ? "bg-green-100 text-green-700" :
-    "bg-red-100 text-red-700";
+    type === "vip"
+      ? "bg-yellow-100 text-yellow-700"
+      : type === "active"
+        ? "bg-green-100 text-green-700"
+        : "bg-red-100 text-red-700";
 
   return (
     <div
@@ -29,8 +49,12 @@ function CustomerCard({ customer, onClick }) {
       onClick={onClick}
     >
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">{name}</h2>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${typeColor}`}>
+        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {name}
+        </h2>
+        <span
+          className={`px-3 py-1 rounded-full text-sm font-medium ${typeColor}`}
+        >
           {type === "vip" ? "VIP" : type === "active" ? "فعال" : "غیرفعال"}
         </span>
       </div>
@@ -54,15 +78,19 @@ export default function AdminCustomers() {
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase();
-    return customers.filter(c => {
+    return customers.filter((c) => {
       const matchCategory = activeTab === "all" || c.type === activeTab;
-      const matchSearch = c.name.toLowerCase().includes(query) || c.phone.includes(query);
+      const matchSearch =
+        c.name.toLowerCase().includes(query) || c.phone.includes(query);
       return matchCategory && matchSearch;
     });
   }, [search, activeTab, customers]);
 
   return (
-    <div dir="RTL" className="flex flex-col min-h-screen transition-colors duration-300">
+    <div
+      dir="RTL"
+      className="flex flex-col min-h-screen transition-colors duration-300"
+    >
       <div className="flex flex-1">
         <Sidebar
           isSidebarOpen={isSidebarOpen}
@@ -71,7 +99,9 @@ export default function AdminCustomers() {
           setActiveMenu={setActiveMenu}
         />
 
-        <main className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}>
+        <main
+          className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}
+        >
           <h1 className="text-2xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
             مشتریان
           </h1>
@@ -85,15 +115,16 @@ export default function AdminCustomers() {
                 { key: "active", label: "فعال", icon: <FiUser /> },
                 { key: "inactive", label: "غیرفعال", icon: <FiUser /> },
                 { key: "vip", label: "VIP", icon: <FiStar /> },
-              ].map(tab => (
+              ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`
                     flex items-center gap-2 px-2.5 md:px-6 py-2 md:py-3 rounded-full transition-all duration-300 border font-semibold
-                    ${activeTab === tab.key
-                      ? "bg-gradient-to-r from-sky-100 to-sky-200 text-gray-800 shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
-                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl hover:scale-105"
+                    ${
+                      activeTab === tab.key
+                        ? "bg-gradient-to-r from-sky-100 to-sky-200 text-gray-800 shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
+                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl hover:scale-105"
                     }`}
                   aria-pressed={activeTab === tab.key}
                 >
@@ -123,11 +154,13 @@ export default function AdminCustomers() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filtered.map(c => (
+              {filtered.map((c) => (
                 <CustomerCard
                   key={c.id}
                   customer={c}
-                  onClick={() => navigate(`/admin-dashboard/customers/${c.id}/transactions`)}
+                  onClick={() =>
+                    navigate(`/admin-dashboard/customers/${c.id}/transactions`)
+                  }
                 />
               ))}
             </div>

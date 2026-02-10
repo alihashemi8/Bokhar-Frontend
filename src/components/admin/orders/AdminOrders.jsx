@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import Sidebar from "./Sidebar";
+import { Check } from "lucide-react";
+import Sidebar from "../Sidebar";
 import OrderModal from "./OrderModal";
-import KPICard from "./reports/KPICard";
-import Search from "./Search";
+import KPICard from "../reports/KPICard";
+import Search from "../../Search";
 
 export default function AdminOrders() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -18,7 +19,7 @@ export default function AdminOrders() {
       phone: "09381234567",
       address: "خیابان ولیعصر",
       name: "علی",
-      deliveryDate: "2025-11-03",
+      deliveryDate: "2026-02-10",
     },
     {
       id: 2,
@@ -29,7 +30,7 @@ export default function AdminOrders() {
       phone: "09129876543",
       address: "خیابان امام رضا",
       name: "سارا",
-      deliveryDate: "2025-11-02",
+      deliveryDate: "2025-02-09",
     },
     {
       id: 3,
@@ -40,7 +41,7 @@ export default function AdminOrders() {
       phone: "09122334455",
       address: "چهارباغ",
       name: "مهدی",
-      deliveryDate: "2025-11-04",
+      deliveryDate: "2026-02-10",
     },
     {
       id: 4,
@@ -51,9 +52,12 @@ export default function AdminOrders() {
       phone: "09123456789",
       address: "تهرانپارس",
       name: "نرگس",
-      deliveryDate: "2025-11-05",
+      deliveryDate: "2026-09-02",
     },
   ]);
+
+  // 🔹 وضعیت اولیه قابل بروزرسانی
+  const [initialOrders, setInitialOrders] = useState([...orders]);
 
   const [sortKey, setSortKey] = useState("date");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -62,6 +66,12 @@ export default function AdminOrders() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // 🔴 تغییرات و انیمیشن
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
+  const [changedCount, setChangedCount] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const cities = Array.from(new Set(orders.map((o) => o.city)));
 
@@ -76,16 +86,49 @@ export default function AdminOrders() {
 
   const toggleStatus = (id) => {
     setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id
-          ? {
-              ...o,
-              status:
-                o.status === "انجام شده" ? "انجام نشده" : "انجام شده",
-            }
-          : o
-      )
+      prev.map((o) => {
+        if (o.id === id) {
+          const newStatus =
+            o.status === "انجام شده" ? "انجام نشده" : "انجام شده";
+          const initial = initialOrders.find((io) => io.id === id);
+
+          const wasChanged = initial.status !== o.status;
+          const nowChanged = initial.status !== newStatus;
+
+          let newChangedCount = changedCount;
+
+          if (!wasChanged && nowChanged) {
+            newChangedCount = changedCount + 1;
+          } else if (wasChanged && !nowChanged) {
+            newChangedCount = Math.max(changedCount - 1, 0);
+          }
+
+          setChangedCount(newChangedCount);
+          setHasPendingChanges(newChangedCount > 0);
+
+          return { ...o, status: newStatus };
+        }
+        return o;
+      }),
     );
+  };
+
+  const confirmChanges = () => {
+    setIsSaving(true);
+
+    setTimeout(() => {
+      setIsSaving(false);
+      setShowSuccess(true);
+      setHasPendingChanges(false);
+      setChangedCount(0);
+
+      // 🔹 بروزرسانی initialOrders به وضعیت جدید بعد از ثبت
+      setInitialOrders([...orders]);
+
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 1200);
+    }, 800);
   };
 
   const sortedOrders = useMemo(() => {
@@ -97,12 +140,9 @@ export default function AdminOrders() {
 
     if (searchQuery) {
       const q = searchQuery.trim();
-
       copy = copy.filter(
         (o) =>
-          o.name.includes(q) ||
-          o.address.includes(q) ||
-          o.phone.includes(q)
+          o.name.includes(q) || o.address.includes(q) || o.phone.includes(q),
       );
     }
 
@@ -129,9 +169,7 @@ export default function AdminOrders() {
   const remainingDays = (date) => {
     const today = new Date();
     const delivery = new Date(date);
-    const diff = Math.ceil(
-      (delivery - today) / (1000 * 60 * 60 * 24)
-    );
+    const diff = Math.ceil((delivery - today) / (1000 * 60 * 60 * 24));
     return diff >= 0 ? diff : 0;
   };
 
@@ -145,13 +183,12 @@ export default function AdminOrders() {
     setIsModalOpen(false);
   };
 
-  // KPI
+  const totalOrders = orders.length;
   const today = new Date().toISOString().slice(0, 10);
   const todayOrders = orders.filter((o) => o.date === today).length;
   const todayUndelivered = orders.filter(
-    (o) => o.deliveryDate === today && o.status !== "انجام شده"
+    (o) => o.deliveryDate === today && o.status !== "انجام شده",
   ).length;
-  const totalOrders = orders.length;
 
   return (
     <div dir="rtl" className="flex flex-row-reverse min-h-screen">
@@ -167,14 +204,12 @@ export default function AdminOrders() {
           مدیریت سفارش‌ها
         </h1>
 
-        {/* KPI */}
         <div className="grid grid-cols-3 gap-4 mt-6">
           <KPICard title="سفارش‌های امروز" value={todayOrders} />
           <KPICard title="تحویل‌نشده‌های امروز" value={todayUndelivered} />
           <KPICard title="کل سفارش‌ها" value={totalOrders} />
         </div>
 
-        {/* Search */}
         <div className="mt-4 max-w-md mx-auto">
           <Search
             value={searchQuery}
@@ -193,7 +228,6 @@ export default function AdminOrders() {
           />
         </div>
 
-        {/* Table */}
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl mt-6 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm text-right">
@@ -243,12 +277,11 @@ export default function AdminOrders() {
                           e.stopPropagation();
                           toggleStatus(order.id);
                         }}
-                        className={`px-4 py-2 rounded-xl font-bold transition
-                          ${
-                            order.status === "انجام شده"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
+                        className={`px-4 py-2 rounded-xl font-bold transition ${
+                          order.status === "انجام شده"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
                       >
                         {order.id}
                       </button>
@@ -263,18 +296,37 @@ export default function AdminOrders() {
                     </td>
                   </tr>
                 ))}
-
-                {sortedOrders.length === 0 && (
-                  <tr>
-                    <td colSpan="5" className="p-4 text-center text-gray-400">
-                      هیچ سفارشی یافت نشد
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {hasPendingChanges && !showSuccess && (
+          <button
+            onClick={confirmChanges}
+            disabled={isSaving}
+            className="fixed bottom-5 left-5 z-50 animate-fab-in"
+          >
+            <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-500 text-white shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full animate-ping bg-white/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+
+              {isSaving ? "در حال ثبت..." : "ثبت تغییرات"}
+
+              <span className="min-w-[20px] h-5 px-1 rounded-full bg-white text-emerald-600 text-xs font-bold flex items-center justify-center">
+                {changedCount}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {showSuccess && (
+          <div className="fixed bottom-5 left-5 z-50 w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center animate-success-pop">
+            <Check size={20} />
+          </div>
+        )}
 
         <OrderModal
           order={selectedOrder}

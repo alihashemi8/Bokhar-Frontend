@@ -14,11 +14,11 @@ export default function DesktopNavbar() {
     <>
       <nav
         dir="rtl"
-        className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 
-             w-[92%] max-w-6xl justify-between items-center
-             backdrop-blur-md bg-sky-50/60
-             border border-white/20 text-gray-800 px-6 py-2 
-             shadow-lg rounded-full z-50"
+        className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 backdrop-blur-md
+                    w-[92%] max-w-6xl justify-between items-center px-6 py-2 shadow-lg rounded-full z-50
+                  bg-sky-50/60 border border-white/20 text-gray-800  
+                  dark:bg-sky-50/40 dark:border dark:border-white/80 dark:text-gray-100
+           "
       >
         {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
         <div className="flex items-center gap-6">
@@ -67,7 +67,7 @@ export default function DesktopNavbar() {
 
           <div
             onClick={() => setOpenModal(true)}
-            className="text-gray-800 gap-2 rounded-xl cursor-pointer hover:text-amber-300 transition"
+            className="text-gray-800 hover:text-amber-300 dark:text-gray-100 gap-2 rounded-xl cursor-pointe transition"
           >
             ورود / ثبت نام
           </div>

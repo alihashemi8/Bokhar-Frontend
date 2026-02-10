@@ -21,7 +21,7 @@ import Landing from "./pages/Landing";
 import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
-import AdminOrders from "./components/admin/AdminOrders";
+import AdminOrders from "./components/admin/orders/AdminOrders";
 import AdminCategories from "./components/admin/AdminCategories";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
@@ -51,7 +51,9 @@ function AppContent() {
   const hideNavbar = currentPath.startsWith("/admin-dashboard");
 
   return (
-    <div className="bg-gradient-to-bl from-sky-200/80 via-pink-100/60 to-sky-200/80 min-h-screen">
+    <div className="bg-gradient-to-bl from-sky-200/80 via-pink-100/60 to-sky-200/80
+                    dark:from-sky-950 dark:via-purple-900/70 dark:to-sky-900
+                    min-h-screen">
       {/* Navbarها فقط اگر در مسیر مخفی نباشیم */}
       {!hideNavbar && (
         <>

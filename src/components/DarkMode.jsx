@@ -15,7 +15,7 @@ export default function DarkMode({ className = "" }) {
         "flex items-center justify-center p-2 rounded-full transition  " +
         "hover:scale-110 active:scale-95 duration-200 " +
         "bg-black/10 dark:bg-black/10 hover:bg-black/20 dark:hover:bg-black/20 " +
-        "border border-white/20 dark:border-white/20 shadow-md " +
+        "border border-white/20 dark:border-white/40 shadow-md " +
         className
       }
     >

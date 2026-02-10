@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import Sidebar from "../Sidebar";
 import { FiPercent } from "react-icons/fi";
 import { ServicesContext } from "../services/ServicesContext";
-import Search from "../Search";
+import Search from "../../Search";
 import DiscountModal from "./DiscountModal";
 
 export default function AdminDiscount() {
@@ -39,10 +39,7 @@ export default function AdminDiscount() {
   };
 
   return (
-    <div
-      dir="rtl"
-      className="flex min-h-screen overflow-x-hidden"
-    >
+    <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}

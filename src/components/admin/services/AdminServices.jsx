@@ -3,7 +3,7 @@ import { FiPlus, FiTrash2, FiEdit } from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
-import Search from "../Search";
+import Search from "../../Search";
 
 export default function AdminServices() {
   const { categories, services, setCategories, setServices } =

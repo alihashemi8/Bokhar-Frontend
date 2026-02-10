@@ -1,16 +1,22 @@
 import { useState, useMemo, useEffect } from "react";
 import CategoryTabs from "../components/CategoryTabs";
 import Card from "../components/Card";
-import Search from "../components/admin/Search";
+import Search from "../components/Search";
 
 // کامپوننت‌ها و داده‌ها
-import ShirtsPants, { shirtsPantsData } from "../components/categories/ShirtsPants";
+import ShirtsPants, {
+  shirtsPantsData,
+} from "../components/categories/ShirtsPants";
 import Men, { menData } from "../components/categories/Men";
 import Women, { womenData } from "../components/categories/Women";
-import HomeAndBed, { homeAndBedData } from "../components/categories/HomeAndBed";
+import HomeAndBed, {
+  homeAndBedData,
+} from "../components/categories/HomeAndBed";
 import Bags, { bagsData } from "../components/categories/Bags";
 import Shoes, { shoesData } from "../components/categories/Shoes";
-import WarmClothes, { warmClothesData } from "../components/categories/WarmClothes";
+import WarmClothes, {
+  warmClothesData,
+} from "../components/categories/WarmClothes";
 import Sports, { sportsData } from "../components/categories/Sports";
 import Others, { othersData } from "../components/categories/Others";
 import Kids, { kidsData } from "../components/categories/Kids";
@@ -40,16 +46,16 @@ export default function Landing() {
   // جمع کردن همه داده‌ها برای سرچ
   const allItems = useMemo(() => {
     return [
-      ...shirtsPantsData.map(c => ({ ...c, category: "پیراهن" })),
-      ...menData.map(c => ({ ...c, category: "مردانه" })),
-      ...womenData.map(c => ({ ...c, category: "زنانه" })),
-      ...homeAndBedData.map(c => ({ ...c, category: "خانه و خواب" })),
-      ...bagsData.map(c => ({ ...c, category: "کیف" })),
-      ...shoesData.map(c => ({ ...c, category: "کفش" })),
-      ...warmClothesData.map(c => ({ ...c, category: "لباس گرم" })),
-      ...sportsData.map(c => ({ ...c, category: "ورزشی" })),
-      ...othersData.map(c => ({ ...c, category: "سایر" })),
-      ...kidsData.map(c => ({ ...c, category: "بچگانه" })),
+      ...shirtsPantsData.map((c) => ({ ...c, category: "پیراهن" })),
+      ...menData.map((c) => ({ ...c, category: "مردانه" })),
+      ...womenData.map((c) => ({ ...c, category: "زنانه" })),
+      ...homeAndBedData.map((c) => ({ ...c, category: "خانه و خواب" })),
+      ...bagsData.map((c) => ({ ...c, category: "کیف" })),
+      ...shoesData.map((c) => ({ ...c, category: "کفش" })),
+      ...warmClothesData.map((c) => ({ ...c, category: "لباس گرم" })),
+      ...sportsData.map((c) => ({ ...c, category: "ورزشی" })),
+      ...othersData.map((c) => ({ ...c, category: "سایر" })),
+      ...kidsData.map((c) => ({ ...c, category: "بچگانه" })),
     ];
   }, []);
 
@@ -87,7 +93,10 @@ export default function Landing() {
   }, [searchQuery]);
 
   return (
-    <div dir="rtl" className="min-h-dvh w-full text-gray-900 dark:text-gray-100">
+    <div
+      dir="rtl"
+      className="min-h-dvh w-full text-gray-900 dark:text-gray-100"
+    >
       {/* هدر */}
       <section className="p-8 text-center">
         <h1 className="text-3xl font-bold md:mt-10">خشکشویی</h1>
@@ -99,7 +108,7 @@ export default function Landing() {
       {/* سرچ */}
       <div className="px-4 mt-4 flex justify-center ">
         <div className="w-full md:w-2/3 lg:w-1/2 ">
-          <span className="flex mr-2 my-1">چی میخوای پیدا کنی؟</span>
+          <span className="flex mr-2 my-1 dark:text-gray-100">چی میخوای پیدا کنی؟</span>
 
           <Search
             value={searchQuery}
@@ -113,9 +122,7 @@ export default function Landing() {
             renderItem={(item) => (
               <div className="flex justify-between text-sm ">
                 <span>{item.title}</span>
-                <span className="text-xs text-gray-400">
-                  {item.category}
-                </span>
+                <span className="text-xs text-gray-400 dark:text-gray-100">{item.category}</span>
               </div>
             )}
           />

@@ -20,9 +20,9 @@ export default function Card({
     <div
       dir="rtl"
       className="
-        bg-sky-100/40 dark:bg-gray-800
-        rounded-2xl shadow-lg hover:shadow-xl shadow-indigo-300
-        border border-indigo-200 ring ring-indigo-200
+        bg-sky-100/40 dark:bg-sky-950/50 
+        rounded-2xl shadow-lg hover:shadow-xl shadow-indigo-300 dark:shadow-indigo-600
+        border border-indigo-200 dark:border-indigo-400 ring ring-indigo-200 dark:ring-indigo-500
         transition-transform hover:scale-[1.02]
         flex flex-col
       "
@@ -33,7 +33,7 @@ export default function Card({
           w-full
           h-24 sm:h-28 md:h-48
           flex items-center justify-center
-          bg-gray-100 dark:bg-gray-700
+          bg-gray-100 dark:bg-sky-950/30 
           rounded-t-2xl
         "
       >
@@ -55,10 +55,9 @@ export default function Card({
           className="
             w-full py-1.5 sm:py-2 mt-4
             rounded-lg font-medium
-            text-sm sm:text-base
-            bg-sky-600 text-white
-            hover:bg-sky-700 transition
-            
+            text-sm sm:text-base text-white transition
+            bg-sky-600 text-whitehover:bg-sky-700 
+            bg-gradient-to-r dark:from-purple-700 dark:to-purple-800 
           "
         >
           خدمات
