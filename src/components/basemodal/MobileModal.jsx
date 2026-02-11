@@ -25,7 +25,7 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
   /* ---------------- Mount after isOpen ---------------- */
   useEffect(() => {
     if (isOpen) {
-      const id = setTimeout(() => setMounted(true), 10); // small delay for animation
+      const id = setTimeout(() => setMounted(true), 10);
       return () => clearTimeout(id);
     } else {
       setMounted(false);
@@ -137,12 +137,13 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
     backdropRef.current.style.transition = BACKDROP_CLOSE;
 
     const shouldClose =
-      velocity.current > 0.7 || dragDistance.current > window.innerHeight * 0.25;
+      velocity.current > 0.7 ||
+      dragDistance.current > window.innerHeight * 0.25;
 
     if (shouldClose) {
       closeWithAnim();
     } else {
-      setTranslate(0); // snap back
+      setTranslate(0);
     }
 
     mode.current = null;
@@ -153,27 +154,36 @@ export default function MobileModal({ isOpen, onClose, children, title }) {
   return ReactDOM.createPortal(
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[200] bg-black/40"
+      className="fixed inset-0 z-[200] bg-black/40 dark:bg-black/60"
       onClick={closeWithAnim}
     >
       <div
         dir="rtl"
         ref={modalRef}
-        className="absolute bottom-0 w-full bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 rounded-t-[32px]"
+        className="
+          absolute bottom-0 w-full rounded-t-[32px]
+          bg-gradient-to-br
+          from-sky-50 via-sky-100 to-sky-200
+          dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+        "
         onClick={(e) => e.stopPropagation()}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
         <div className="pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto" />
+          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto" />
         </div>
 
-        {title && <div className="px-6 pb-2 font-semibold">{title}</div>}
+        {title && (
+          <div className="px-6 pb-2 font-semibold text-gray-900 dark:text-gray-100">
+            {title}
+          </div>
+        )}
 
         <div
           ref={contentRef}
-          className="px-6 pb-6 max-h-[75vh] overflow-y-auto"
+          className="px-6 pb-6 max-h-[75vh] overflow-y-auto text-gray-900 dark:text-gray-100"
         >
           {children}
         </div>

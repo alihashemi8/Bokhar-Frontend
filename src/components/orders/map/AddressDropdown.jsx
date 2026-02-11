@@ -26,27 +26,40 @@ export default function AddressDropdown({
           className={`absolute inset-0 z-[600] ${
             fullScreen
               ? "w-[75%] m-auto -top-1"
-              : "bg-white p-5 rounded-xl shadow-2xl shadow-sky-400"
+              : "bg-white dark:bg-gray-800 p-5 rounded-xl shadow-2xl shadow-sky-400 dark:shadow-black/40"
           }`}
         >
           <div
             dir="rtl"
             className={`${
               fullScreen
-                ? "bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 w-full h-full flex flex-col shadow-md shadow-sky-300 border border-sky-200 rounded-2xl p-4"
+                ? `
+                  bg-gradient-to-br
+                  from-sky-50 via-sky-100 to-sky-200
+                  dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+                  w-full h-full flex flex-col
+                  shadow-md shadow-sky-300 dark:shadow-black/40
+                  border border-sky-200 dark:border-gray-600
+                  rounded-2xl p-4
+                `
                 : "w-[360px]"
             }`}
           >
             {/* header */}
             <div className="flex justify-between items-center mb-3">
               <div>
-                <h3 className="text-lg font-semibold text-sky-600">
+                <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-400">
                   اطلاعات تکمیلی
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">{address}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {address}
+                </p>
               </div>
               <button onClick={onClose}>
-                <X size={20} className="text-gray-500 hover:text-gray-700" />
+                <X
+                  size={20}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                />
               </button>
             </div>
 
@@ -57,7 +70,14 @@ export default function AddressDropdown({
                 placeholder="پلاک"
                 value={plaque}
                 onChange={(e) => setPlaque(e.target.value)}
-                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="
+                  w-full border-2 rounded-xl px-3 py-2
+                  bg-sky-50 dark:bg-gray-700
+                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  border-sky-300 dark:border-gray-600
+                  text-gray-900 dark:text-gray-100
+                  focus:outline-none focus:ring-2 focus:ring-sky-400
+                "
               />
             </div>
 
@@ -68,27 +88,51 @@ export default function AddressDropdown({
                 placeholder="واحد"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="
+                  w-full border-2 rounded-xl px-3 py-2
+                  bg-sky-50 dark:bg-gray-700
+                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  border-sky-300 dark:border-gray-600
+                  text-gray-900 dark:text-gray-100
+                  focus:outline-none focus:ring-2 focus:ring-sky-400
+                "
               />
             </div>
 
             {/* input عنوان آدرس */}
             <div className="flex flex-col mt-4 mx-auto w-[75%]">
-              <label className="text-xs text-gray-600 mb-1">
+              <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                 برای ذخیره آدرس، عنوان آدرس را بنویسید
               </label>
               <input
                 placeholder="عنوان آدرس"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full border-2 rounded-xl px-3 py-2 bg-sky-50 shadow-lg shadow-sky-300 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="
+                  w-full border-2 rounded-xl px-3 py-2
+                  bg-sky-50 dark:bg-gray-700
+                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  border-sky-300 dark:border-gray-600
+                  text-gray-900 dark:text-gray-100
+                  focus:outline-none focus:ring-2 focus:ring-sky-400
+                "
               />
             </div>
 
             {/* submit */}
             <button
               onClick={onSubmit}
-              className="mt-4 mx-auto w-[75%] bg-sky-600 border border-sky-600 shadow-lg shadow-sky-300 text-white rounded-xl py-2 hover:bg-sky-700 transition"
+              className="
+                mt-4 mx-auto w-[75%]
+                bg-gradient-to-r from-sky-100 to-sky-200
+                dark:from-purple-700 dark:to-purple-800
+                border border-gray-300 dark:border-indigo-600
+                shadow-md shadow-indigo-300 dark:shadow-black/30
+                text-gray-800 dark:text-white/90
+                rounded-xl py-2 font-bold
+                transition-all duration-300
+                hover:scale-105
+              "
             >
               ثبت اطلاعات
             </button>
