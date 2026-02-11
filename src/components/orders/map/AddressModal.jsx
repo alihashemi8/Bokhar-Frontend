@@ -53,9 +53,12 @@ export default function AddressModal({
 
   if (!ready) return null;
 
+  const inputBaseClasses =
+    "border rounded-xl px-3 py-2 shadow-md font-bold focus:outline-none focus:ring-2 transition-all duration-300";
+
   return (
     <MobileModal isOpen={isOpen} onClose={onClose} title="📍 اطلاعات تکمیلی">
-      {address && <p className="text-xs text-gray-600 mb-4">{address}</p>}
+      {address && <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">{address}</p>}
 
       <div className="flex gap-4 justify-center mb-4">
         <input
@@ -63,29 +66,29 @@ export default function AddressModal({
           placeholder="پلاک"
           value={localPlaque}
           onChange={(e) => setLocalPlaque(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className={`${inputBaseClasses} w-[45%] bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
         />
         <input
           type="number"
           placeholder="واحد"
           value={localUnit}
           onChange={(e) => setLocalUnit(e.target.value)}
-          className="w-[45%] border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className={`${inputBaseClasses} w-[45%] bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
         />
       </div>
 
       <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 mb-1">عنوان آدرس</label>
+        <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">عنوان آدرس</label>
         <input
           placeholder="مثلاً خانه، محل کار"
           value={localTitle}
           onChange={(e) => setLocalTitle(e.target.value)}
-          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          className={`${inputBaseClasses} bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
         />
       </div>
 
       <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 mb-1">
+        <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">
           توضیحات اضافی (اختیاری)
         </label>
         <textarea
@@ -93,16 +96,16 @@ export default function AddressModal({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="border rounded-xl px-3 py-2 bg-sky-50 border-sky-300 focus:outline-none focus:ring-2 focus:ring-sky-400 resize-none"
+          className={`${inputBaseClasses} bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 resize-none`}
         />
       </div>
 
       <button
         onClick={handleSubmit}
         disabled={!isFormValid}
-        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition ${
+        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition-all duration-300 font-bold ${
           isFormValid
-            ? "bg-sky-600 hover:bg-sky-700"
+            ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow-md shadow-indigo-300 hover:scale-105"
             : "bg-gray-300 cursor-not-allowed"
         }`}
       >

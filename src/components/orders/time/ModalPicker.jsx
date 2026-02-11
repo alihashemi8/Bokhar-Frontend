@@ -85,7 +85,7 @@ export default function ModalPicker({
 
       {/* Preview */}
       {(selectedDate || selectedTime) && (
-        <div className=" my-3 text-sm text-gray-700">
+        <div className="my-3 text-sm text-gray-700">
           {selectedDate && (
             <span className="font-semibold">{formatSafe(selectedDate)}</span>
           )}
@@ -140,12 +140,12 @@ export default function ModalPicker({
                     setSelectedDate(dayObj);
                     setHasUserSelectedDate(true); // ✅ فقط اینجا
                   }}
-                  className={`border rounded-2xl p-3 my-4 text-center transition w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-1 ${
+                  className={`border rounded-2xl p-3 my-4 text-center transition-all duration-300 w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-1 ${
                     isDisabled
                       ? "opacity-40 cursor-not-allowed"
                       : isSelected
-                      ? "bg-pink-100 border-pink-600 shadow-md shadow-pink-900 scale-105 cursor-pointer"
-                      : "bg-white/70 border-pink-400 hover:bg-pink-50 shadow-md shadow-pink-400 cursor-pointer"
+                      ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 text-gray-800 dark:text-white/90 shadow-md shadow-indigo-300 scale-105 cursor-pointer font-bold"
+                      : "bg-white/80 border border-gray-200 text-gray-800 hover:bg-sky-100 dark:hover:bg-white/95 shadow-md cursor-pointer font-bold"
                   }`}
                 >
                   <p className="text-sm font-medium text-pink-500">
@@ -165,10 +165,10 @@ export default function ModalPicker({
             <button
               key={idx}
               onClick={() => setSelectedTime(slot)}
-              className={`px-5 py-3 rounded-xl text-sm border transition ${
+              className={`px-5 py-3 rounded-xl text-sm border transition-all duration-300 ${
                 selectedTime === slot
-                  ? "bg-pink-500/80 text-white border-pink-600 shadow-md shadow-pink-400 scale-105"
-                  : "bg-sky-50 border-pink-400 text-gray-700 hover:bg-pink-300 shadow-md shadow-pink-400"
+                  ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 text-gray-800 dark:text-white/90 shadow-md shadow-indigo-300 scale-105 font-bold"
+                  : "bg-white/80 border border-gray-200 text-gray-800 hover:bg-sky-100 dark:hover:bg-white/95 shadow-md font-bold"
               }`}
             >
               {slot}
@@ -183,7 +183,7 @@ export default function ModalPicker({
         onClick={() => !isConfirmDisabled && onConfirm(type)}
         className={`block mx-auto mt-6 px-6 py-2 rounded-xl ${
           !isConfirmDisabled
-            ? "bg-pink-500 text-white"
+            ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 text-gray-800 dark:text-gray-300 font-bold shadow-md shadow-indigo-300"
             : "bg-gray-300 text-gray-500 cursor-not-allowed"
         }`}
       >
