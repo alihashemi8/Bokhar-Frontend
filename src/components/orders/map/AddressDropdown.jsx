@@ -40,7 +40,7 @@ export default function AddressDropdown({
                   w-full h-full flex flex-col
                   shadow-md shadow-sky-300 dark:shadow-black/40
                   border border-sky-200 dark:border-gray-600
-                  rounded-2xl p-4
+                  rounded-2xl dark:rounded-xl p-4
                 `
                 : "w-[360px]"
             }`}
@@ -124,14 +124,14 @@ export default function AddressDropdown({
               onClick={onSubmit}
               className="
                 mt-4 mx-auto w-[75%]
-                bg-gradient-to-r from-sky-100 to-sky-200
-                dark:from-purple-700 dark:to-purple-800
-                border border-gray-300 dark:border-indigo-600
+                bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600
+                dark:from-purple-700 dark:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900
+                border border-indigo-300 dark:border-indigo-600
                 shadow-md shadow-indigo-300 dark:shadow-black/30
-                text-gray-800 dark:text-white/90
+                text-gray-100 dark:text-white/90
                 rounded-xl py-2 font-bold
                 transition-all duration-300
-                hover:scale-105
+                hover:scale-102
               "
             >
               ثبت اطلاعات

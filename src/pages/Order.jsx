@@ -48,7 +48,7 @@ export default function Order() {
   const { step, maxStep, orderData, factorTotal } = state;
 
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
   const [mounted, setMounted] = useState(false); // اضافه کردن mounted
   const [modalOpen, setModalOpen] = useState(false);
@@ -123,7 +123,7 @@ export default function Order() {
       }
       return null;
     },
-    [isMobile]
+    [isMobile],
   );
 
   const steps = isMobile
@@ -181,7 +181,7 @@ export default function Order() {
       if (clickedStep <= maxStep)
         dispatch({ type: "SET_STEP", payload: clickedStep });
     },
-    [maxStep]
+    [maxStep],
   );
 
   const submitOrder = useCallback(async () => {
@@ -192,7 +192,7 @@ export default function Order() {
 
       toast.success("سفارش با موفقیت ثبت شد ✅");
       ["orderData", "orderStep", "orderMaxStep"].forEach(
-        localStorage.removeItem
+        localStorage.removeItem,
       );
       dispatch({ type: "RESET_ORDER" });
     } catch (error) {
@@ -225,7 +225,7 @@ export default function Order() {
         });
       }
     },
-    [modalType, orderData.datetime]
+    [modalType, orderData.datetime],
   );
 
   const handleSetModalTime = useCallback(
@@ -252,7 +252,7 @@ export default function Order() {
         });
       }
     },
-    [modalType, orderData.datetime]
+    [modalType, orderData.datetime],
   );
 
   const handleModalConfirm = useCallback(() => {
@@ -328,7 +328,14 @@ export default function Order() {
             {isMobile && step === 1 && (
               <div className="mt-6 text-center">
                 <button
-                  className="bg-sky-300 border border-sky-300 shadow-lg shadow-sky-200 text-gray-600 hover:bg-sky-700 w-[100%] px-5 py-2 mb-20 rounded-xl"
+                  className="
+    w-full px-5 py-2 mb-20 rounded-xl font-semibold transition
+    bg-sky-300 text-gray-700 border border-sky-300 shadow-lg shadow-sky-200
+    hover:bg-sky-700 hover:text-white
+    dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
+    dark:border-purple-700 dark:text-white
+    dark:shadow-black/40 dark:hover:from-purple-600 dark:hover:to-purple-700
+  "
                   onClick={() => {
                     setModalType("delivery");
                     setModalOpen(true);

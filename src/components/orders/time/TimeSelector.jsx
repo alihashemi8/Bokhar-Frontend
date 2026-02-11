@@ -49,10 +49,10 @@ export default function TimeSelector({
           onClick={() => setWeekOffset((p) => Math.max(0, p - 1))}
           className="text-pink-500 disabled:text-gray-300"
         >
-         →  هفته قبل
+          → هفته قبل
         </button>
 
-        <span className="font-medium text-gray-700">
+        <span className="font-medium text-gray-700 dark:text-gray-300">
           هفته {weekOffset + 1}
         </span>
 
@@ -64,12 +64,13 @@ export default function TimeSelector({
         </button>
       </div>
 
+      {/* Days */}
       <div className="flex md:grid md:grid-cols-7 gap-1 overflow-x-auto scrollbar-hide">
         {isLoading
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
-                className="h-24 w-20 bg-pink-100/60 animate-pulse rounded-xl flex-shrink-0"
+                className="h-24 w-20 bg-pink-100/60 dark:bg-sky-800/40 animate-pulse rounded-xl flex-shrink-0"
               />
             ))
           : days.map((day, idx) => {
@@ -88,18 +89,33 @@ export default function TimeSelector({
                 <div
                   key={idx}
                   onClick={() => !isDisabled && setSelectedDate(d)}
-                  className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition ${
-                    isDisabled
-                      ? "opacity-40 cursor-not-allowed"
-                      : isSelected
-                      ? "bg-pink-100 border-pink-600 shadow-md scale-105"
-                      : "bg-pink-50 border-pink-400 hover:bg-pink-50 cursor-pointer"
-                  }`}
+                  className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition-all duration-300 flex-shrink-0
+                    ${
+                      isDisabled
+                        ? "opacity-40 cursor-not-allowed"
+                        : isSelected
+                        ? `
+                          bg-gradient-to-r
+                          from-sky-100 to-sky-200
+                          dark:from-purple-700 dark:to-purple-800
+                          border-gray-300 dark:border-indigo-600
+                          text-gray-800 dark:text-white/90
+                          shadow-md shadow-indigo-300
+                          scale-105 font-bold
+                        `
+                        : `
+                          bg-white/80 dark:bg-white/80 
+                          border-gray-200 dark:border-sky-700
+                          text-gray-800 dark:text-gray-800
+                          hover:bg-sky-100 dark:hover:bg-white/90
+                          shadow-md cursor-pointer font-bold
+                        `
+                    }`}
                 >
-                  <p className="text-sm text-pink-500">
+                  <p className="text-sm font-medium text-pink-500">
                     {d.weekDay.name}
                   </p>
-                  <p className="text-2xl font-bold text-gray-800">
+                  <p className="text-2xl font-bold">
                     {d.day}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -110,17 +126,33 @@ export default function TimeSelector({
             })}
       </div>
 
+      {/* Time Slots */}
       {selectedDate && (
-        <div className="mt-4 flex justify-center gap-3 flex-wrap">
+        <div className="mt-4 flex justify-center gap-3 flex-wrap animate-fadeInUp">
           {timeSlots.map((slot) => (
             <button
               key={slot}
               onClick={() => setSelectedTime(slot)}
-              className={`px-5 py-3 rounded-xl border transition ${
-                selectedTime === slot
-                  ? "bg-pink-500 text-white border-pink-600 scale-105"
-                  : "bg-sky-50 border-pink-400 hover:bg-pink-100"
-              }`}
+              className={`px-5 py-3 rounded-xl text-sm border transition-all duration-300 font-bold
+                ${
+                  selectedTime === slot
+                    ? `
+                      bg-gradient-to-r
+                      from-sky-100 to-sky-200
+                      dark:from-purple-700 dark:to-purple-800
+                      border-gray-300 dark:border-indigo-600
+                      text-gray-800 dark:text-white/90
+                      shadow-md shadow-indigo-300
+                      scale-105
+                    `
+                    : `
+                      bg-white/80 dark:bg-white/80
+                      border-gray-200 dark:border-sky-700
+                      text-gray-800 dark:text-gray-800
+                      hover:bg-sky-100 dark:hover:bg-white/90
+                      shadow-md
+                    `
+                }`}
             >
               {slot}
             </button>

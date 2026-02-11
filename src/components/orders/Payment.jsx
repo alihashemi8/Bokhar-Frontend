@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  CreditCard,
-  Tag,
-  CheckCircle,
-  XCircle,
-  Loader2,
-} from "lucide-react";
+import { CreditCard, Tag, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function Payment({
   subtotal,
@@ -39,12 +33,25 @@ export default function Payment({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="bg-sky-50 dark:bg-gray-900 border border-sky-200 dark:border-sky-500 rounded-3xl  p-6 shadow-xl shadow-sky-200/40 space-y-7">
-
+      <div
+        className="
+          rounded-3xl p-6 space-y-7 border shadow-xl
+          bg-sky-50
+          dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+          border-sky-200 dark:border-sky-700
+          shadow-sky-200/40 dark:shadow-black/40
+        "
+      >
         {/* Header */}
-        <div className="flex items-center gap-3 ">
-          <div className="size-11 rounded-2xl bg-sky-100 flex items-center justify-center">
-            <CreditCard className="text-sky-600" />
+        <div className="flex items-center gap-3">
+          <div
+            className="
+              size-11 rounded-2xl flex items-center justify-center
+              bg-sky-100
+              dark:bg-sky-700/60
+            "
+          >
+            <CreditCard className="text-sky-600 dark:text-sky-300" />
           </div>
           <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
             پرداخت نهایی
@@ -59,17 +66,15 @@ export default function Payment({
             <Row
               label="تخفیف"
               value={`-${discountAmount.toLocaleString()} تومان`}
-              valueClass="text-emerald-600"
+              valueClass="text-emerald-600 dark:text-emerald-400"
             />
           )}
 
-          <div className="h-px bg-sky-200 dark:bg-sky-500 my-2" />
+          <div className="h-px bg-sky-200 dark:bg-sky-700 my-2" />
 
           <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-300">
-              مبلغ نهایی
-            </span>
-            <span className="text-2xl font-bold text-sky-700 dark:text-sky-300">
+            <span className="text-gray-600 dark:text-gray-300">مبلغ نهایی</span>
+            <span className="text-2xl font-bold text-sky-700 dark:text-gray-100">
               {total.toLocaleString()} تومان
             </span>
           </div>
@@ -78,19 +83,29 @@ export default function Payment({
         {/* Discount */}
         <div className="space-y-2">
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <div className="relative flex-1 ">
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 dark:text-gray-100" />
               <input
                 value={discountCode}
                 onChange={(e) => setDiscountCode(e.target.value)}
                 placeholder="کد تخفیف"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-sky-300 bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-sky-400 outline-none"
+                className="
+                  w-full pl-9 pr-3 py-2.5 rounded-xl border outline-none
+                  bg-white border-sky-300
+                  dark:bg-sky-900/60 dark:border-sky-700 dark:text-white
+                  focus:ring-2 focus:ring-sky-400
+                 placeholder:text-gray-400  dark:placeholder:text-gray-300
+                "
               />
             </div>
 
             <button
               onClick={onApplyDiscount}
-              className="px-4 rounded-xl bg-sky-100 hover:bg-sky-200 text-gray-800 font-semibold transition"
+              className="
+                px-4 rounded-xl font-semibold transition
+                bg-sky-100 hover:bg-sky-200 text-gray-800
+                dark:bg-sky-700/60 dark:hover:bg-sky-600 dark:text-white
+              "
             >
               اعمال
             </button>
@@ -104,8 +119,8 @@ export default function Payment({
                 exit={{ opacity: 0, y: -6 }}
                 className={`flex items-center gap-1 text-sm ${
                   discountStatus === "success"
-                    ? "text-emerald-600"
-                    : "text-red-500"
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-red-500 dark:text-red-400"
                 }`}
               >
                 {discountStatus === "success" ? (
@@ -128,7 +143,13 @@ export default function Payment({
         <button
           onClick={onPay}
           disabled={loading}
-          className="w-full h-12 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-bold flex items-center justify-center gap-2 transition disabled:opacity-70"
+          className="
+            w-full h-12 rounded-2xl font-bold flex items-center justify-center gap-2 transition
+            bg-sky-600 hover:bg-sky-700 text-white
+            dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
+            dark:hover:from-purple-600 dark:hover:to-purple-700
+            disabled:opacity-70
+          "
         >
           {loading ? (
             <Loader2 className="size-5 animate-spin" />
