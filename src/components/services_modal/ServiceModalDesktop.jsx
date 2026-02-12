@@ -133,7 +133,7 @@ export default function ServiceModalDesktop({
           <button
             onClick={handleAdd}
             disabled={!selectedMain}
-            className="px-4 py-2 rounded-xl bg-purple-800 text-white disabled:opacity-40"
+            className="px-4 py-2 rounded-xl bg-sky-600 dark:bg-purple-800 text-white disabled:opacity-40"
           >
             افزودن به سبد
           </button>
