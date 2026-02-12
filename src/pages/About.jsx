@@ -19,7 +19,6 @@ const storeIcon = new L.Icon({
   shadowSize: [45, 45],
 });
 
-
 // حرکت نرم نقشه به لوکیشن
 function MapUpdater({ position }) {
   const map = useMap();
@@ -31,16 +30,18 @@ function MapUpdater({ position }) {
 
 export default function PickupInfo() {
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
 
   useEffect(() => {
-    const checkDark = () =>
-      setIsDarkMode(document.documentElement.classList.contains("dark"));
-    checkDark();
-    const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, { attributes: true });
-    return () => observer.disconnect();
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => (prev === "light" ? "dark" : "light"));
 
   const store = {
     name: "فروشگاه مرکزی",
@@ -51,21 +52,19 @@ export default function PickupInfo() {
     lng: 51.389,
   };
 
-  const tileUrl = isDarkMode
-    ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const tileUrl =
+    theme === "dark"
+      ? "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
-  // تابع اشتراک‌گذاری موقعیت
   const handleShareLocation = () => {
     const url = `https://www.google.com/maps?q=${store.lat},${store.lng}`;
     if (navigator.share) {
-      navigator
-        .share({
-          title: store.name,
-          text: `موقعیت ${store.name}`,
-          url,
-        })
-        .catch(console.error);
+      navigator.share({
+        title: store.name,
+        text: `موقعیت ${store.name}`,
+        url,
+      }).catch(console.error);
     } else {
       navigator.clipboard.writeText(url);
       alert("لینک موقعیت فروشگاه کپی شد ✅");
@@ -74,17 +73,20 @@ export default function PickupInfo() {
 
   return (
     <div dir="rtl" className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6">
-
       {/* Header */}
       <div className="flex items-center md:mt-16 gap-3">
-        <h1 className="text-lg font-semibold text-gray-800">اطلاعات دریافت حضوری</h1>
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+          اطلاعات دریافت حضوری
+        </h1>
 
         {/* Back Button */}
         <button
           onClick={() => navigate("/customer-dashboard")}
-          className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
+          className="ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md flex items-center justify-center
+          bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
+          dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500"
         >
-          <ArrowLeft size={20} className="text-gray-700" />
+          <ArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
         </button>
       </div>
 
@@ -93,7 +95,7 @@ export default function PickupInfo() {
       </p>
 
       {/* کارت فروشگاه */}
-      <div className="bg-white mb-20 md:mb-0 shadow-lg rounded-2xl overflow-hidden border border-gray-200 relative z-0">
+      <div className="bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 mb-20 md:mb-0 shadow-lg rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 relative z-0">
         <img
           src={store.image}
           alt="عکس فروشگاه"

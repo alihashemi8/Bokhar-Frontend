@@ -1,60 +1,90 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export default function EditProfile() {
   const navigate = useNavigate();
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   return (
     <div dir="rtl" className="min-h-screen p-4 md:p-8">
-      
-      <div className="bg-white rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto md:mt-15">
-        
+      <div
+        className="
+          bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+          border border-sky-200 dark:border-sky-700
+          rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto mt-5 md:mt-15
+        "
+      >
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-2xl">
+          <div className="w-14 h-14 rounded-full bg-sky-100 dark:bg-sky-700 flex items-center justify-center text-2xl">
             👤
           </div>
+
           <div className="flex-1">
-            <p className="text-lg font-semibold">ویرایش پروفایل</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              ویرایش پروفایل
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               اطلاعات هویتی شما در این بخش نمایش داده می‌شود
             </p>
           </div>
+
+          {/* Back Button */}
+          <button
+            onClick={() => navigate("/customer-dashboard")}
+            className="
+              w-10 h-10 rounded-full border shadow-sm hover:shadow-md
+              bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
+               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500
+              flex items-center justify-center transition
+            "
+          >
+            <ArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
+          </button>
         </div>
 
         {/* Form */}
         <div className="space-y-4">
-          
           {/* Full Name */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">
               نام و نام خانوادگی
             </label>
             <input
-              className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="
+                w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
+                bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700
+                text-gray-900 dark:text-white
+                placeholder:text-gray-400 dark:placeholder:text-gray-300
+              "
               placeholder="علی هاشمی"
             />
           </div>
 
-          {/* Mobile */}
+          {/* Info */}
           <div>
-
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-300 mt-1">
               تغییر رمز عبور فقط از طریق بخش «امنیت و حریم خصوصی» امکان‌پذیر است
             </p>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="mt-6 space-y-3">
-          <button className="w-full bg-blue-600 text-white rounded-xl p-3 hover:bg-blue-700 transition">
+        <div className="mt-6">
+          <button className="w-full bg-sky-600 hover:bg-sky-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white rounded-xl p-3 transition font-medium">
             ذخیره تغییرات
-          </button>
-
-          <button
-            onClick={() => navigate("/customer-dashboard")}
-            className="w-full text-gray-500 hover:text-gray-700"
-          >
-            بازگشت
           </button>
         </div>
       </div>

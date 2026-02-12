@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Wallet, Package, Edit2 } from "lucide-react";
+import { LogOut, Wallet, Package } from "lucide-react";
 import { FiSun, FiMoon } from "react-icons/fi";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 
@@ -12,7 +12,7 @@ function QuickCard({ title, icon, onClick }) {
         flex flex-col items-center gap-2 p-4 rounded-2xl transition w-full shadow-md hover:shadow-lg
         bg-sky-50
         dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-        border border-sky-200 dark:border-sky-700
+        border border-sky-200 dark:border-sky-700 shadow-sky-200 dark:shadow-indigo-500
       "
     >
       <div className="text-gray-700 dark:text-gray-200">{icon}</div>
@@ -46,12 +46,22 @@ function SettingItem({ title, onClick }) {
 
 export default function CustomersDashboard() {
   const navigate = useNavigate();
-  const [theme, setTheme] = useState("light");
+
+  // حالت اولیه را از localStorage یا کلاس dark روی <html> می‌خوانیم
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
+
+  // وقتی theme تغییر کرد، کلاس dark روی html و localStorage بروزرسانی می‌شود
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return (
@@ -60,9 +70,8 @@ export default function CustomersDashboard() {
       <div
         className="
           rounded-2xl p-5 flex items-center gap-4 md:mt-12 shadow-md md:max-w-3xl md:mx-auto
-          bg-sky-50
-          dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-          border border-sky-200 dark:border-sky-700
+          bg-sky-50 border border-sky-200 shadow-sky-200 dark:shadow-indigo-500
+          dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 dark:border-sky-700
         "
       >
         <div className="w-16 h-16 rounded-full bg-sky-100 dark:bg-sky-700 flex items-center justify-center text-2xl">
@@ -90,7 +99,7 @@ export default function CustomersDashboard() {
           mt-5 p-5 rounded-2xl shadow-md md:max-w-3xl md:mx-auto
           bg-sky-50
           dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-          border border-sky-200 dark:border-sky-700
+          border border-sky-200 dark:border-sky-700 shadow-sky-200 dark:shadow-indigo-500
         "
       >
         <div className="flex items-center justify-between">
@@ -111,7 +120,7 @@ export default function CustomersDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-3 mt-5 md:max-w-3xl md:mx-auto">
+      <div className="grid grid-cols-1 gap-3 mt-5 md:max-w-3xl md:mx-auto ">
         <QuickCard
           title="پیگیری سفارش‌ها"
           onClick={() => navigate("/customer-dashboard/orders-tracking")}
@@ -125,7 +134,7 @@ export default function CustomersDashboard() {
           mt-5 rounded-2xl p-5 shadow-md space-y-3 md:max-w-3xl md:mx-auto
           bg-sky-50
           dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-          border border-sky-200 dark:border-sky-700 dark:hover:bg-red-500
+          border border-sky-200 dark:border-sky-700 shadow-sky-200 dark:shadow-indigo-500
         "
       >
         <SettingItem
@@ -159,10 +168,14 @@ export default function CustomersDashboard() {
         </button>
         <button
           onClick={toggleTheme}
-          className={`relative w-14 h-8 rounded-full p-1 transition-all duration-300 ${theme === "dark" ? "bg-sky-600" : "bg-gray-300"}`}
+          className={`relative w-14 h-8 rounded-full p-1 transition-all duration-300 ${
+            theme === "dark" ? "bg-sky-600" : "bg-gray-300"
+          }`}
         >
           <span
-            className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white flex items-center justify-center transform transition-transform duration-300 ${theme === "dark" ? "translate-x-6" : ""}`}
+            className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white flex items-center justify-center transform transition-transform duration-300 ${
+              theme === "dark" ? "translate-x-6" : ""
+            }`}
           >
             {theme === "dark" ? (
               <FiMoon size={16} className="text-sky-700" />

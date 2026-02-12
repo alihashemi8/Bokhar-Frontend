@@ -28,7 +28,7 @@ export default function StepProgress({ steps, step, maxStep, onStepClick }) {
                 ${
                   isActive
                     ? `
-                      bg-sky-300 border-sky-300 text-white shadow-md
+                      from-sky-300 to-sky-300 border-sky-300 text-sky-600 shadow-md
                       dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
                       dark:border-indigo-600 dark:text-white/90
                       dark:shadow-indigo-300

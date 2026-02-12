@@ -15,6 +15,17 @@ export default function Support() {
   const [openFAQ, setOpenFAQ] = useState(null);
   const faqRefs = useRef([]);
 
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   const sendMessage = () => {
     if (!message) return;
     alert("پیام شما ارسال شد ✅");
@@ -42,69 +53,75 @@ export default function Support() {
 
         {/* Header */}
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-gray-800">پشتیبانی</h1>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">پشتیبانی</h1>
 
           {/* Back Button */}
           <button
             onClick={() => navigate("/customer-dashboard")}
-            className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
+            className="ms-auto w-10 h-10 rounded-full shadow-sm hover:shadow-md
+              bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
+               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500 flex items-center justify-center transition"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
           </button>
         </div>
 
         {/* تماس */}
-        <div className="bg-white rounded-2xl shadow p-4 flex items-center justify-between">
+        <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow p-4 flex items-center justify-between transition">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center">
-              <Phone className="text-green-600" />
+            <div className="w-11 h-11 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
+              <Phone className="text-green-600 dark:text-green-300" />
             </div>
             <div>
-              <p className="font-medium">تماس با پشتیبانی</p>
-              <p className="text-sm text-gray-500">همه روزه ۹ تا ۱۸</p>
+              <p className="font-medium text-gray-900 dark:text-gray-100">تماس با پشتیبانی</p>
+              <p className="text-sm text-gray-500 dark:text-gray-300">همه روزه ۹ تا ۱۸</p>
             </div>
           </div>
           <a
             href="tel:02112345678"
-            className="text-green-600 font-medium"
+            className="text-green-600 dark:text-green-400 font-medium"
           >
             تماس
           </a>
         </div>
 
         {/* ارسال پیام */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow p-4 transition">
           <div className="flex items-center gap-3 mb-3">
-            <MessageCircle className="text-blue-600" />
-            <p className="font-medium">ارسال پیام</p>
+            <MessageCircle className="text-blue-600 dark:text-blue-400" />
+            <p className="font-medium text-gray-900 dark:text-gray-100">ارسال پیام</p>
           </div>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="پیام خود را اینجا بنویسید..."
-            className="w-full border rounded-xl p-3 resize-none h-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="
+              w-full border rounded-xl p-3 resize-none h-28 focus:outline-none focus:ring-2 focus:ring-blue-500
+              bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 text-gray-900 dark:text-white
+              placeholder:text-gray-400 dark:placeholder:text-gray-300
+            "
           />
           <button
             onClick={sendMessage}
-            className="w-full bg-blue-600 text-white rounded-xl p-3 mt-3 hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white rounded-xl p-3 mt-3 transition font-medium"
           >
             ارسال پیام
           </button>
         </div>
 
         {/* سوالات متداول */}
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow p-4 transition">
           <div className="flex items-center gap-3 mb-3">
-            <HelpCircle className="text-orange-600" />
-            <p className="font-medium">سوالات متداول</p>
+            <HelpCircle className="text-orange-600 dark:text-orange-400" />
+            <p className="font-medium text-gray-900 dark:text-gray-100">سوالات متداول</p>
           </div>
 
-          <div className="space-y-2 text-gray-700">
+          <div className="space-y-2 text-gray-900 dark:text-gray-100">
             {faqs.map((faq, idx) => (
-              <div key={idx} className="border-b last:border-none">
+              <div key={idx} className="border-b last:border-none border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
-                  className="w-full flex justify-between items-center py-2 text-sm font-medium focus:outline-none"
+                  className="w-full flex justify-between items-center py-2 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none"
                 >
                   {faq.question}
                   <ChevronDown
@@ -118,7 +135,7 @@ export default function Support() {
                   ref={(el) => (faqRefs.current[idx] = el)}
                   className="overflow-hidden transition-all duration-300 ease-in-out opacity-0 max-h-0"
                 >
-                  <p className="text-gray-500 text-sm mt-1">{faq.answer}</p>
+                  <p className="text-gray-500 dark:text-gray-300 text-sm mt-1">{faq.answer}</p>
                 </div>
               </div>
             ))}

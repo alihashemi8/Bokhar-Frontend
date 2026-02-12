@@ -20,12 +20,16 @@ function PasswordInput({ placeholder, value, onChange }) {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        className="
+          w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition
+          bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 text-gray-900 dark:text-white
+          placeholder:text-gray-400 dark:placeholder:text-gray-300
+        "
       />
       <button
         type="button"
         onClick={() => setShow(!show)}
-        className="absolute top-3 left-3 text-gray-500 hover:text-gray-700"
+        className="absolute top-3 left-3 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
       >
         {show ? <EyeOff size={20} /> : <Eye size={20} />}
       </button>
@@ -42,13 +46,23 @@ export default function SecurityPrivacy() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, []);
 
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) return savedTheme;
+    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   const [password, setPassword] = useState({
     current: "",
     new: "",
     confirm: "",
   });
 
-  // ✅ اعتبارسنجی پر بودن هر 3 فیلد
   const isPasswordFormValid =
     password.current.trim() !== "" &&
     password.new.trim() !== "" &&
@@ -83,24 +97,26 @@ export default function SecurityPrivacy() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Lock className="text-blue-600" size={26} />
-          <p className="font-semibold text-lg text-gray-800">
+          <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">
             امنیت و حریم خصوصی
           </p>
 
           {/* Back Button */}
           <button
             onClick={() => navigate("/customer-dashboard")}
-            className="ms-auto w-10 h-10 rounded-full bg-white shadow hover:bg-gray-100 flex items-center justify-center"
+            className="ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md
+              bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
+               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500 flex items-center justify-center transition"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
           </button>
         </div>
 
         {/* تغییر رمز عبور */}
-        <div className="bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition">
+        <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow-lg p-5 hover:shadow-xl transition">
           <div className="flex items-center gap-3 mb-5">
             <Lock className="text-blue-600" size={24} />
-            <p className="font-medium text-gray-800 text-lg">
+            <p className="font-medium text-gray-900 dark:text-gray-100 text-lg">
               تغییر رمز عبور
             </p>
           </div>
@@ -135,7 +151,7 @@ export default function SecurityPrivacy() {
               className={`w-full mt-3 rounded-xl p-3 font-medium transition
                 ${
                   isPasswordFormValid
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-purple-700 dark:hover:bg-purple-800"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }
               `}
@@ -146,8 +162,8 @@ export default function SecurityPrivacy() {
         </div>
 
         {/* مدیریت دستگاه‌ها */}
-        <div className="bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition">
-          <p className="font-medium text-gray-800 text-lg mb-5">
+        <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow-lg p-5 hover:shadow-xl transition">
+          <p className="font-medium text-gray-900 dark:text-gray-100 text-lg mb-5">
             دستگاه‌ها و نشست‌ها
           </p>
 
@@ -155,13 +171,20 @@ export default function SecurityPrivacy() {
             {devices.map((d) => (
               <div
                 key={d.id}
-                className="flex justify-between items-center p-4 border rounded-xl hover:bg-gray-50 transition shadow-sm"
+                className="
+                  flex justify-between items-center p-4 border rounded-xl hover:bg-sky-100 dark:hover:bg-sky-800 transition shadow-sm
+                  border-sky-200 dark:border-sky-700
+                "
               >
                 <div className="flex items-center gap-3">
                   {getDeviceIcon(d.type)}
                   <div>
-                    <p className="font-medium text-gray-700">{d.name}</p>
-                    <p className="text-sm text-gray-500">{d.lastActive}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                      {d.name}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-300">
+                      {d.lastActive}
+                    </p>
                   </div>
                 </div>
                 <button className="text-red-500 text-sm hover:underline">
