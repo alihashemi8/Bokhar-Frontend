@@ -60,8 +60,8 @@ export default function Sidebar({
       {/* Mobile Menu Button */}
       <button
         className="md:hidden fixed top-4 right-4 z-50
-          bg-white/70 dark:bg-gray-900/70
-          backdrop-blur-lg border border-sky-200 dark:border-sky-700
+          bg-white/70 dark:bg-purple-800/60 dark:text-white/80
+          backdrop-blur-lg border border-sky-200 dark:border-indigo-500
           hover:bg-white dark:hover:bg-gray-800
           p-2 rounded-xl shadow-lg"
         onClick={() => setIsSidebarOpen(true)}

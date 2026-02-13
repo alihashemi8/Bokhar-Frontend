@@ -100,27 +100,26 @@ export default function CustomerTransactions() {
               key={t.id}
               className="
                 rounded-2xl sm:rounded-3xl p-5
-                bg-white/70 dark:bg-gray-900/60
-                backdrop-blur-lg
-                border border-sky-200 dark:border-gray-700
-                shadow-md hover:shadow-xl
+                bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200
+                dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+                border border-sky-200 dark:border-sky-700
+                shadow-lg backdrop-blur-xl dark:text-gray-300
                 transition-all
               "
             >
-              <div className="flex items-center gap-2 mb-3 text-sky-700 dark:text-sky-300 font-bold">
+              <div className="flex items-center gap-2 mb-3 text-sky-700 dark:text-sky-100 font-bold">
                 <FiCalendar size={18} />
                 تاریخ: {t.date}
               </div>
 
-              <div className="font-semibold mb-4 text-sky-600 dark:text-sky-400">
-                مبلغ کل این تراکنش:{" "}
-                {getTransactionTotal(t).toLocaleString()} تومان
+              <div className="font-semibold mb-4 text-sky-700 dark:text-sky-100">
+                مبلغ کل این تراکنش: {getTransactionTotal(t).toLocaleString()} تومان
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-sky-200 dark:border-gray-700">
+              <div className="overflow-x-auto rounded-xl border border-sky-200 dark:border-sky-700">
                 <table className="min-w-full text-right text-sm">
                   <thead>
-                    <tr className="bg-sky-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                    <tr className="bg-sky-50 dark:bg-sky-900 text-gray-600 dark:text-gray-200">
                       <th className="p-3 font-bold">نام کالا</th>
                       <th className="p-3 font-bold">تعداد</th>
                       <th className="p-3 font-bold">قیمت واحد</th>
@@ -132,16 +131,14 @@ export default function CustomerTransactions() {
                       <tr
                         key={idx}
                         className="
-                          border-t border-sky-100 dark:border-gray-700
-                          hover:bg-sky-50 dark:hover:bg-gray-800
+                          border-t border-sky-100 dark:border-sky-700
+                          hover:bg-sky-100 dark:hover:bg-sky-800
                           transition
                         "
                       >
                         <td className="p-3 font-medium">{item.name}</td>
                         <td className="p-3">{item.quantity}</td>
-                        <td className="p-3">
-                          {item.price.toLocaleString()}
-                        </td>
+                        <td className="p-3">{item.price.toLocaleString()}</td>
                         <td className="p-3 font-semibold">
                           {(item.price * item.quantity).toLocaleString()}
                         </td>

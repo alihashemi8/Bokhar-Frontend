@@ -94,9 +94,7 @@ export default function AdminReports() {
   ];
 
   const todayMonthIndex = new Date().getMonth();
-  const [activeMonth, setActiveMonth] = useState(
-    persianMonths[todayMonthIndex],
-  );
+  const [activeMonth, setActiveMonth] = useState(persianMonths[todayMonthIndex]);
   const [viewType, setViewType] = useState("week");
   const [valueType, setValueType] = useState("revenue");
   const [summary, setSummary] = useState(null);
@@ -190,7 +188,7 @@ export default function AdminReports() {
               onClick={() => setActiveMonth(m)}
               className={`px-4 py-2 my-3 mx-1 rounded-full font-medium shrink-0 transition ${
                 activeMonth === m
-                   ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 dark:text-white/90 shadow-md shadow-indigo-300 text-gray-800 scale-105"
+                  ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 dark:text-white/90 shadow-md shadow-indigo-300 text-gray-800 scale-105"
                   : "bg-white/70 dark:bg-white/80 hover:bg-white dark:hover:bg-white/95 border border-gray-200 dark:border-sky-200 shadow-md text-gray-800 "
               }`}
             >
@@ -206,79 +204,102 @@ export default function AdminReports() {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="lg:col-span-2 p-4 rounded-3xl bg-white/30 dark:bg-white/50 backdrop-blur-lg border border-sky-200/50 shadow-xl">
-            <div className="flex flex-col sm:flex-row gap-3 justify-between mb-4">
-              <h3 className="font-semibold text-gray-800 dark:text-gray-900">
-                نمودار فروش ({activeMonth})
-              </h3>
+  {/* عنوان */}
+  <h3 className="font-semibold mb-2 text-gray-800 dark:text-gray-900 w-full sm:w-auto text-center sm:text-start">
+    نمودار فروش ({activeMonth})
+  </h3>
+{/* Header + Controls */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 w-full">
 
-              <div className="flex flex-wrap gap-2 items-center">
-                <div className="flex gap-2 mx-auto">
-                  <button
-                    onClick={() => setActiveWeek((w) => Math.max(0, w - 1))}
-                    disabled={viewType === "week" || activeWeek === 0}
-                    className="
-      px-4 py-2
-      rounded-xl
-      text-sm font-semibold
-      bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 
-      shadow-lg text-gray-800 dark:text-white
-      transition
-      disabled:opacity-40
-      disabled:cursor-not-allowed
-    "
-                  >
-                    هفته قبل
-                  </button>
 
-                  <button
-                    onClick={() =>
-                      setActiveWeek((w) => Math.min(series.length - 1, w + 1))
-                    }
-                    disabled={
-                      viewType === "week" || activeWeek === series.length - 1
-                    }
-                    className="
-      px-4 py-2
-      rounded-xl
-      text-sm font-semibold
-      bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 
-      shadow-lg text-gray-800 dark:text-white
-      transition
-      disabled:opacity-40
-      disabled:cursor-not-allowed
-    "
-                  >
-                    هفته بعد
-                  </button>
-                </div>
+  {/* دکمه‌ها و Toggles */}
+  <div className="flex flex-col sm:flex-row sm:gap-2 w-full sm:w-auto">
 
-                <SegmentedToggle
-                  options={[
-                    { label: "هفته‌ای", value: "week" },
-                    { label: "روزانه", value: "day" },
-                  ]}
-                  value={viewType}
-                  onChange={setViewType}
-                />
+    {/* ردیف دکمه‌ها */}
+    <div className="flex gap-2 justify-center sm:justify-start mb-2 sm:mb-0">
+      <button
+        onClick={() => setActiveWeek((w) => Math.max(0, w - 1))}
+        disabled={viewType === "week" || activeWeek === 0}
+className="
+h-10
+px-4
+text-xs
+whitespace-nowrap
+rounded-2xl
+font-medium
+bg-gradient-to-r from-sky-100 to-sky-200 
+dark:from-purple-700 dark:to-purple-800
+shadow
+text-gray-800 dark:text-white
+transition
+disabled:opacity-40 disabled:cursor-not-allowed
 
-                <SegmentedToggle
-                  options={[
-                    { label: "قیمت", value: "revenue" },
-                    { label: "تعداد", value: "count" },
-                  ]}
-                  value={valueType}
-                  onChange={setValueType}
-                />
-              </div>
-            </div>
+sm:h-9 sm:px-3.5 sm:text-sm
+lg:h-10 lg:px-4
+"
 
+      >
+        هفته قبل
+      </button>
+
+      <button
+        onClick={() =>
+          setActiveWeek((w) => Math.min(series.length - 1, w + 1))
+        }
+        disabled={viewType === "week" || activeWeek === series.length - 1}
+className="
+h-10
+px-4
+text-xs
+whitespace-nowrap
+rounded-2xl
+font-medium
+bg-gradient-to-r from-sky-100 to-sky-200 
+dark:from-purple-700 dark:to-purple-800
+shadow
+text-gray-800 dark:text-white
+transition
+disabled:opacity-40 disabled:cursor-not-allowed
+
+sm:h-9 sm:px-3.5 sm:text-sm
+lg:h-10 lg:px-4
+"
+
+      >
+        هفته بعد
+      </button>
+    </div>
+
+    {/* ردیف Toggles */}
+    <div className="flex gap-2 justify-center sm:justify-start">
+      <SegmentedToggle
+        options={[
+          { label: "هفته‌ای", value: "week" },
+          { label: "روزانه", value: "day" },
+        ]}
+        value={viewType}
+        onChange={setViewType}
+      />
+
+      <SegmentedToggle
+        options={[
+          { label: "قیمت", value: "revenue" },
+          { label: "تعداد", value: "count" },
+        ]}
+        value={valueType}
+        onChange={setValueType}
+      />
+    </div>
+
+  </div>
+</div>
             <RevenueChart
               data={dataForChart.map((i) =>
                 viewType === "week"
                   ? { week: i.week, revenue: i.value }
-                  : { day: i.day, revenue: i.value },
+                  : { day: i.day, revenue: i.value }
               )}
               xKey={viewType === "week" ? "week" : "day"}
             />
