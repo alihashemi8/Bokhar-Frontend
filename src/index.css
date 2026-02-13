@@ -152,3 +152,25 @@
 .animate-success-pop {
   animation: success-pop 0.4s ease-out;
 }
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ffffff; /* رنگ نقطه */
+  animation: pulse 1s infinite ease-in-out;
+}

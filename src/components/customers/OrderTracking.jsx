@@ -40,8 +40,8 @@ export default function OrderTracking() {
       >
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-700 flex items-center justify-center">
-            <Package className="text-orange-600 dark:text-orange-300" size={22} />
+          <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-500 flex items-center justify-center">
+            <Package className="text-orange-600 dark:text-orange-200" size={22} />
           </div>
 
           <div>

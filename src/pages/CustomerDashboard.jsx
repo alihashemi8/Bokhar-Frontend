@@ -158,7 +158,7 @@ export default function CustomersDashboard() {
       </button>
 
       {/* Mobile Footer */}
-      <div className="mb-20 mt-5 rounded-2xl bottom-0 left-0 right-0 bg-sky-50 dark:bg-sky-900 p-4 flex justify-between items-center shadow-md md:hidden">
+      <div className="mb-20 mt-5 rounded-2xl bottom-0 left-0 right-0 bg-sky-50 dark:bg-sky-900 shadow-sky-200 dark:shadow-indigo-500 p-4 flex justify-between items-center shadow-md md:hidden">
         <button
           onClick={() => navigate("/login")}
           className="flex items-center gap-2 text-red-600 font-medium"
