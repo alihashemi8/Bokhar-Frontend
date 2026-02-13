@@ -2,71 +2,63 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar";
 import { FiUser, FiUsers, FiStar } from "react-icons/fi";
-import Search from "../../Search"; // مسیر به کامپوننت Search
+import Search from "../../Search";
 
-// ----------- Hook برای داده‌ها ----------
+/* ================= HOOK ================= */
+
 function useCustomers() {
   const [customers] = useState([
     { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
-    {
-      id: 2,
-      name: "سارا محمدی",
-      phone: "09351239811",
-      type: "active",
-      orders: 3,
-    },
-    {
-      id: 3,
-      name: "محمد کریمی",
-      phone: "09132223344",
-      type: "inactive",
-      orders: 0,
-    },
-    {
-      id: 4,
-      name: "مهسا سلطانی",
-      phone: "09012225566",
-      type: "active",
-      orders: 5,
-    },
+    { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
+    { id: 3, name: "محمد کریمی", phone: "09132223344", type: "inactive", orders: 0 },
+    { id: 4, name: "مهسا سلطانی", phone: "09012225566", type: "active", orders: 5 },
   ]);
   return customers;
 }
 
-// ----------- کامپوننت کارت مشتری ----------
+/* ================= CARD ================= */
+
 function CustomerCard({ customer, onClick }) {
   const { name, phone, type, orders } = customer;
-  const typeColor =
+
+  const badgeStyle =
     type === "vip"
-      ? "bg-yellow-100 text-yellow-700"
+      ? "bg-yellow-200/70 text-yellow-800"
       : type === "active"
-        ? "bg-green-100 text-green-700"
-        : "bg-red-100 text-red-700";
+      ? "bg-emerald-200/70 text-emerald-800"
+      : "bg-rose-200/70 text-rose-800";
 
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg cursor-pointer hover:shadow-2xl transition transform duration-300 hover:-translate-y-1 hover:scale-[1.01]"
       onClick={onClick}
+      className="
+        p-6 rounded-2xl cursor-pointer
+        bg-white/30 dark:bg-white/50 backdrop-blur-lg
+        border border-sky-200/50
+        shadow-xl transition-all
+        hover:scale-[1.03] hover:bg-white/80
+        active:scale-[0.98]
+      "
     >
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-gray-900">
           {name}
         </h2>
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${typeColor}`}
-        >
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badgeStyle}`}>
           {type === "vip" ? "VIP" : type === "active" ? "فعال" : "غیرفعال"}
         </span>
       </div>
-      <div className="flex justify-between text-gray-600 dark:text-gray-300">
-        <span>شماره: {phone}</span>
+
+      <div className="flex justify-between text-sm text-slate-600 dark:text-gray-700">
+        <span>{phone}</span>
         <span>سفارش‌ها: {orders}</span>
       </div>
     </div>
   );
 }
 
-// ----------- کامپوننت اصلی ----------
+/* ================= PAGE ================= */
+
 export default function AdminCustomers() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("customers");
@@ -79,78 +71,73 @@ export default function AdminCustomers() {
   const filtered = useMemo(() => {
     const query = search.toLowerCase();
     return customers.filter((c) => {
-      const matchCategory = activeTab === "all" || c.type === activeTab;
+      const matchTab = activeTab === "all" || c.type === activeTab;
       const matchSearch =
         c.name.toLowerCase().includes(query) || c.phone.includes(query);
-      return matchCategory && matchSearch;
+      return matchTab && matchSearch;
     });
-  }, [search, activeTab, customers]);
+  }, [customers, search, activeTab]);
 
   return (
-    <div
-      dir="RTL"
-      className="flex flex-col min-h-screen transition-colors duration-300"
-    >
-      <div className="flex flex-1">
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-          activeMenu={activeMenu}
-          setActiveMenu={setActiveMenu}
-        />
+    <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
+      <Sidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        activeMenu={activeMenu}
+        setActiveMenu={setActiveMenu}
+      />
 
-        <main
-          className={`flex-1 p-6 md:p-8 overflow-y-auto transition-all duration-300 ${!isSidebarOpen ? "md:mr-64" : ""}`}
-        >
-          <h1 className="text-2xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
-            مشتریان
-          </h1>
+      <main className="flex-1 min-w-0 p-4 sm:p-6 md:mr-64 overflow-y-auto">
+        <h1 className="text-2xl font-bold text-center md:text-start text-slate-800 dark:text-gray-900">
+          مشتریان
+        </h1>
 
-          {/* تب‌ها و سرچ */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6 md:mb-8">
-            {/* تب‌ها */}
-            <div className="flex gap-2 md:gap-10 flex-wrap">
-              {[
-                { key: "all", label: "همه", icon: <FiUsers /> },
-                { key: "active", label: "فعال", icon: <FiUser /> },
-                { key: "inactive", label: "غیرفعال", icon: <FiUser /> },
-                { key: "vip", label: "VIP", icon: <FiStar /> },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`
-                    flex items-center gap-2 px-2.5 md:px-6 py-2 md:py-3 rounded-full transition-all duration-300 border font-semibold
-                    ${
-                      activeTab === tab.key
-                        ? "bg-gradient-to-r from-sky-100 to-sky-200 text-gray-800 shadow-lg shadow-indigo-300 border-1 border-gray-300 transform scale-105"
-                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-700 shadow-lg hover:shadow-xl hover:scale-105"
-                    }`}
-                  aria-pressed={activeTab === tab.key}
-                >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* سرچ */}
-            <div className="w-full md:w-1/3">
-              <Search
-                value={search}
-                onChange={setSearch}
-                items={[]} // items برای نمایش پیشنهادات فعلا خالی است
-                onSelect={() => {}}
-                renderItem={() => null}
-                placeholder="جستجو بر اساس نام یا شماره..."
-              />
-            </div>
+        {/* Tabs + Search */}
+        <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          {/* Tabs */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-2">
+            {[
+              { key: "all", label: "همه", icon: <FiUsers /> },
+              { key: "active", label: "فعال", icon: <FiUser /> },
+              { key: "inactive", label: "غیرفعال", icon: <FiUser /> },
+              { key: "vip", label: "VIP", icon: <FiStar /> },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition border shadow-md
+                  ${
+                    activeTab === tab.key
+                      ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-lg scale-105 text-gray-800 dark:text-white/90"
+                      : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
+                  }
+                `}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
 
-          {/* کارت‌های مشتریان */}
+          {/* Search */}
+          <div className="w-full md:w-1/3">
+            <Search
+              value={search}
+              onChange={setSearch}
+              items={[]}
+              onSelect={() => {}}
+              renderItem={() => null}
+              placeholder="جستجو بر اساس نام یا شماره..."
+            />
+          </div>
+        </div>
+
+        {/* Cards */}
+        <div className="mt-8">
           {filtered.length === 0 ? (
-            <div className="text-center p-8 text-gray-400 dark:text-gray-500 text-lg">
-              مشتری‌ای یافت نشد.
+            <div className="text-center text-slate-400 text-lg">
+              مشتری‌ای یافت نشد
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -165,8 +152,8 @@ export default function AdminCustomers() {
               ))}
             </div>
           )}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

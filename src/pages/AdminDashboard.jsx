@@ -78,8 +78,8 @@ export default function AdminDashboard() {
               <div
                 key={i}
                 onClick={() => card.link && navigate(card.link)}
-                className={`p-5 rounded-2xl bg-white/30 dark:bg-white/10 backdrop-blur-lg 
-                border border-sky-200/50 hover:bg-white/70 transition-all cursor-pointer shadow-xl 
+                className={`p-5 rounded-2xl bg-white/30 dark:bg-white/50 backdrop-blur-lg 
+                border border-sky-200/50 hover:bg-white/80 dark:hover:text-gray-800 transition-all cursor-pointer shadow-xl 
                 hover:scale-[1.03] active:scale-[0.98]`}
               >
                 <div
@@ -95,8 +95,8 @@ export default function AdminDashboard() {
           </div>
 
           {/* جدول سفارش‌ها */}
-          <div className="bg-white/50 dark:bg-white/30 backdrop-blur-lg border border-sky-200/50 rounded-2xl p-6 shadow-xl">
-            <h2 className="text-xl font-semibold mb-4 border-b border-white/10 pb-2">
+          <div className="bg-white/50 dark:bg-white/50 backdrop-blur-lg border border-sky-200/50 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-black mb-4 border-b border-white/10 pb-2">
               آخرین سفارش‌ها
             </h2>
             <div className="overflow-x-auto">
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
                   {orders.map((order) => (
                     <tr
                       key={order.id}
-                      className="hover:bg-white/10 transition border-b border-white/5"
+                      className="hover:bg-white/80 dark:text-gray-900  transition border-b border-white/5"
                     >
                       <td className="p-3">{order.id}</td>
                       <td className="p-3">{order.name}</td>
@@ -121,10 +121,10 @@ export default function AdminDashboard() {
                       <td
                         className={`p-3 ${
                           order.status === "تحویل‌شده"
-                            ? "text-green-400"
+                            ? "text-green-400 dark:text-green-600"
                             : order.status === "لغوشده"
-                            ? "text-red-400"
-                            : "text-yellow-400"
+                            ? "text-red-400 dark:text-red-600"
+                            : "text-yellow-400 dark:text-amber-300"
                         }`}
                       >
                         {order.status}

@@ -31,8 +31,8 @@ export default function CustomerTransactions() {
     },
   ]);
 
-  const getTransactionTotal = (transaction) =>
-    transaction.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const getTransactionTotal = (t) =>
+    t.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   const totalSum = transactions.reduce(
     (sum, t) => sum + getTransactionTotal(t),
@@ -40,7 +40,7 @@ export default function CustomerTransactions() {
   );
 
   return (
-    <div dir="rtl" className="flex min-h-screen">
+    <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -49,15 +49,14 @@ export default function CustomerTransactions() {
       />
 
       <main
-        className={`flex-1 p-6 transition-all duration-300 overflow-y-auto ${
+        className={`flex-1 p-4 sm:p-6 transition-all duration-300 overflow-y-auto ${
           !isSidebarOpen ? "md:mr-64" : ""
         }`}
       >
-        {/* هدر چسبنده و مدرن */}
+        {/* ===== Sticky Header ===== */}
         <div
           className={`
-            sticky top-0 z-40 transition-all duration-300 pt-3
-
+            sticky top-0 z-40 pt-3 transition-all
             ${
               isSidebarOpen
                 ? "opacity-0 pointer-events-none md:opacity-100 md:pointer-events-auto md:mr-64"
@@ -67,55 +66,62 @@ export default function CustomerTransactions() {
         >
           <div
             className="
-            bg-white dark:bg-gray-800 
-            border border-gray-200 dark:border-gray-700
-            rounded-2xl p-5 shadow-md
-            flex flex-col md:flex-row justify-between items-start md:items-center
-            backdrop-blur-xl bg-opacity-70 dark:bg-opacity-70
-            gap-4"
+              rounded-2xl sm:rounded-3xl p-5
+              bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200
+              dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+              border border-sky-200 dark:border-sky-700
+              shadow-lg backdrop-blur-xl
+              flex flex-col md:flex-row justify-between gap-4
+            "
           >
-            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <FiShoppingBag className="text-blue-500" size={22} />
+            <h1 className="text-xl sm:text-2xl font-extrabold text-sky-900 dark:text-sky-100 flex items-center gap-2">
+              <FiShoppingBag size={22} />
               تراکنش‌های مشتری: {customer.name}
             </h1>
 
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 
-                            border border-blue-200 dark:border-blue-700
-                            rounded-xl py-3 px-5 shadow-sm 
-                            text-blue-900 dark:text-blue-100 font-extrabold whitespace-nowrap">
+            <div
+              className="
+                rounded-xl px-5 py-3 font-extrabold whitespace-nowrap
+                bg-white/80 dark:bg-gray-900/60
+                text-sky-700 dark:text-sky-200
+                border border-sky-300 dark:border-sky-700
+                shadow-sm
+              "
+            >
               مجموع کل: {totalSum.toLocaleString()} تومان
             </div>
           </div>
         </div>
 
-        {/* لیست تراکنش‌ها */}
+        {/* ===== Transactions ===== */}
         <div className="space-y-6 mt-6">
           {transactions.map((t) => (
             <div
               key={t.id}
               className="
-                bg-white dark:bg-gray-800 
-                border border-gray-200 dark:border-gray-700
-                rounded-2xl p-5 shadow-md 
-                hover:shadow-xl transition-all duration-300
+                rounded-2xl sm:rounded-3xl p-5
+                bg-white/70 dark:bg-gray-900/60
+                backdrop-blur-lg
+                border border-sky-200 dark:border-gray-700
+                shadow-md hover:shadow-xl
+                transition-all
               "
             >
-              <div className="flex items-center gap-3 mb-3">
-                <FiCalendar className="text-gray-500 dark:text-gray-300" size={20} />
-                <h2 className="font-bold text-lg text-gray-700 dark:text-gray-200">
-                  تاریخ: {t.date}
-                </h2>
+              <div className="flex items-center gap-2 mb-3 text-sky-700 dark:text-sky-300 font-bold">
+                <FiCalendar size={18} />
+                تاریخ: {t.date}
               </div>
 
-              <div className="text-blue-700 dark:text-blue-300 font-semibold mb-4">
-                مبلغ کل این تراکنش: {getTransactionTotal(t).toLocaleString()} تومان
+              <div className="font-semibold mb-4 text-sky-600 dark:text-sky-400">
+                مبلغ کل این تراکنش:{" "}
+                {getTransactionTotal(t).toLocaleString()} تومان
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-                <table className="min-w-full text-right table-auto">
+              <div className="overflow-x-auto rounded-xl border border-sky-200 dark:border-gray-700">
+                <table className="min-w-full text-right text-sm">
                   <thead>
-                    <tr className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-b">
-                      <th className="p-3 font-bold text-right">نام کالا</th>
+                    <tr className="bg-sky-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                      <th className="p-3 font-bold">نام کالا</th>
                       <th className="p-3 font-bold">تعداد</th>
                       <th className="p-3 font-bold">قیمت واحد</th>
                       <th className="p-3 font-bold">جمع</th>
@@ -125,12 +131,18 @@ export default function CustomerTransactions() {
                     {t.items.map((item, idx) => (
                       <tr
                         key={idx}
-                        className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                        className="
+                          border-t border-sky-100 dark:border-gray-700
+                          hover:bg-sky-50 dark:hover:bg-gray-800
+                          transition
+                        "
                       >
                         <td className="p-3 font-medium">{item.name}</td>
                         <td className="p-3">{item.quantity}</td>
-                        <td className="p-3">{item.price.toLocaleString()}</td>
                         <td className="p-3">
+                          {item.price.toLocaleString()}
+                        </td>
+                        <td className="p-3 font-semibold">
                           {(item.price * item.quantity).toLocaleString()}
                         </td>
                       </tr>

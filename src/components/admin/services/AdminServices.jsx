@@ -77,13 +77,22 @@ export default function AdminServices() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
-        <h1 className="text-2xl text-center md:text-start font-extrabold mb-6 md:mb-8 text-gray-900 dark:text-gray-100 tracking-wide">
+        <h1 className="text-2xl font-bold text-center md:text-start text-gray-800 dark:text-gray-100 mb-8">
           خدمات
-        </h1>{" "}
+        </h1>
+
         <div className="space-y-10 max-w-full">
           {/* دسته‌بندی‌ها */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          <div
+            className="
+              p-6 rounded-3xl
+              bg-white/30 
+              backdrop-blur-lg
+              border border-sky-200/50
+              shadow-xl
+            "
+          >
+            <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
               دسته‌بندی‌ها
             </h2>
 
@@ -92,16 +101,25 @@ export default function AdminServices() {
                 value={newCat}
                 onChange={(e) => setNewCat(e.target.value)}
                 placeholder="نام دسته جدید"
-                className="flex-1 min-w-0 p-3 h-12 bg-white border-sky-300/50
-                           rounded-xl shadow-lg dark:bg-gray-700 border"
+                className="
+                  flex-1 min-w-0 p-3 h-12
+                  rounded-xl border
+                  bg-white/80 dark:bg-white/50 focus:bg-white/80
+                  border-sky-200
+                  shadow-lg
+                  text-slate-800
+                "
                 onKeyDown={(e) => e.key === "Enter" && addCategory()}
               />
               <button
                 onClick={addCategory}
-                className="px-4 h-12 rounded-xl bg-gradient-to-r
-                           from-sky-50 via-sky-100 to-sky-200
-                           shadow-indigo-300 text-gray-800 shadow-md
-                           flex items-center gap-2 shrink-0"
+                className="
+                  px-4 h-12 rounded-xl
+                  bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600
+                  shadow-lg text-gray-800 dark:text-white/90
+                  flex items-center gap-2 shrink-0
+                  hover:scale-105 transition
+                "
               >
                 <FiPlus /> افزودن
               </button>
@@ -111,15 +129,16 @@ export default function AdminServices() {
               {visibleCategories.map((c) => (
                 <div
                   key={c}
-                  className="truncate px-4 py-2 bg-gradient-to-r
-                             from-sky-50 via-sky-100 to-sky-200
-                             shadow-indigo-300 text-gray-800 shadow-md
-                             rounded-xl flex items-center gap-3
-                             dark:text-white"
+                  className="
+                    truncate px-4 py-2 rounded-xl border
+                    bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 
+                    shadow-lg text-gray-800 dark:text-white/90
+                    flex items-center gap-3
+                  "
                 >
                   <span className="truncate">{c}</span>
                   <button onClick={() => deleteCategory(c)}>
-                    <FiTrash2 className="text-red-600 dark:text-red-400" />
+                    <FiTrash2 className="text-red-600" />
                   </button>
                 </div>
               ))}
@@ -127,7 +146,15 @@ export default function AdminServices() {
           </div>
 
           {/* خدمات */}
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow">
+          <div
+            className="
+              p-6 rounded-3xl
+              bg-white/30 dark:bg-white/50
+              backdrop-blur-lg
+              border border-sky-200/50
+              shadow-xl
+            "
+          >
             <div className="mb-6">
               <Search
                 value={search}
@@ -137,16 +164,7 @@ export default function AdminServices() {
               />
             </div>
 
-            {/* گرید نهایی بدون تداخل */}
-            <div
-              className="
-                grid
-                grid-cols-2
-                md:grid-cols-3
-                lg:grid-cols-4
-                gap-6
-              "
-            >
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {/* افزودن سرویس */}
               <div
                 onClick={() => {
@@ -156,13 +174,13 @@ export default function AdminServices() {
                 className="
                   flex flex-col items-center justify-center
                   rounded-2xl cursor-pointer
-                  bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200
-                  shadow-md hover:scale-105 transition-all
-                  p-4
-                  min-h-[220px]
+                bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 
+                shadow-lg text-gray-800 dark:text-white/90
+                  hover:scale-105 transition-all
+                  p-4 min-h-[220px]
                 "
               >
-                <div className="w-14 h-14 rounded-full bg-white/60 flex items-center justify-center mb-2">
+                <div className="w-14 h-14 rounded-full bg-white/70 flex items-center justify-center mb-2">
                   <FiPlus className="text-3xl" />
                 </div>
                 <p className="font-semibold text-sm md:text-md lg:text-lg">
@@ -175,9 +193,14 @@ export default function AdminServices() {
                 <div
                   key={srv.id}
                   className="
-                    bg-gray-100 dark:bg-gray-700 rounded-2xl p-4 shadow
+                    p-4 rounded-2xl
+                    bg-white/60
+                    backdrop-blur-lg
+                    border border-sky-200/50
+                    shadow-xl
                     flex flex-col justify-between
                     min-h-[220px]
+                    hover:scale-[1.03] transition
                   "
                 >
                   <div>
@@ -188,18 +211,18 @@ export default function AdminServices() {
                       />
                     </div>
 
-                    <h3 className="font-bold text-center truncate text-gray-900 dark:text-white">
+                    <h3 className="font-bold text-center truncate text-slate-800">
                       {srv.title || "بدون عنوان"}
                     </h3>
 
-                    <p className="text-center text-sm mt-1 text-gray-700 dark:text-gray-300 truncate">
+                    <p className="text-center text-sm mt-1 text-slate-600 truncate">
                       دسته: {srv.category || "-"}
                     </p>
                   </div>
 
                   <div className="flex justify-between mt-3">
                     <button
-                      className="text-blue-600 dark:text-blue-400"
+                      className="text-blue-600"
                       onClick={() => {
                         setEditItem(srv);
                         setModalOpen(true);
@@ -209,7 +232,7 @@ export default function AdminServices() {
                     </button>
 
                     <button
-                      className="text-red-600 dark:text-red-400"
+                      className="text-red-600"
                       onClick={() => deleteService(srv.id)}
                     >
                       <FiTrash2 />

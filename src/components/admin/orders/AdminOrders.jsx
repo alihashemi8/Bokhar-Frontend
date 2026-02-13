@@ -86,7 +86,7 @@ export default function AdminOrders() {
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
-      {/* سایدبار دسکتاپ */}
+      {/* سایدبار */}
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -94,50 +94,13 @@ export default function AdminOrders() {
         setActiveMenu={setActiveMenu}
       />
 
-      {/* منوی موبایل */}
-      <div className="lg:hidden fixed top-4 right-4 z-50">
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-2 rounded bg-gray-200 dark:bg-gray-700"
-        >
-          <Menu size={24} />
-        </button>
-      </div>
-
-      {/* overlay موبایل */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 bg-opacity-40 z-30 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
       {/* محتوای اصلی */}
-      <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64 lg:mr-64">
+      <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
         <h1 className="text-2xl font-bold text-center md:text-start">
           مدیریت سفارش‌ها
         </h1>
 
-        {/* 🔹 Search */}
-        <div className="mt-4 max-w-md mx-auto md:mx-0">
-          <Search
-            value={searchQuery}
-            onChange={setSearchQuery}
-            items={searchQuery ? filteredOrders : []}
-            placeholder="نام، آدرس یا شماره همراه"
-            onSelect={openModal}
-            renderItem={(order) => (
-              <div className="flex flex-col text-sm">
-                <span className="font-medium">{order.name}</span>
-                <span className="text-xs text-gray-500">
-                  {order.phone} — {order.address}
-                </span>
-              </div>
-            )}
-          />
-        </div>
-
-        {/* 🔹 KPI ها */}
+        {/* KPI */}
         <div className="grid grid-cols-3 gap-4 mt-6">
           <KPICard
             title="سفارش‌های امروز"
@@ -154,7 +117,28 @@ export default function AdminOrders() {
           <KPICard title="کل سفارش‌ها" value={filteredOrders.length} />
         </div>
 
-        {/* 🔹 تب‌ها */}
+        {/* 🔍 Search (وسط‌چین کامل) */}
+        <div className="mt-6 flex justify-center">
+          <div className="w-full max-w-md">
+            <Search
+              value={searchQuery}
+              onChange={setSearchQuery}
+              items={searchQuery ? filteredOrders : []}
+              placeholder="نام، آدرس یا شماره همراه"
+              onSelect={openModal}
+              renderItem={(order) => (
+                <div className="flex flex-col text-sm">
+                  <span className="font-medium">{order.name}</span>
+                  <span className="text-xs text-gray-500">
+                    {order.phone} — {order.address}
+                  </span>
+                </div>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* تب‌ها */}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           {[
             { key: "new", label: "جدید" },
@@ -164,10 +148,10 @@ export default function AdminOrders() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-2xl font-medium transition ${
+              className={`px-4 py-2 rounded-2xl font-medium transition border shadow-md ${
                 activeTab === tab.key
-                  ? "bg-gradient-to-r from-sky-50 via-sky-100 to-sky-200 shadow-indigo-300 text-gray-800 shadow-md"
-                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 shadow-md hover:shadow-xl"
+                 ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 dark:text-white/90 shadow-lg shadow-indigo-300 text-gray-800 scale-105"
+                  : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border border-gray-200 shadow-lg text-gray-800 "
               }`}
             >
               {tab.label}
@@ -175,8 +159,8 @@ export default function AdminOrders() {
           ))}
         </div>
 
-        {/* جدول سفارش‌ها */}
-        <div className=" overflow-x-auto">
+        {/* جدول */}
+        <div className="overflow-x-auto">
           <OrdersTable
             orders={filteredOrders}
             cities={cities}
@@ -189,18 +173,23 @@ export default function AdminOrders() {
           />
         </div>
 
-        {/* Confirm Button */}
         {changedCount > 0 && !showSuccess && (
           <button
-            dir="ltr"
             onClick={confirmChanges}
             disabled={isSaving}
             className="fixed bottom-5 left-5 z-50 animate-fab-in"
           >
-            <div className="flex flex-row-reverse items-center gap-3 px-4 py-2 rounded-full bg-emerald-500 text-white shadow-lg transition-transform duration-300 ease-out hover:scale-105">
-              <span className="pulse-dot"></span>
+            <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105">
+              {/* نقطه پالس‌دار */}
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full animate-ping bg-white/70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+              </span>
+
               {isSaving ? "در حال ثبت..." : "ثبت تغییرات"}
-              <span className="bg-white text-emerald-600 text-xs px-2 rounded-full">
+
+              {/* شمارنده */}
+              <span className="min-w-[20px] h-5 px-1 rounded-full bg-white text-emerald-600 text-xs font-bold flex items-center justify-center">
                 {changedCount}
               </span>
             </div>
@@ -223,6 +212,8 @@ export default function AdminOrders() {
   );
 }
 
+/* ================= HOOK ================= */
+
 function useOrders(initialData) {
   const [orders, setOrders] = useState(
     initialData.map((o) => ({
@@ -231,10 +222,10 @@ function useOrders(initialData) {
       isChecked: false,
     })),
   );
+
   const [activeTab, setActiveTab] = useState("new");
   const [cityFilter, setCityFilter] = useState("");
-  const [sortKey, setSortKey] = useState("date");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [searchQuery, setSearchQuery] = useState("");
   const [changedCount, setChangedCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -272,9 +263,19 @@ function useOrders(initialData) {
 
   const filteredOrders = useMemo(() => {
     let copy = orders.filter((o) => o.stage === activeTab);
-    if (cityFilter) copy = copy.filter((o) => o.city === cityFilter);
+
+    if (cityFilter) {
+      copy = copy.filter((o) => o.city === cityFilter);
+    }
+
+    if (searchQuery) {
+      copy = copy.filter((o) =>
+        [o.name, o.phone, o.address].some((v) => v.includes(searchQuery)),
+      );
+    }
+
     return copy;
-  }, [orders, activeTab, cityFilter]);
+  }, [orders, activeTab, cityFilter, searchQuery]);
 
   useMemo(() => {
     setChangedCount(
@@ -282,17 +283,14 @@ function useOrders(initialData) {
     );
   }, [orders, activeTab]);
 
-  const toggleSort = (key) => {
-    setSortKey(key);
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-  };
-
   return {
     filteredOrders,
     cities,
     cityFilter,
     setCityFilter,
-    toggleSort,
+    searchQuery,
+    setSearchQuery,
+    toggleSort: () => {},
     toggleCheck,
     confirmChanges,
     changedCount,
@@ -300,7 +298,5 @@ function useOrders(initialData) {
     showSuccess,
     activeTab,
     setActiveTab,
-    searchQuery: "",
-    setSearchQuery: () => {},
   };
 }

@@ -59,8 +59,11 @@ export default function Sidebar({
     <>
       {/* Mobile Menu Button */}
       <button
-        className="md:hidden fixed top-4 right-4 z-50  bg-white/30 dark:bg-white/10 backdrop-blur-lg 
-                border border-sky-200/50 hover:bg-white/70 p-2  rounded-lg "
+        className="md:hidden fixed top-4 right-4 z-50
+          bg-white/70 dark:bg-gray-900/70
+          backdrop-blur-lg border border-sky-200 dark:border-sky-700
+          hover:bg-white dark:hover:bg-gray-800
+          p-2 rounded-xl shadow-lg"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FiMenu size={24} />
@@ -77,38 +80,33 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 right-0
-          h-[100dvh] w-64
-          bg-white dark:bg-gray-800 shadow-xl
+          fixed top-0 right-0 h-[100dvh] w-64
+          bg-gradient-to-br
+          from-sky-50 via-sky-100 to-sky-200
+          dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
+          shadow-xl
           transform transition-transform duration-300 ease-out
           z-50
           ${isSidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"}
           md:translate-x-0 md:pointer-events-auto
         `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full text-gray-800 dark:text-gray-200">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b shrink-0">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-800 text-transparent bg-clip-text">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-sky-200 dark:border-sky-700 shrink-0">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-500 to-indigo-700 dark:from-purple-400 dark:to-purple-600 text-transparent bg-clip-text">
               خشکشویی افشار
             </h1>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="md:hidden p-1 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800"
             >
               <FiChevronRight size={24} />
             </button>
           </div>
 
-          {/* Menu (Scrollable) */}
-          <nav
-            className="
-              flex-1 overflow-y-auto
-              px-4 py-2
-              text-gray-800 dark:text-gray-200
-              overscroll-contain
-            "
-          >
+          {/* Menu */}
+          <nav className="flex-1 overflow-y-auto px-4 py-2 overscroll-contain">
             {allMenuItems.map((item) => (
               <button
                 key={item.key}
@@ -118,23 +116,23 @@ export default function Sidebar({
                   setIsSidebarOpen(false);
                 }}
                 className={`
-                  flex items-center gap-2 w-full px-3 py-3 my-2 rounded text-right
+                  flex items-center gap-2 w-full px-3 py-3 my-2 rounded-xl text-right
                   transition-all duration-200
                   ${
                     activeMenu === item.key
-                      ? "bg-blue-100 dark:bg-blue-700 text-blue-700 dark:text-white font-semibold"
-                      : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                      ? "bg-gradient-to-r from-sky-400 to-sky-500 text-white shadow-md dark:from-purple-700 dark:to-purple-800"
+                      : "hover:bg-white/70 dark:hover:bg-gray-800"
                   }
                 `}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="font-medium">{item.label}</span>
               </button>
             ))}
           </nav>
 
-          {/* Footer (Always Visible) */}
-          <div className="border-t px-4 pt-3 pb-safe flex flex-col gap-3 shrink-0">
+          {/* Footer */}
+          <div className="border-t border-sky-200 dark:border-sky-700 px-4 pt-3 pb-safe flex flex-col gap-3 shrink-0">
             {/* Theme Toggle */}
             <div className="flex items-center justify-between">
               <span className="font-medium">
@@ -143,11 +141,11 @@ export default function Sidebar({
               <button
                 onClick={toggleTheme}
                 className={`relative w-14 h-8 rounded-full p-1 transition-all
-                  ${theme === "dark" ? "bg-blue-600" : "bg-gray-300"}`}
+                  ${theme === "dark" ? "bg-purple-700" : "bg-sky-300"}`}
               >
                 <span
                   className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white
-                    flex items-center justify-center transition-transform
+                    flex items-center justify-center transition-transform text-gray-800
                     ${theme === "dark" ? "translate-x-6" : ""}`}
                 >
                   {theme === "dark" ? <FiMoon size={16} /> : <FiSun size={16} />}
@@ -156,7 +154,7 @@ export default function Sidebar({
             </div>
 
             {/* Logout */}
-            <button className="flex items-center gap-2 text-red-600 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded transition">
+            <button className="flex items-center gap-2 text-red-600 hover:bg-white/70 dark:hover:bg-gray-800 p-2 rounded-xl transition">
               <FiLogOut />
               خروج
             </button>
