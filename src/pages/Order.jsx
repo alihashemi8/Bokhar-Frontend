@@ -55,10 +55,20 @@ export default function Order() {
   const [modalType, setModalType] = useState("delivery");
   const historyLock = useRef(false);
 
-  // قبل از mount قفل اسکرول موبایل
-  if (typeof window !== "undefined" && !mounted && isMobile) {
+useEffect(() => {
+  if (!isMobile) return;
+
+  if (modalOpen) {
     document.body.style.overflow = "hidden";
+  } else {
+    document.body.style.overflow = "auto";
   }
+
+  return () => {
+    document.body.style.overflow = "auto";
+  };
+}, [modalOpen, isMobile]);
+
 
   useEffect(() => {
     setMounted(true);

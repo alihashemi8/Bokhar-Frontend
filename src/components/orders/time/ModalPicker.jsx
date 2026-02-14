@@ -85,7 +85,7 @@ export default function ModalPicker({
 
       {/* Preview */}
       {(selectedDate || selectedTime) && (
-        <div className="my-3 text-sm text-gray-700">
+        <div className="my-3 text-sm text-gray-700 dark:text-gray-300">
           {selectedDate && (
             <span className="font-semibold">{formatSafe(selectedDate)}</span>
           )}
@@ -102,7 +102,7 @@ export default function ModalPicker({
         >
           → هفته قبل
         </button>
-        <span className="font-medium text-gray-700">
+        <span className="font-medium text-gray-700 dark:text-gray-300">
           هفته {weekOffset + 1}
         </span>
         <button
@@ -138,21 +138,21 @@ export default function ModalPicker({
                   onClick={() => {
                     if (isDisabled) return;
                     setSelectedDate(dayObj);
-                    setHasUserSelectedDate(true); // ✅ فقط اینجا
+                    setHasUserSelectedDate(true); 
                   }}
                   className={`border rounded-2xl p-3 my-4 text-center transition-all duration-300 w-20 h-24 flex flex-col justify-center flex-shrink-0 mx-1 ${
                     isDisabled
                       ? "opacity-40 cursor-not-allowed"
                       : isSelected
                       ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 text-gray-800 dark:text-white/90 shadow-md shadow-indigo-300 scale-105 cursor-pointer font-bold"
-                      : "bg-white/80 border border-gray-200 text-gray-800 hover:bg-sky-100 dark:hover:bg-white/95 shadow-md cursor-pointer font-bold"
+                      : "bg-white/80 dark:bg-white/70 border border-gray-200 text-gray-800 hover:bg-sky-100 dark:hover:bg-white/95 shadow-md cursor-pointer font-bold"
                   }`}
                 >
                   <p className="text-sm font-medium text-pink-500">
                     {dayObj.weekDay.name}
                   </p>
-                  <p className="text-2xl font-bold text-gray-800">{dayObj.day}</p>
-                  <p className="text-xs text-gray-500">{dayObj.month.name}</p>
+                  <p className="text-2xl font-bold">{dayObj.day}</p>
+                  <p className="text-xs">{dayObj.month.name}</p>
                 </div>
               );
             })}

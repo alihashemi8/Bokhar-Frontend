@@ -69,7 +69,7 @@ export default function Support() {
         {/* تماس */}
         <div className="bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 border border-sky-200 dark:border-sky-700 rounded-2xl shadow p-4 flex items-center justify-between transition">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-full bg-green-100 dark:bg-green-600 flex items-center justify-center">
               <Phone className="text-green-600 dark:text-green-300" />
             </div>
             <div>
@@ -79,7 +79,7 @@ export default function Support() {
           </div>
           <a
             href="tel:02112345678"
-            className="text-green-600 dark:text-green-400 font-medium"
+            className="text-green-600 dark:text-green-200 font-medium"
           >
             تماس
           </a>
@@ -121,7 +121,7 @@ export default function Support() {
               <div key={idx} className="border-b last:border-none border-gray-200 dark:border-gray-700">
                 <button
                   onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
-                  className="w-full flex justify-between items-center py-2 text-sm font-medium text-gray-900 dark:text-gray-100 focus:outline-none"
+                  className="w-full flex justify-between items-center py-2 text-sm font-medium text-gray-900 dark:text-white focus:outline-none"
                 >
                   {faq.question}
                   <ChevronDown
@@ -133,7 +133,7 @@ export default function Support() {
                 </button>
                 <div
                   ref={(el) => (faqRefs.current[idx] = el)}
-                  className="overflow-hidden transition-all duration-300 ease-in-out opacity-0 max-h-0"
+                  className="overflow-hidden transition-all duration-300 ease-in-out py-3 opacity-0 max-h-0"
                 >
                   <p className="text-gray-500 dark:text-gray-300 text-sm mt-1">{faq.answer}</p>
                 </div>
