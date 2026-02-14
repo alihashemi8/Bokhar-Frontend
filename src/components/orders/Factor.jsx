@@ -63,13 +63,13 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
           <table className="min-w-full text-sm border-collapse">
             <thead>
               <tr className="text-gray-700 dark:text-gray-200 border-b border-sky-200 dark:border-sky-700">
-                <th className="py-3 text-right">محصول</th>
-                <th className="py-3 text-center">تعداد</th>
-                <th className="py-3 text-center">خدمات</th>
-                <th className="py-3 text-center">ویژگی‌ها</th>
-                <th className="py-3 text-right">قیمت واحد</th>
-                <th className="py-3 text-right">قیمت کل</th>
-                <th className="py-3 text-center">حذف</th>
+                <th className="py-3 px-3 text-right">محصول</th>
+                <th className="py-3 px-3 text-center">تعداد</th>
+                <th className="py-3 px-3 text-center">خدمات</th>
+                <th className="py-3 px-3 text-center">جنس</th>
+                <th className="py-3 px-3 text-right">قیمت واحد</th>
+                <th className="py-3 px-3 text-right">قیمت کل</th>
+                <th className="py-3 px-3 text-center">حذف</th>
               </tr>
             </thead>
 
@@ -82,7 +82,7 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
                   >
                     <td className="py-3 font-medium text-gray-800 dark:text-gray-100">{item.name}</td>
 
-                    <td className="py-3 text-center">
+                    <td className="py-3 px-3 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => decreaseQty(item)}
@@ -106,7 +106,7 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
                         .map(([key]) => (
                           <div
                             key={key}
-                            className="text-emerald-600 dark:text-emerald-400"
+                            className="text-gray-800 dark:text-gray-300"
                           >
                             {optionLabels[key] || key}
                           </div>
@@ -119,16 +119,16 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
                         .map(([key, v]) => (
                           <div
                             key={key}
-                            className="text-sky-700 dark:text-sky-300"
+                            className="text-gray-800 dark:text-gray-300"
                           >
                             {optionLabels[key] || key}: {v}
                           </div>
                         ))}
                     </td>
 
-                    <td className="py-3 text-right">{item.totalPrice?.toLocaleString()}</td>
+                    <td className="py-3 text-right text-gray-800 dark:text-gray-300">{item.totalPrice?.toLocaleString()}</td>
 
-                    <td className="py-3 text-right font-semibold">
+                    <td className="py-3 text-right text-gray-800 dark:text-gray-300 font-semibold">
                       {(item.totalPrice * item.qty).toLocaleString()}
                     </td>
 

@@ -125,7 +125,7 @@ export default function DateTimeRangePicker({
         bg-gradient-to-br
         from-sky-50 via-sky-100 to-sky-200
         dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-        border-pink-200 dark:border-sky-700
+        border-sky-300 dark:border-sky-700
         text-gray-900 dark:text-gray-100
       "
     >

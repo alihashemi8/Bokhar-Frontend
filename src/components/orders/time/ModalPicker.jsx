@@ -31,19 +31,16 @@ export default function ModalPicker({
       ? date
       : new DateObject({ date, calendar: persian, locale: persian_fa });
 
-  const baseDate = useMemo(() => {
-    const deliveryDate = minDate
-      ? formatDate(minDate)
-      : new DateObject({ calendar: persian, locale: persian_fa });
+const baseDate = useMemo(() => {
+  return minDate
+    ? formatDate(minDate)
+    : new DateObject({ calendar: persian, locale: persian_fa });
+}, [minDate]);
 
-    return type === "pickup" ? deliveryDate.add(2, "days") : deliveryDate;
-  }, [minDate, type]);
+const minDateObj = useMemo(() => {
+  return minDate ? formatDate(minDate) : null;
+}, [minDate]);
 
-  const minDateObj = useMemo(() => {
-    if (!minDate) return null;
-    const deliveryDate = formatDate(minDate);
-    return type === "pickup" ? deliveryDate.add(2, "days") : deliveryDate;
-  }, [minDate, type]);
 
   useEffect(() => setWeekOffset(0), [minDate, type]);
 
@@ -70,12 +67,7 @@ export default function ModalPicker({
     }
   };
 
-  // مقدار اولیه روز (برای نمایش) بدون تاثیر روی شرط Confirm
-  useEffect(() => {
-    if (minDateObj && !selectedDate) {
-      setSelectedDate(minDateObj);
-    }
-  }, [minDateObj, selectedDate, setSelectedDate]);
+
 
   const isConfirmDisabled = !hasUserSelectedDate || !selectedTime;
 
