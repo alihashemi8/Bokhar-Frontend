@@ -62,7 +62,7 @@ export default function Order() {
   const { step, maxStep, orderData, factorTotal } = state;
 
   const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
   const [mounted, setMounted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -119,30 +119,17 @@ export default function Order() {
   }, [step]);
 
   // modal & history
-  useEffect(() => {
-    if (!isMobile) return;
+useEffect(() => {
+  if (!isMobile) return;
 
-    document.body.style.overflow = modalOpen ? "hidden" : "auto";
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = modalOpen ? "hidden" : prevOverflow;
 
-    if (modalOpen && !historyLock.current) {
-      window.history.pushState({ modal: true }, "");
-      historyLock.current = true;
-    }
+  return () => {
+    document.body.style.overflow = prevOverflow;
+  };
+}, [modalOpen, isMobile]);
 
-    const onPopState = () => {
-      if (modalOpen) {
-        setModalOpen(false);
-        setModalType("delivery");
-        historyLock.current = false;
-      }
-    };
-
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.removeEventListener("popstate", onPopState);
-      document.body.style.overflow = "auto";
-    };
-  }, [modalOpen, isMobile]);
 
   // -------------------- modal handlers --------------------
   const closeModalSafely = useCallback(() => {
@@ -162,7 +149,7 @@ export default function Order() {
       }
       dispatch({ type: "SET_ORDER_DATA", payload: { datetime } });
     },
-    [modalType, orderData.datetime]
+    [modalType, orderData.datetime],
   );
 
   const handleModalConfirm = useCallback(() => {
@@ -194,7 +181,12 @@ export default function Order() {
 
     if (currentType === "time") {
       const { delivery, pickup } = orderData.datetime;
-      if (!delivery?.date || !delivery?.time || !pickup?.date || !pickup?.time) {
+      if (
+        !delivery?.date ||
+        !delivery?.time ||
+        !pickup?.date ||
+        !pickup?.time
+      ) {
         toast.error("لطفاً زمان تحویل دادن و تحویل گرفتن را کامل انتخاب کنید.");
         return;
       }
@@ -212,7 +204,8 @@ export default function Order() {
     if (step < stepsCount) {
       const nextStep = step + 1;
       dispatch({ type: "SET_STEP", payload: nextStep });
-      if (nextStep > maxStep) dispatch({ type: "SET_MAX_STEP", payload: nextStep });
+      if (nextStep > maxStep)
+        dispatch({ type: "SET_MAX_STEP", payload: nextStep });
     }
   }, [step, maxStep, orderData, stepMap]);
 
@@ -222,17 +215,24 @@ export default function Order() {
 
   const handleStepClick = useCallback(
     (clickedStep) => {
-      if (clickedStep <= maxStep) dispatch({ type: "SET_STEP", payload: clickedStep });
+      if (clickedStep <= maxStep)
+        dispatch({ type: "SET_STEP", payload: clickedStep });
     },
-    [maxStep]
+    [maxStep],
   );
 
   const submitOrder = useCallback(async () => {
     try {
       const total = factorTotal - (orderData.discountAmount || 0);
-      await axios.post(`${API_URL}/orders/`, { ...orderData, subtotal: factorTotal, total });
+      await axios.post(`${API_URL}/orders/`, {
+        ...orderData,
+        subtotal: factorTotal,
+        total,
+      });
       toast.success("سفارش با موفقیت ثبت شد ✅");
-      ["orderData", "orderStep", "orderMaxStep"].forEach(localStorage.removeItem);
+      ["orderData", "orderStep", "orderMaxStep"].forEach(
+        localStorage.removeItem,
+      );
       dispatch({ type: "RESET_ORDER" });
     } catch (err) {
       console.error(err);
@@ -250,7 +250,12 @@ export default function Order() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Toaster position="top-center" />
-      <StepProgress steps={stepLabels.map((label, idx) => ({ id: idx + 1, label }))} step={step} maxStep={maxStep} onStepClick={handleStepClick} />
+      <StepProgress
+        steps={stepLabels.map((label, idx) => ({ id: idx + 1, label }))}
+        step={step}
+        maxStep={maxStep}
+        onStepClick={handleStepClick}
+      />
 
       <div className="min-h-[350px]">
         <AnimatePresence mode="wait">
@@ -263,8 +268,12 @@ export default function Order() {
           >
             {stepType(step) === "factor" && (
               <Factor
-                onTotalChange={(value) => dispatch({ type: "SET_FACTOR_TOTAL", payload: value })}
-                goToTimeStep={() => !isMobile && dispatch({ type: "SET_STEP", payload: 2 })}
+                onTotalChange={(value) =>
+                  dispatch({ type: "SET_FACTOR_TOTAL", payload: value })
+                }
+                goToTimeStep={() =>
+                  !isMobile && dispatch({ type: "SET_STEP", payload: 2 })
+                }
               />
             )}
 
@@ -292,7 +301,9 @@ export default function Order() {
                     type={modalType}
                     isOpen={modalOpen}
                     selectedDate={selectedDateObj}
-                    setSelectedDate={(d) => handleModalChange("date", d?.format("YYYY-MM-DD") || null)}
+                    setSelectedDate={(d) =>
+                      handleModalChange("date", d?.format("YYYY-MM-DD") || null)
+                    }
                     selectedTime={
                       modalType === "delivery"
                         ? orderData.datetime.delivery?.time || null
@@ -310,7 +321,9 @@ export default function Order() {
             {!isMobile && stepType(step) === "time" && (
               <DateTimeRangePicker
                 value={orderData.datetime}
-                onChange={(v) => dispatch({ type: "SET_ORDER_DATA", payload: { datetime: v } })}
+                onChange={(v) =>
+                  dispatch({ type: "SET_ORDER_DATA", payload: { datetime: v } })
+                }
                 onGoLocation={goToLocationStep}
               />
             )}
@@ -328,18 +341,26 @@ export default function Order() {
 
             {stepType(step) === "payment" && (
               <Payment
-                cartItems={orderData.cartItems}
                 subtotal={factorTotal}
                 total={factorTotal - (orderData.discountAmount || 0)}
                 discountAmount={orderData.discountAmount}
                 discountCode={orderData.discountCode}
+                datetime={orderData.datetime}
+                location={orderData.location}
                 setDiscountCode={(code) =>
-                  dispatch({ type: "SET_ORDER_DATA", payload: { discountCode: code } })
+                  dispatch({
+                    type: "SET_ORDER_DATA",
+                    payload: { discountCode: code },
+                  })
                 }
                 applyDiscount={() => {
-                  const rate = DISCOUNT_CODES[orderData.discountCode?.toUpperCase()];
+                  const rate =
+                    DISCOUNT_CODES[orderData.discountCode?.toUpperCase()];
                   if (rate) {
-                    dispatch({ type: "SET_ORDER_DATA", payload: { discountAmount: rate * factorTotal } });
+                    dispatch({
+                      type: "SET_ORDER_DATA",
+                      payload: { discountAmount: rate * factorTotal },
+                    });
                     toast.success("تخفیف اعمال شد 🎉");
                     return true;
                   }

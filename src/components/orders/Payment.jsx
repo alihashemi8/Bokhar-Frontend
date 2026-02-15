@@ -10,6 +10,8 @@ export default function Payment({
   setDiscountCode,
   applyDiscount,
   handlePayment,
+  datetime,
+  location,
 }) {
   const [loading, setLoading] = useState(false);
   const [discountStatus, setDiscountStatus] = useState(null);
@@ -62,6 +64,13 @@ export default function Payment({
         <div className="space-y-3 text-sm">
           <Row label="جمع خرید" value={`${subtotal.toLocaleString()} تومان`} />
 
+          {/* هزینه پیک */}
+          <Row
+            label="هزینه پیک"
+            value="رایگان"
+            valueClass="text-gray-500 dark:text-gray-400"
+          />
+
           {discountAmount > 0 && (
             <Row
               label="تخفیف"
@@ -76,6 +85,39 @@ export default function Payment({
             <span className="text-gray-600 dark:text-gray-300">مبلغ نهایی</span>
             <span className="text-2xl font-bold text-sky-700 dark:text-gray-100">
               {total.toLocaleString()} تومان
+            </span>
+          </div>
+        </div>
+
+        {/* Delivery & Location Info */}
+        <div className="space-y-3 text-sm rounded-2xl p-4 bg-white/60 dark:bg-sky-900/40 border border-sky-200 dark:border-sky-700">
+          {/* زمان تحویل دادن */}
+          <div className="flex justify-between items-center">
+            <span className="font-semibold text-gray-700 dark:text-gray-200">
+              زمان تحویل دادن:
+            </span>
+            <span className="text-gray-600 dark:text-gray-300">
+              {datetime?.delivery?.date} — {datetime?.delivery?.time}
+            </span>
+          </div>
+
+          {/* زمان تحویل گرفتن */}
+          <div className="flex justify-between items-center">
+            <span className="font-semibold text-gray-700 dark:text-gray-200">
+              زمان تحویل گرفتن:
+            </span>
+            <span className="text-gray-600 dark:text-gray-300">
+              {datetime?.pickup?.date} — {datetime?.pickup?.time}
+            </span>
+          </div>
+
+          {/* آدرس */}
+          <div>
+            <span className="font-semibold text-gray-700 dark:text-gray-200">
+              آدرس:
+            </span>
+            <span className="text-gray-600 dark:text-gray-300 leading-relaxed pr-2">
+              {location?.address} پلاک {location?.plaque}، واحد {location?.unit}
             </span>
           </div>
         </div>
