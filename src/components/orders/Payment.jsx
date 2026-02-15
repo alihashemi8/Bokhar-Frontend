@@ -68,7 +68,7 @@ export default function Payment({
           <Row
             label="هزینه پیک"
             value="رایگان"
-            valueClass="text-gray-500 dark:text-gray-400"
+            valueClass="text-gray-500 dark:text-gray-300"
           />
 
           {discountAmount > 0 && (
@@ -90,33 +90,33 @@ export default function Payment({
         </div>
 
         {/* Delivery & Location Info */}
-        <div className="space-y-3 text-sm rounded-2xl p-4 bg-white/60 dark:bg-sky-900/40 border border-sky-200 dark:border-sky-700">
+        <div className="space-y-3 text-sm rounded-2xl p-4 bg-white/60 dark:bg-sky-600/40 border border-sky-200 dark:border-sky-700">
           {/* زمان تحویل دادن */}
           <div className="flex justify-between items-center">
-            <span className="font-semibold text-gray-700 dark:text-gray-200">
+            <span className="font-semibold text-gray-700 dark:text-gray-100">
               زمان تحویل دادن:
             </span>
-            <span className="text-gray-600 dark:text-gray-300">
+            <span className="text-gray-600 dark:text-gray-200">
               {datetime?.delivery?.date} — {datetime?.delivery?.time}
             </span>
           </div>
 
           {/* زمان تحویل گرفتن */}
           <div className="flex justify-between items-center">
-            <span className="font-semibold text-gray-700 dark:text-gray-200">
+            <span className="font-semibold text-gray-700 dark:text-gray-100">
               زمان تحویل گرفتن:
             </span>
-            <span className="text-gray-600 dark:text-gray-300">
+            <span className="text-gray-600 dark:text-gray-200">
               {datetime?.pickup?.date} — {datetime?.pickup?.time}
             </span>
           </div>
 
           {/* آدرس */}
           <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-200">
+            <span className="font-semibold text-gray-700 dark:text-gray-100">
               آدرس:
             </span>
-            <span className="text-gray-600 dark:text-gray-300 leading-relaxed pr-2">
+            <span className="text-gray-600 dark:text-gray-200 leading-relaxed pr-2">
               {location?.address} پلاک {location?.plaque}، واحد {location?.unit}
             </span>
           </div>
@@ -130,11 +130,11 @@ export default function Payment({
               <input
                 value={discountCode}
                 onChange={(e) => setDiscountCode(e.target.value)}
-                placeholder="کد تخفیف"
+                placeholder="کد تخفیف خود را وارد کنید"
                 className="
                   w-full pl-9 pr-3 py-2.5 rounded-xl border outline-none
                   bg-white border-sky-300
-                  dark:bg-sky-900/60 dark:border-sky-700 dark:text-white
+                  dark:bg-sky-600/60 dark:border-sky-700 dark:text-white
                   focus:ring-2 focus:ring-sky-400
                  placeholder:text-gray-400  dark:placeholder:text-gray-300
                 "

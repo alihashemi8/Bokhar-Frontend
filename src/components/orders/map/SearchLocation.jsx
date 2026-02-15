@@ -46,10 +46,10 @@ export default function SearchLocation({ onSelect }) {
         dir="rtl"
         className="
           flex items-center gap-2
-          bg-white/80 dark:bg-white/70 border border-sky-300 dark:border-purple-800
+          bg-white/80 dark:bg-white/70 border border-sky-300 dark:border-purple-700
           px-3 py-2 rounded-2xl
           shadow-sm shadow-sky-200/60
-          focus-within:ring-1 focus-within:ring-sky-400 dark:focus-within:ring-purple-900
+          focus-within:ring-1 focus-within:ring-sky-400 dark:focus-within:ring-purple-800
           transition-all
         "
       >
