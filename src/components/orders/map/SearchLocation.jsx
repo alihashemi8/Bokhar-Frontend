@@ -46,10 +46,10 @@ export default function SearchLocation({ onSelect }) {
         dir="rtl"
         className="
           flex items-center gap-2
-          bg-sky-50 border border-sky-300
+          bg-white/80 dark:bg-white/70 border border-sky-300 dark:border-purple-800
           px-3 py-2 rounded-2xl
           shadow-sm shadow-sky-200/60
-          focus-within:ring-1 focus-within:ring-sky-400
+          focus-within:ring-1 focus-within:ring-sky-400 dark:focus-within:ring-purple-900
           transition-all
         "
       >
@@ -69,8 +69,8 @@ export default function SearchLocation({ onSelect }) {
           dir="rtl"
           className="
             absolute w-full
-            bg-sky-50
-            border border-sky-300
+            bg-white/80 dark:bg-white/70
+            border border-sky-300 dark:border-purple-800
             rounded-2xl mt-2
             shadow-xl shadow-sky-200/60
             z-50
@@ -92,7 +92,7 @@ export default function SearchLocation({ onSelect }) {
               }}
               className="
                 flex items-start gap-3 px-4 py-3
-                hover:bg-sky-100
+                hover:bg-sky-100 dark:hover:bg-purple-800/60
                 cursor-pointer transition
               "
             >

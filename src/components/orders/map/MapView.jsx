@@ -94,6 +94,7 @@ export default function MapView({
       center={position}
       zoom={13}
       scrollWheelZoom
+      zoomControl={false}
       className="h-[300px] md:h-[400px] w-full rounded-2xl"
     >
       <TileLayer
