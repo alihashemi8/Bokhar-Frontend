@@ -14,6 +14,7 @@ export default function MapSelector({
   const [address, setAddress] = useState(initialAddress || "");
   const [plaque, setPlaque] = useState("");
   const [unit, setUnit] = useState("");
+  const [title, setTitle] = useState("");
   const [open, setOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -48,6 +49,7 @@ export default function MapSelector({
   const handleSubmit = ({ plaque, unit, title, description }) => {
     setPlaque(plaque);
     setUnit(unit);
+    setTitle(title);
 
     onLocationSelect({
       coords,
@@ -60,8 +62,7 @@ export default function MapSelector({
 
     setOpen(false);
     historyLock.current = false;
-
-    goToNextStep?.(); // ✅ حتماً اجرا می‌شود
+    goToNextStep?.();
   };
 
   const closeModalSafely = () => {
@@ -76,7 +77,7 @@ export default function MapSelector({
       >
         <MapView
           initialPosition={coords}
-          onPositionChange={(pos) => setCoords(pos)}
+          onPositionChange={setCoords}
           onMarkerClick={() => setOpen(true)}
         />
 
@@ -92,19 +93,17 @@ export default function MapSelector({
 
       <button
         onClick={() => setOpen(true)}
-        className="
-    w-[75%] mx-auto px-3 py-2 mb-20 md:mb-0 rounded-xl font-bold transition
-    bg-sky-100 text-gray-700 border border-sky-300 shadow-md
-    hover:bg-sky-200 
-    dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
-    dark:text-white dark:border-purple-700 dark:shadow-black/40
-    dark:hover:from-purple-600 dark:hover:to-purple-700
-  "
+        className="w-[75%] mx-auto px-3 py-2 mb-20 md:mb-0 rounded-xl font-bold transition
+        bg-sky-100 text-gray-700 border border-sky-300 shadow-md
+        hover:bg-sky-200 
+        dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
+        dark:text-white dark:border-purple-700 dark:shadow-black/40
+        dark:hover:from-purple-600 dark:hover:to-purple-700"
       >
         تایید موقعیت
       </button>
 
-      {isMobile && (
+      {isMobile ? (
         <AddressModal
           isOpen={open}
           onClose={closeModalSafely}
@@ -112,11 +111,9 @@ export default function MapSelector({
           plaque={plaque}
           unit={unit}
           address={address}
-          title=""
+          title={title}
         />
-      )}
-
-      {!isMobile && (
+      ) : (
         <AddressDropdown
           open={open}
           onClose={() => setOpen(false)}
@@ -125,6 +122,8 @@ export default function MapSelector({
           setPlaque={setPlaque}
           unit={unit}
           setUnit={setUnit}
+          title={title}
+          setTitle={setTitle}
           address={address}
           fullScreen
         />

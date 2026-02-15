@@ -103,7 +103,7 @@ export default function AddressModal({
       <button
         onClick={handleSubmit}
         disabled={!isFormValid}
-        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-white transition-all duration-300 font-bold ${
+        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-gray-800 dark:text-white transition-all duration-300 font-bold ${
           isFormValid
             ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow-md shadow-indigo-300 hover:scale-105"
             : "bg-gray-300 cursor-not-allowed"

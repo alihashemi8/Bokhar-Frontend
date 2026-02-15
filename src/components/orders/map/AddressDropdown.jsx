@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -14,6 +15,8 @@ export default function AddressDropdown({
   setTitle,
   fullScreen = false,
 }) {
+  const [description, setDescription] = useState("");
+
   return (
     <AnimatePresence>
       {open && (
@@ -46,7 +49,7 @@ export default function AddressDropdown({
             }`}
           >
             {/* header */}
-            <div className="flex justify-between items-center mb-3">
+            <div className="flex justify-between items-center mb-2">
               <div>
                 <h3 className="text-lg font-semibold text-sky-600 dark:text-sky-400">
                   اطلاعات تکمیلی
@@ -63,35 +66,31 @@ export default function AddressDropdown({
               </button>
             </div>
 
-            {/* input پلاک */}
-            <div className="flex flex-col mt-3 mx-auto w-[75%]">
+            {/* پلاک + واحد (یک ردیف) */}
+            <div className="flex gap-3 mt-2 mx-auto w-[75%]">
               <input
                 type="number"
                 placeholder="پلاک"
                 value={plaque}
                 onChange={(e) => setPlaque(e.target.value)}
                 className="
-                  w-full border-2 rounded-xl px-3 py-2
+                  w-1/2 border-2 rounded-lg px-2 py-1.5 text-sm
                   bg-sky-50 dark:bg-gray-700
-                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  shadow-md shadow-sky-200 dark:shadow-black/30
                   border-sky-300 dark:border-gray-600
                   text-gray-900 dark:text-gray-100
                   focus:outline-none focus:ring-2 focus:ring-sky-400
                 "
               />
-            </div>
-
-            {/* input واحد */}
-            <div className="flex flex-col mt-3 mx-auto w-[75%]">
               <input
                 type="number"
                 placeholder="واحد"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
                 className="
-                  w-full border-2 rounded-xl px-3 py-2
+                  w-1/2 border-2 rounded-lg px-2 py-1.5 text-sm
                   bg-sky-50 dark:bg-gray-700
-                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  shadow-md shadow-sky-200 dark:shadow-black/30
                   border-sky-300 dark:border-gray-600
                   text-gray-900 dark:text-gray-100
                   focus:outline-none focus:ring-2 focus:ring-sky-400
@@ -100,18 +99,18 @@ export default function AddressDropdown({
             </div>
 
             {/* input عنوان آدرس */}
-            <div className="flex flex-col mt-4 mx-auto w-[75%]">
-              <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                برای ذخیره آدرس، عنوان آدرس را بنویسید
+            <div className="flex flex-col mt-3 mx-auto w-[75%]">
+              <label className="text-[11px] text-gray-600 dark:text-gray-400 mb-1">
+                عنوان آدرس
               </label>
               <input
-                placeholder="عنوان آدرس"
+                placeholder="مثلاً خانه یا محل کار"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="
-                  w-full border-2 rounded-xl px-3 py-2
+                  w-full border-2 rounded-lg px-2 py-1.5 text-sm
                   bg-sky-50 dark:bg-gray-700
-                  shadow-lg shadow-sky-300 dark:shadow-black/30
+                  shadow-md shadow-sky-200 dark:shadow-black/30
                   border-sky-300 dark:border-gray-600
                   text-gray-900 dark:text-gray-100
                   focus:outline-none focus:ring-2 focus:ring-sky-400
@@ -119,17 +118,48 @@ export default function AddressDropdown({
               />
             </div>
 
+            {/* textarea توضیحات */}
+            <div className="flex flex-col mt-3 mx-auto w-[75%]">
+              <label className="text-[11px] text-gray-600 dark:text-gray-400 mb-1">
+                توضیحات (اختیاری)
+              </label>
+              <textarea
+                placeholder="مثلاً زنگ خراب است..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={2}
+                className="
+                  w-full border-2 rounded-lg px-2 py-1 text-sm
+                  bg-sky-50 dark:bg-gray-700
+                  shadow-md shadow-sky-200 dark:shadow-black/20
+                  border-sky-300 dark:border-gray-600
+                  text-gray-900 dark:text-gray-100
+                  focus:outline-none focus:ring-2 focus:ring-sky-400
+                  resize-none
+                "
+              />
+            </div>
+
             {/* submit */}
             <button
-              onClick={onSubmit}
+              onClick={() =>
+                onSubmit({
+                  plaque,
+                  unit,
+                  title,
+                  description,
+                })
+              }
               className="
                 mt-4 mx-auto w-[75%]
-                bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600
-                dark:from-purple-700 dark:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900
+                bg-gradient-to-r from-sky-400 to-sky-500
+                hover:from-sky-500 hover:to-sky-600
+                dark:from-purple-700 dark:to-purple-800
+                dark:hover:from-purple-800 dark:hover:to-purple-900
                 border border-indigo-300 dark:border-indigo-600
                 shadow-md shadow-indigo-300 dark:shadow-black/30
                 text-gray-100 dark:text-white/90
-                rounded-xl py-2 font-bold
+                rounded-xl py-2 font-bold text-sm
                 transition-all duration-300
                 hover:scale-102
               "
