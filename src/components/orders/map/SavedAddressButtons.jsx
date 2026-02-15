@@ -62,7 +62,11 @@ export default function SavedAddressButtons({
       {onCurrentLocation && (
         <button
           onClick={onCurrentLocation}
-          className="w-9 h-9 rounded-full bg-white/70 shadow flex items-center justify-center"
+          className="
+        w-9 h-9 rounded-full transition-colors flex items-center justify-center shadow-md
+        bg-white/40 text-sky-600 hover:bg-white hover:text-sky-600 text-shadow-2xl
+        dark:bg-white/70 dark:text-purple-800 dark:hover:bg-white/90 dark:hover:text-purple-900
+      "
           style={{ touchAction: "manipulation" }}
         >
           <Locate size={18} />
@@ -96,7 +100,7 @@ export default function SavedAddressButtons({
                   ${
                     isLongPress
                       ? "bg-red-100 border-red-400"
-                      : "bg-white/70 hover:bg-white"
+                      : " bg-white/40 text-sky-600 hover:bg-white hover:text-sky-600 text-shadow-2xldark:bg-white/70 dark:text-purple-800 dark:hover:bg-white/90 dark:hover:text-purple-900"
                   }`}
                 style={{ touchAction: "manipulation" }}
               >
