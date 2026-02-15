@@ -1,19 +1,29 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import { Locate } from "lucide-react";
-export default function SavedAddressButtons({ addresses, onSelect, onDelete, onCurrentLocation }) {
+
+export default function SavedAddressButtons({
+  addresses,
+  onSelect,
+  onDelete,
+  onCurrentLocation,
+}) {
   const [longPressId, setLongPressId] = useState(null);
-  const [preventClick, setPreventClick] = useState(false);
+
   const timerRef = useRef(null);
+  const preventClickRef = useRef(false);
+  const containerRef = useRef(null);
 
   if (!addresses?.length && !onCurrentLocation) return null;
 
   const startPress = (id) => {
-    setPreventClick(false);
+    preventClickRef.current = false;
+
     timerRef.current = setTimeout(() => {
       setLongPressId(id);
-      setPreventClick(true);
-    }, 1000); // 1000ms برای Long Press
+      preventClickRef.current = true;
+      if (navigator.vibrate) navigator.vibrate(30);
+    }, 600);
   };
 
   const endPress = () => {
@@ -21,40 +31,52 @@ export default function SavedAddressButtons({ addresses, onSelect, onDelete, onC
   };
 
   const handleDelete = (item) => {
-    if (onDelete) onDelete(item.id);
+    onDelete?.(item.id);
     setLongPressId(null);
+    preventClickRef.current = false;
   };
+
+  // اضافه کردن listener برای کلیک خارج از دکمه‌ها
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setLongPressId(null);
+        preventClickRef.current = false;
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div
-      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] w-[95%] flex items-center gap-3 overflow-x-auto px-2"
+      ref={containerRef}
+      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-[1000] w-[95%] flex items-center gap-3 px-2"
     >
-   {/* دکمه Current Location همیشه جدا سمت چپ */}
-{onCurrentLocation && (
-  <div className="shrink-0 mr-2">
-    <button
-      onClick={onCurrentLocation}
-      className="
-        w-9 h-9 rounded-full transition-colors flex items-center justify-center shadow-md
-        bg-white/40 text-sky-600 hover:bg-white hover:text-sky-600 text-shadow-2xl
-        dark:bg-white/70 dark:text-purple-800 dark:hover:bg-white/90 dark:hover:text-purple-900
-      "
-    >
-      <Locate className="w-4.5 h-4.5 md:w-6 md:h-6" />
-    </button>
-  </div>
-)}
+      {onCurrentLocation && (
+        <button
+          onClick={onCurrentLocation}
+          className="w-9 h-9 rounded-full bg-white/70 shadow flex items-center justify-center"
+          style={{ touchAction: "manipulation" }}
+        >
+          <Locate size={18} />
+        </button>
+      )}
 
-
-      {/* دکمه‌های Saved Addresses پشت سر هم */}
       <div className="flex gap-2 ml-auto">
-        {addresses?.slice(0, 3).map((item) => {
+        {addresses.slice(0, 3).map((item) => {
           const isLongPress = longPressId === item.id;
 
           return (
             <div
               key={item.id}
-              className="relative shrink-0"
+              className="relative"
               onMouseDown={() => startPress(item.id)}
               onMouseUp={endPress}
               onMouseLeave={endPress}
@@ -62,23 +84,32 @@ export default function SavedAddressButtons({ addresses, onSelect, onDelete, onC
               onTouchEnd={endPress}
             >
               <button
-                onClick={() => {
-                  if (!preventClick) onSelect(item);
+                onClick={(e) => {
+                  if (preventClickRef.current) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  onSelect(item);
                 }}
-                className={`
-                  rounded-2xl backdrop-blur border px-2 py-1 text-right shadow-sm transition
-                  text-[11px] md:text-sm md:px-3 md:py-2
-                  ${isLongPress ? "bg-red-100 border-red-400" : " bg-white/40 text-sky-600 hover:bg-white hover:text-sky-600 text-shadow-2xl dark:bg-white/70 dark:text-purple-800 dark:hover:bg-white/90 dark:hover:text-purple-900"}
-                  hover:bg-sky-100
-                `}
+                className={`px-3 py-1 rounded-2xl text-sm border transition
+                  ${
+                    isLongPress
+                      ? "bg-red-100 border-red-400"
+                      : "bg-white/70 hover:bg-white"
+                  }`}
+                style={{ touchAction: "manipulation" }}
               >
                 {item.title}
               </button>
 
               {isLongPress && (
                 <button
-                  onClick={() => handleDelete(item)}
-                  className="absolute -left-3 -top-1 text-red-600 p-1 bg-white rounded-full shadow-md z-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(item);
+                  }}
+                  className="absolute -left-3 -top-1 bg-white rounded-full p-1 shadow text-red-600"
                 >
                   <FaTrash size={12} />
                 </button>

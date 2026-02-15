@@ -59,7 +59,7 @@ export default function SearchLocation({ onSelect }) {
           placeholder="جستجوی آدرس..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-700"
+          className="flex-1 bg-transparent outline-none text-sm text-gray-700 dark:text-gray-900"
         />
       </div>
 
