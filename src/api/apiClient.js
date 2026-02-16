@@ -45,3 +45,5 @@ export async function verifyRegisterOtp({ phone, otp, fullname }) {
     throw new Error(err?.message || "خطا در تایید OTP");
   }
 }
+
+

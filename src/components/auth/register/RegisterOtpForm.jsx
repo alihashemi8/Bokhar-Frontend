@@ -98,8 +98,8 @@ export default function RegisterOtpForm({
         disabled={loading || otp.length < 5}
         className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
           loading || otp.length < 5
-            ? "bg-blue-400 cursor-not-allowed"
-            : "bg-blue-600 hover:bg-blue-700"
+          ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+          : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
         }`}
       >
         {loading && (
@@ -115,7 +115,7 @@ export default function RegisterOtpForm({
           <button
             onClick={handleResend}
             disabled={resendLoading}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 dark:text-purple-400 hover:underline"
           >
             {resendLoading ? "در حال ارسال..." : "ارسال مجدد کد"}
           </button>
@@ -124,7 +124,7 @@ export default function RegisterOtpForm({
 
       <button
         onClick={onBack}
-        className="block mx-auto mt-4 text-blue-600 dark:text-blue-400 hover:underline"
+        className="block mx-auto mt-4 text-blue-600 dark:text-purple-400 hover:underline"
       >
         بازگشت
       </button>

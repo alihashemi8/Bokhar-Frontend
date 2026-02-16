@@ -2,20 +2,34 @@ import { useState } from "react";
 import PhoneInputBoxes from "../ui/PhoneInputBoxes";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
-import OtpInput from "../ui/OtpInput"; // کامپوننت وارد کردن OTP
+import OtpInput from "../ui/OtpInput";
 import { PhoneIcon } from "@heroicons/react/24/solid";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
+// 🌟 تابع کمکی ارسال درخواست POST
+async function apiPost(endpoint, body) {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw data;
+  return data;
+}
+
 export default function LoginForm({ onSwitchRegister, onClose }) {
-  const [mode, setMode] = useState("login"); // login | forgot-phone | forgot-otp | forgot-newpass
+  const [mode, setMode] = useState("login"); // login | otp
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
-  const [newPass, setNewPass] = useState("");
 
-  // ==================== ورود ====================
-  const handleLogin = async () => {
+  // ==================== ورود با رمز عبور ====================
+  const handleLoginPassword = async () => {
     if (loading) return;
 
     if (!/^09\d{9}$/.test(phone)) {
@@ -29,73 +43,62 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
     setLoading(true);
     try {
-      const res = await apiPost("/login/", { phone, password });
-      if (!res?.ok) throw new Error(res?.message || "شماره یا رمز اشتباه است");
+      const data = await apiPost("/login/", { phone, password });
+
+      // ذخیره توکن‌ها
+      if (data.access) {
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
+      }
 
       toast.success("ورود موفق ✅");
       onClose();
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "شماره یا رمز اشتباه است");
     } finally {
       setLoading(false);
     }
   };
 
-  // ==================== فراموشی رمز عبور ====================
+  // ==================== ارسال OTP ====================
   const handleSendOtp = async () => {
     if (!/^09\d{9}$/.test(phone)) {
       toast.error("شماره موبایل معتبر نیست");
       return;
     }
+
     setLoading(true);
     try {
-      const res = await apiPost("/send-forgot-otp/", { phone });
-      if (!res?.ok) throw new Error(res?.message || "خطا در ارسال کد");
+      await apiPost("/sent/otp", { phone });
       toast.success("کد OTP ارسال شد");
-      setMode("forgot-otp");
+      setMode("otp");
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "خطا در ارسال OTP");
     } finally {
       setLoading(false);
     }
   };
 
+  // ==================== تایید OTP ====================
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
       toast.error("کد OTP باید 6 رقمی باشد");
       return;
     }
-    setLoading(true);
-    try {
-      const res = await apiPost("/verify-forgot-otp/", { phone, otp });
-      if (!res?.ok) throw new Error(res?.message || "کد OTP اشتباه است");
-      toast.success("کد تایید شد");
-      setMode("forgot-newpass");
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleSetNewPassword = async () => {
-    if (newPass.length < 6) {
-      toast.error("رمز عبور باید حداقل 6 کاراکتر باشد");
-      return;
-    }
     setLoading(true);
     try {
-      const res = await apiPost("/reset-password/", {
-        phone,
-        password: newPass,
-      });
-      if (!res?.ok) throw new Error(res?.message || "خطا در تغییر رمز");
-      toast.success("رمز عبور با موفقیت تغییر کرد");
-      setMode("login");
-      setPassword("");
-      setNewPass("");
+      const data = await apiPost("/login/otp", { phone, otp });
+
+      if (data.access) {
+        localStorage.setItem("access", data.access);
+        localStorage.setItem("refresh", data.refresh);
+      }
+
+      toast.success("ورود موفق ✅");
+      onClose();
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || "کد OTP اشتباه است");
     } finally {
       setLoading(false);
     }
@@ -110,19 +113,18 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
             ورود به حساب کاربری
           </h2>
 
-      <div className="flex items-center gap-2 mb-1">
-        <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
-        <p className="text-gray-800 dark:text-gray-300 text-sm">
-          شماره موبایل خود را وارد کنید:
-        </p>
-      </div>
+          <div className="flex items-center gap-2 mb-1">
+            <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+            <p className="text-gray-800 dark:text-gray-300 text-sm">
+              شماره موبایل خود را وارد کنید:
+            </p>
+          </div>
           <PhoneInputBoxes
             value={phone}
             onChange={(val) => setPhone(val.replace(/\D/g, ""))}
           />
 
-          <div className="mt-8 text-gray-800 dark:text-gray-100 ">رمز عبور خود را وارد کنید:</div>
-
+          <div className="mt-4 text-gray-800 dark:text-gray-100">رمز عبور:</div>
           <div className="relative">
             <input
               type={showPass ? "text" : "password"}
@@ -130,7 +132,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border-b p-1 pr-2 bg-transparent outline-none transition
                text-gray-800 border-gray-300 focus:border-blue-600 
-                 dark:border-gray-100 dark:focus:border-purple-600 dark:focus:border-b-2 dark:text-gray-100 "
+               dark:border-gray-100 dark:focus:border-purple-600 dark:focus:border-b-2 dark:text-gray-100"
             />
             <button
               type="button"
@@ -141,37 +143,28 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
             </button>
           </div>
 
-          {/* ⭐ دکمه ورود با شرط معتبر بودن شماره و رمز عبور */}
           <button
-            onClick={handleLogin}
-            disabled={
-              loading ||
-              !/^09\d{9}$/.test(phone) ||
-              password.trim().length === 0
-            }
-            className={`
-        w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition shadow-lg
-        ${
-          loading || !/^09\d{9}$/.test(phone) || password.trim().length === 0
-            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
-            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
-        }
-      `}
+            onClick={handleLoginPassword}
+            disabled={loading || !/^09\d{9}$/.test(phone) || !password}
+            className={`w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition shadow-lg ${
+              loading || !/^09\d{9}$/.test(phone) || !password
+                ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
+            }`}
           >
-            {loading && (
+            {loading ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            )}
+            ) : null}
             {loading ? "در حال ورود..." : "ورود"}
           </button>
 
           <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
             <button
-              onClick={() => setMode("forgot-phone")}
+              onClick={handleSendOtp}
               className="text-blue-600 hover:underline dark:text-purple-400"
             >
-              ورود با رمز یک بار مصرف
+              ورود با OTP
             </button>
-
             <button
               onClick={onSwitchRegister}
               className="text-blue-600 hover:underline dark:text-purple-400"
@@ -182,54 +175,9 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
         </>
       )}
 
-{mode === "forgot-phone" && (
-  <>
-    <h2 className="text-xl font-bold md:my-6 text-center">
-      فراموشی رمز عبور
-    </h2>
-
-    <div className="flex items-center gap-2 mb-3 mt-8">
-      <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
-      <span className="text-gray-600 dark:text-gray-300 text-sm">
-        شماره موبایل خود را وارد کنید
-      </span>
-    </div>
-
-    <PhoneInputBoxes
-      value={phone}
-      onChange={(val) => setPhone(val.replace(/\D/g, ""))}
-    />
-
-    <button
-      onClick={handleSendOtp}
-      disabled={loading || !/^09\d{9}$/.test(phone)}
-      className={`w-full mt-8 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition
-        ${
-          loading || !/^09\d{9}$/.test(phone)
-            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
-            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
-        }
-      `}
-    >
-      {loading && (
-        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-      )}
-      {loading ? "در حال ارسال..." : "ارسال کد یک بار مصرف"}
-    </button>
-
-    <button
-      onClick={() => setMode("login")}
-      className="mt-6 w-full text-center text-gray-600 hover:underline dark:text-purple-400 "
-    >
-      بازگشت
-    </button>
-  </>
-)}
-
-
-      {mode === "forgot-otp" && (
+      {mode === "otp" && (
         <>
-          <h2 className="text-xl font-bold mb-4 text-center">تایید کد OTP</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">ورود با OTP</h2>
           <OtpInput value={otp} onChange={setOtp} />
           <button
             onClick={handleVerifyOtp}
@@ -240,43 +188,13 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
                 : "bg-blue-600 hover:bg-blue-700"
             }`}
           >
-            تایید کد
-          </button>
-          <button
-            onClick={() => setMode("forgot-phone")}
-            className="mt-4 w-full text-center text-gray-600 hover:underline"
-          >
-            بازگشت
-          </button>
-        </>
-      )}
-
-      {mode === "forgot-newpass" && (
-        <>
-          <h2 className="text-xl font-bold mb-4 text-center">رمز عبور جدید</h2>
-          <input
-            type="password"
-            value={newPass}
-            onChange={(e) => setNewPass(e.target.value)}
-            placeholder="رمز عبور جدید"
-            className="w-full border rounded-xl p-3 bg-transparent text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-700 focus:border-blue-600 outline-none transition"
-          />
-          <button
-            onClick={handleSetNewPassword}
-            disabled={loading}
-            className={`w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 ${
-              loading
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            تغییر رمز عبور
+            {loading ? "در حال تایید..." : "تایید OTP"}
           </button>
           <button
             onClick={() => setMode("login")}
-            className="mt-4 w-full text-center text-gray-600 hover:underline "
+            className="mt-4 w-full text-center text-gray-600 hover:underline"
           >
-            بازگشت به ورود
+            بازگشت
           </button>
         </>
       )}
