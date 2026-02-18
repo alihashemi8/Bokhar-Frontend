@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -32,9 +32,26 @@ export default function TimeSelector({
     return () => clearTimeout(t);
   }, [weekOffset]);
 
-  const days = Array.from({ length: 7 }, (_, i) =>
-    new DateObject(baseDate).add(weekOffset * 7 + i, "days")
-  );
+const days = useMemo(() => {
+  const result = [];
+  let i = 0;
+
+  while (result.length < 7) {
+    const day = new DateObject(baseDate).add(
+      weekOffset * 7 + i,
+      "days"
+    );
+
+    // ❌ جمعه
+    if (day.weekDay.index !== 6) {
+      result.push(day);
+    }
+
+    i++;
+  }
+
+  return result;
+}, [baseDate, weekOffset]);
 
   const minDateObj = minDate ? toDateObj(minDate) : null;
 

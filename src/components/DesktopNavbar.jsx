@@ -1,29 +1,29 @@
-import { useState, useContext } from "react";
-import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
+import { useState } from "react";
+import { User, ShoppingCart, MessageSquare } from "lucide-react";
 import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
   const { totalItems } = useCart();
+  const { user, logout } = useAuth();
 
   return (
     <>
       <nav
         dir="rtl"
         className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 backdrop-blur-md
-                    w-[92%] max-w-6xl justify-between items-center px-6 py-2 shadow-lg rounded-full z-50
-                  bg-sky-50/60 border border-white/20 text-gray-800  
-                  dark:bg-sky-50/40 dark:border dark:border-white/80 dark:text-gray-100
-           "
+          w-[92%] max-w-6xl justify-between items-center px-6 py-2 shadow-lg rounded-full z-50
+          bg-sky-50/60 border border-white/20 text-gray-800  
+          dark:bg-sky-50/40 dark:border dark:border-white/80 dark:text-gray-100"
       >
-        {/* بخش راست: خانه، لوگو، پیام‌ها، سبد خرید */}
+        {/* بخش راست */}
         <div className="flex items-center gap-6">
           {/* لوگو */}
-
           <div
             onClick={() => navigate("/")}
             className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
@@ -57,20 +57,32 @@ export default function DesktopNavbar() {
           </div>
         </div>
 
-        {/* بخش چپ: حالت تاریک و پروفایل/ورود */}
-        <div className="flex items-center gap-6 ">
+        {/* بخش چپ */}
+        <div className="flex items-center gap-6">
           {/* حالت تاریک */}
           <div className="hidden md:flex items-center gap-4">
             <DarkMode />
           </div>
-          {/* پروفایل یا ورود/ثبت‌نام */}
 
-          <div
-            onClick={() => setOpenModal(true)}
-            className="text-gray-800 hover:text-amber-300 dark:text-gray-100 gap-2 rounded-xl cursor-pointe transition"
-          >
-            ورود / ثبت نام
-          </div>
+          {/* پروفایل یا ورود */}
+          {user ? (
+            <div
+              onClick={() => navigate("/profile")}
+              className="flex items-center gap-2 px-4 cursor-pointer hover:text-amber-300 transition"
+            >
+              <User size={22} />
+              <span className="hidden lg:block">
+                {user.fullname || "پروفایل"}
+              </span>
+            </div>
+          ) : (
+            <div
+              onClick={() => setOpenModal(true)}
+              className="text-gray-800 hover:text-amber-300 dark:text-gray-100 cursor-pointer transition"
+            >
+              ورود / ثبت نام
+            </div>
+          )}
         </div>
       </nav>
 
@@ -79,3 +91,4 @@ export default function DesktopNavbar() {
     </>
   );
 }
+

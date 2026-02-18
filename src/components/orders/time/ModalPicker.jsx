@@ -50,13 +50,14 @@ const minDateObj = useMemo(() => {
     return () => clearTimeout(t);
   }, [weekOffset]);
 
-  const days = useMemo(
-    () =>
-      Array.from({ length: 7 }, (_, i) =>
-        new DateObject(baseDate).add(weekOffset * 7 + i, "days")
-      ),
-    [baseDate, weekOffset]
-  );
+const days = useMemo(
+  () =>
+    Array.from({ length: 7 }, (_, i) =>
+      new DateObject(baseDate).add(weekOffset * 7 + i, "days")
+    ).filter((day) => day.weekDay.index !== 6), 
+  [baseDate, weekOffset]
+);
+
 
   const formatSafe = (date) => {
     if (!date) return "";

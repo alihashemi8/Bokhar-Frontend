@@ -4,14 +4,16 @@ import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import OtpInput from "../ui/OtpInput";
 import { PhoneIcon } from "@heroicons/react/24/solid";
+import { useAuth } from "../../../context/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
-// 🌟 تابع کمکی ارسال درخواست POST
+// 🌟 فقط برای ارسال OTP (لاگین نیست)
 async function apiPost(endpoint, body) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include", // ⭐ مهم برای cookie
     body: JSON.stringify(body),
   });
 
@@ -28,6 +30,8 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
 
+  const { loginWithPassword, loginWithOTP } = useAuth();
+
   // ==================== ورود با رمز عبور ====================
   const handleLoginPassword = async () => {
     if (loading) return;
@@ -43,18 +47,11 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
     setLoading(true);
     try {
-      const data = await apiPost("/login/", { phone, password });
-
-      // ذخیره توکن‌ها
-      if (data.access) {
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-      }
-
+      await loginWithPassword({ phone, password });
       toast.success("ورود موفق ✅");
       onClose();
     } catch (err) {
-      toast.error(err.message || "شماره یا رمز اشتباه است");
+      toast.error(err?.detail || "شماره یا رمز اشتباه است");
     } finally {
       setLoading(false);
     }
@@ -73,7 +70,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
       toast.success("کد OTP ارسال شد");
       setMode("otp");
     } catch (err) {
-      toast.error(err.message || "خطا در ارسال OTP");
+      toast.error(err?.detail || "خطا در ارسال OTP");
     } finally {
       setLoading(false);
     }
@@ -88,17 +85,11 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
     setLoading(true);
     try {
-      const data = await apiPost("/login/otp", { phone, otp });
-
-      if (data.access) {
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
-      }
-
+      await loginWithOTP({ phone, otp });
       toast.success("ورود موفق ✅");
       onClose();
     } catch (err) {
-      toast.error(err.message || "کد OTP اشتباه است");
+      toast.error(err?.detail || "کد OTP اشتباه است");
     } finally {
       setLoading(false);
     }
@@ -119,12 +110,14 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
               شماره موبایل خود را وارد کنید:
             </p>
           </div>
+
           <PhoneInputBoxes
             value={phone}
             onChange={(val) => setPhone(val.replace(/\D/g, ""))}
           />
 
           <div className="mt-4 text-gray-800 dark:text-gray-100">رمز عبور:</div>
+
           <div className="relative">
             <input
               type={showPass ? "text" : "password"}
@@ -152,9 +145,9 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
                 : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
             }`}
           >
-            {loading ? (
+            {loading && (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            ) : null}
+            )}
             {loading ? "در حال ورود..." : "ورود"}
           </button>
 
@@ -178,7 +171,9 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
       {mode === "otp" && (
         <>
           <h2 className="text-xl font-bold mb-4 text-center">ورود با OTP</h2>
+
           <OtpInput value={otp} onChange={setOtp} />
+
           <button
             onClick={handleVerifyOtp}
             disabled={loading}
@@ -190,6 +185,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
           >
             {loading ? "در حال تایید..." : "تایید OTP"}
           </button>
+
           <button
             onClick={() => setMode("login")}
             className="mt-4 w-full text-center text-gray-600 hover:underline"
