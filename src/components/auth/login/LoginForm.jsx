@@ -8,12 +8,12 @@ import { useAuth } from "../../../context/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_URL;
 
-// 🌟 فقط برای ارسال OTP (لاگین نیست)
+// فقط برای ارسال OTP (لاگین نیست)
 async function apiPost(endpoint, body) {
   const res = await fetch(`${API_BASE}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // ⭐ مهم برای cookie
+    credentials: "include",
     body: JSON.stringify(body),
   });
 
@@ -23,7 +23,7 @@ async function apiPost(endpoint, body) {
 }
 
 export default function LoginForm({ onSwitchRegister, onClose }) {
-  const [mode, setMode] = useState("login"); // login | otp
+  const [mode, setMode] = useState("login"); // login | otp-phone | otp-verify
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -68,7 +68,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
     try {
       await apiPost("/sent/otp", { phone });
       toast.success("کد OTP ارسال شد");
-      setMode("otp");
+      setMode("otp-verify");
     } catch (err) {
       toast.error(err?.detail || "خطا در ارسال OTP");
     } finally {
@@ -98,6 +98,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
   // ==================== رندر فرم‌ها ====================
   return (
     <div className="max-w-md mx-auto p-1" dir="rtl">
+      {/* ==================== ورود با رمز ==================== */}
       {mode === "login" && (
         <>
           <h2 className="text-2xl font-bold text-center mb-6 md:my-6 text-gray-800 dark:text-gray-100">
@@ -153,7 +154,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
           <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
             <button
-              onClick={handleSendOtp}
+              onClick={() => setMode("otp-phone")}
               className="text-blue-600 hover:underline dark:text-purple-400"
             >
               ورود با OTP
@@ -168,9 +169,48 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
         </>
       )}
 
-      {mode === "otp" && (
+      {/* ==================== فرم شماره برای OTP ==================== */}
+      {mode === "otp-phone" && (
         <>
           <h2 className="text-xl font-bold mb-4 text-center">ورود با OTP</h2>
+
+          <div className="flex items-center gap-2 mb-1">
+            <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
+            <p className="text-gray-800 dark:text-gray-300 text-sm">
+              شماره موبایل خود را وارد کنید:
+            </p>
+          </div>
+
+          <PhoneInputBoxes
+            value={phone}
+            onChange={(val) => setPhone(val.replace(/\D/g, ""))}
+          />
+
+          <button
+            onClick={handleSendOtp}
+            disabled={loading || !/^09\d{9}$/.test(phone)}
+            className={`w-full py-3 mt-6 rounded-xl text-white font-medium flex justify-center items-center gap-2 ${
+              loading || !/^09\d{9}$/.test(phone)
+                ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+                : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
+            }`}
+          >
+            {loading ? "در حال ارسال..." : "ارسال OTP"}
+          </button>
+
+          <button
+            onClick={() => setMode("login")}
+            className="mt-4 w-full text-center text-gray-600 hover:underline"
+          >
+            بازگشت
+          </button>
+        </>
+      )}
+
+      {/* ==================== تایید OTP ==================== */}
+      {mode === "otp-verify" && (
+        <>
+          <h2 className="text-xl font-bold mb-4 text-center">تایید OTP</h2>
 
           <OtpInput value={otp} onChange={setOtp} />
 
@@ -187,7 +227,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
           </button>
 
           <button
-            onClick={() => setMode("login")}
+            onClick={() => setMode("otp-phone")}
             className="mt-4 w-full text-center text-gray-600 hover:underline"
           >
             بازگشت

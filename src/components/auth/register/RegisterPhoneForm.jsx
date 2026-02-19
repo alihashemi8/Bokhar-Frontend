@@ -59,7 +59,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
           w-full border-b p-2 mb-6
           bg-transparent
           text-gray-800 dark:text-gray-100
-          focus:border-purple-600 focus:border-b-2 outline-none
+          focus:border-blue-500 dark:focus:border-purple-600 focus:border-b-2 outline-none
         "
       />
 
