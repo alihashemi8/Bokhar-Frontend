@@ -1,18 +1,13 @@
 import { useState, useEffect } from "react";
 import OtpInput from "../ui/OtpInput";
 import toast from "react-hot-toast";
-import { verifyRegisterOtp, sendRegisterOtp } from "../../../api/apiClient";
+import { useAuth } from "../../../context/AuthContext";
 
-export default function RegisterOtpForm({
-  phone,
-  fullname,
-  onBack,
-  onSuccess,
-}) {
+export default function RegisterOtpForm({ phone, fullname, onBack, onSuccess }) {
+  const { registerWithOTP } = useAuth();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-
   const [timer, setTimer] = useState(60);
   const canResend = timer === 0;
 
@@ -33,23 +28,20 @@ export default function RegisterOtpForm({
 
     setLoading(true);
     try {
-      await verifyRegisterOtp({ phone, otp, fullname });
+      // ✅ فراخوانی مستقیم کانتکست برای ثبت‌نام و آپدیت user
+      await registerWithOTP({ phone, otp, fullname });
 
-      // ✅ نوتیف ثبت‌نام موفق
       toast.success(`🎉 خوش آمدی ${fullname}! ثبت‌نام با موفقیت انجام شد`, {
-        duration: 4000, // یا 5000
+        duration: 4000,
         position: "top-center",
       });
-      setTimeout(() => onSuccess(), 3000); 
 
+      onSuccess(); // مودال بسته می‌شود و Navbar آپدیت می‌شود
     } catch (err) {
-      // اصلاح نمایش خطا
       let message = "خطا در تأیید کد";
       if (err?.message) message = err.message;
       else if (err?.detail) message = err.detail;
-      else if (typeof err === "object") {
-        message = Object.values(err).flat().join(" | ");
-      }
+      else if (typeof err === "object") message = Object.values(err).flat().join(" | ");
       toast.error(message);
     } finally {
       setLoading(false);
@@ -62,15 +54,19 @@ export default function RegisterOtpForm({
 
     setResendLoading(true);
     try {
-      await sendRegisterOtp(phone);
+      // ارسال مجدد OTP از همان API
+      await fetch(`${import.meta.env.VITE_API_URL}/sent/otp/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ phone }),
+      });
       toast.success("کد تأیید دوباره ارسال شد ✅");
       setTimer(60);
     } catch (err) {
       let message = "خطا در ارسال مجدد کد";
       if (err?.message) message = err.message;
-      else if (typeof err === "object") {
-        message = Object.values(err).flat().join(" | ");
-      }
+      else if (typeof err === "object") message = Object.values(err).flat().join(" | ");
       toast.error(message);
     } finally {
       setResendLoading(false);
@@ -84,22 +80,18 @@ export default function RegisterOtpForm({
       </h2>
 
       <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
-        کد ارسال‌شده به شماره <span className="font-medium">{phone}</span> را
-        وارد کنید
+        کد ارسال‌شده به شماره <span className="font-medium">{phone}</span> را وارد کنید
       </p>
 
-      <OtpInput
-        value={otp}
-        onChange={(val) => setOtp(val.replace(/\D/g, ""))}
-      />
+      <OtpInput value={otp} onChange={(val) => setOtp(val.replace(/\D/g, ""))} />
 
       <button
         onClick={handleVerify}
         disabled={loading || otp.length < 5}
         className={`w-full mt-6 py-3 rounded-xl text-white font-medium flex justify-center items-center gap-2 transition ${
           loading || otp.length < 5
-          ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
-          : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
+            ? "bg-blue-400 dark:bg-purple-500 cursor-not-allowed"
+            : "bg-blue-600 dark:bg-purple-700 hover:bg-blue-700 dark:hover:bg-purple-900"
         }`}
       >
         {loading && (
