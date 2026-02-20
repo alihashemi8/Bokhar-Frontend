@@ -17,10 +17,22 @@ async function apiPost(endpoint, body) {
     body: JSON.stringify(body),
   });
 
-  const data = await res.json();
+  // ← اینجا raw response رو چاپ می‌کنیم
+  const text = await res.text();
+  console.log("RAW RESPONSE:", text);
+
+  let data;
+  try {
+    data = JSON.parse(text); // تلاش برای parse کردن JSON
+  } catch (err) {
+    console.error("❌ Response is not JSON!", err);
+    throw { detail: "Server did not return JSON", raw: text };
+  }
+
   if (!res.ok) throw data;
   return data;
 }
+
 
 export default function LoginForm({ onSwitchRegister, onClose }) {
   const [mode, setMode] = useState("login"); // login | otp-phone | otp-verify
@@ -66,7 +78,7 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
 
     setLoading(true);
     try {
-      await apiPost("/sent/otp", { phone });
+      await apiPost("/sent/otp/", { phone });
       toast.success("کد OTP ارسال شد");
       setMode("otp-verify");
     } catch (err) {
@@ -89,8 +101,16 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
       toast.success("ورود موفق ✅");
       onClose();
     } catch (err) {
-      toast.error(err?.detail || "کد OTP اشتباه است");
-    } finally {
+  // اگر fetch معمولیه
+  const message =
+    (err && err.message) || 
+    (err && err.otp) || 
+    (err && err.پیام) ||
+    "کد OTP اشتباه است";
+
+  toast.error(message);
+}
+ finally {
       setLoading(false);
     }
   };

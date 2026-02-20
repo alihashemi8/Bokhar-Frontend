@@ -3,9 +3,10 @@ const API_BASE = import.meta.env.VITE_API_URL;
 // ------------------------- Send Register OTP -------------------------
 export async function sendRegisterOtp(phone) {
   try {
-    const res = await fetch(`${API_BASE}/sent/otp`, {
+    const res = await fetch(`${API_BASE}/sent/otp/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ phone }),
     });
 
@@ -21,9 +22,10 @@ export async function sendRegisterOtp(phone) {
 // ------------------------- Verify OTP + Register + Login -------------------------
 export async function verifyRegisterOtp({ phone, otp, fullname }) {
   try {
-    const res = await fetch(`${API_BASE}/register/otp`, {
+    const res = await fetch(`${API_BASE}/register/otp/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({
         phone,
         otp,
@@ -34,11 +36,6 @@ export async function verifyRegisterOtp({ phone, otp, fullname }) {
     const data = await res.json();
     if (!res.ok) throw data;
 
-    // 🔐 ذخیره توکن‌ها
-    if (data.access) {
-      localStorage.setItem("access", data.access);
-      localStorage.setItem("refresh", data.refresh);
-    }
 
     return data;
   } catch (err) {

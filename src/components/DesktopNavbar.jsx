@@ -10,7 +10,9 @@ export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
   const { totalItems } = useCart();
-  const { user, logout } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
 
   return (
     <>
@@ -65,9 +67,9 @@ export default function DesktopNavbar() {
           </div>
 
           {/* پروفایل یا ورود */}
-          {user ? (
+          {user?.isAuthenticated ? (
             <div
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/customer-dashboard")}
               className="flex items-center gap-2 px-4 cursor-pointer hover:text-amber-300 transition"
             >
               <User size={22} />
@@ -91,4 +93,3 @@ export default function DesktopNavbar() {
     </>
   );
 }
-

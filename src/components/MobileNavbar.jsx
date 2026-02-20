@@ -3,12 +3,25 @@ import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function MobileNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  // تابع کلیک روی پروفایل
+  const handleProfileClick = () => {
+    if (user?.isAuthenticated) {
+      navigate("/customer-dashboard");
+    } else {
+      setOpenModal(true);
+    }
+  };
 
   return (
     <>
@@ -20,8 +33,12 @@ export default function MobileNavbar() {
         {/* پروفایل */}
         <NavItem
           icon={<User size={22} />}
-          label="پروفایل"
-          onClick={() => setOpenModal(true)}
+          label={
+            user?.isAuthenticated
+              ? user.fullname || "پروفایل"
+              : "ورود / ثبت نام"
+          }
+          onClick={handleProfileClick}
           active={location.pathname === "/profile"}
         />
 
@@ -41,7 +58,6 @@ export default function MobileNavbar() {
           onClick={() => navigate("/order")}
           active={location.pathname === "/order"}
         />
-
 
         {/* پیام‌ها */}
         <NavItem
@@ -78,14 +94,18 @@ function NavItem({ icon, label, onClick, active }) {
       className={`
         flex flex-col items-center justify-center gap-1 px-2 py-1 rounded-lg
         transition-all duration-300
-        ${active
-          ? "text-amber-400 scale-110"
-          : "text-gray-600 dark:text-gray-300 hover:text-amber-300 scale-100"}
+        ${
+          active
+            ? "text-amber-400 scale-110"
+            : "text-gray-600 dark:text-gray-300 hover:text-amber-300 scale-100"
+        }
       `}
       aria-label={label}
     >
       {icon}
-      <span className="text-[10px] transition-colors duration-300">{label}</span>
+      <span className="text-[10px] transition-colors duration-300">
+        {label}
+      </span>
     </button>
   );
 }
