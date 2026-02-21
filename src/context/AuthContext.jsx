@@ -141,17 +141,23 @@ export function AuthProvider({ children }) {
       credentials: "include",
       body: JSON.stringify({ phone, otp, fullname }),
     }).then(handleAuthResponse);
+const logout = useCallback(async () => {
+  try {
+    console.log("🚪 Logging out...");
+    const res = await fetch(`${API_BASE}/logout/`, {
+      method: "POST",
+      credentials: "include",
+    });
 
-  const logout = useCallback(async () => {
-    try {
-      await fetch(`${API_BASE}/logout/`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } finally {
-      setUser({ isAuthenticated: false });
-    }
-  }, []);
+    console.log("📡 Logout status:", res.status);
+  } catch (err) {
+    console.log("💥 Logout error:", err.message);
+  } finally {
+    // پاک کردن state و هر token محلی
+    setUser({ isAuthenticated: false });
+  }
+}, []);
+
 
   // ------------------- effects -------------------
   useEffect(() => {

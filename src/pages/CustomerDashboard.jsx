@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut, Wallet, Package } from "lucide-react";
 import { FiSun, FiMoon } from "react-icons/fi";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
+import { useAuth } from "../context/AuthContext";
 
 function QuickCard({ title, icon, onClick }) {
   return (
@@ -46,12 +47,15 @@ function SettingItem({ title, onClick }) {
 
 export default function CustomersDashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // حالت اولیه را از localStorage یا کلاس dark روی <html> می‌خوانیم
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) return savedTheme;
-    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+    return document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
   });
 
   // وقتی theme تغییر کرد، کلاس dark روی html و localStorage بروزرسانی می‌شود
@@ -150,7 +154,10 @@ export default function CustomersDashboard() {
 
       {/* Logout Desktop */}
       <button
-        onClick={() => navigate("/")}
+        onClick={async () => {
+          await logout();
+          navigate("/");
+        }}
         className="mt-8 mb-20 md:mb-0 hidden md:flex w-full items-center justify-center gap-2 text-red-600 md:max-w-3xl md:mx-auto font-medium"
       >
         <LogOut size={20} />
@@ -160,12 +167,16 @@ export default function CustomersDashboard() {
       {/* Mobile Footer */}
       <div className="mb-20 mt-5 rounded-2xl bottom-0 left-0 right-0 bg-sky-50 dark:bg-sky-900 shadow-sky-200 dark:shadow-indigo-500 p-4 flex justify-between items-center shadow-md md:hidden">
         <button
-          onClick={() => navigate("/login")}
+          onClick={async () => {
+            await logout();
+            navigate("/");
+          }}
           className="flex items-center gap-2 text-red-600 font-medium"
         >
           <LogOut size={20} />
           خروج
         </button>
+
         <button
           onClick={toggleTheme}
           className={`relative w-14 h-8 rounded-full p-1 transition-all duration-300 ${
