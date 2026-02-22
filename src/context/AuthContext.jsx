@@ -10,66 +10,69 @@ import {
 const AuthContext = createContext(null);
 const API_BASE = import.meta.env.VITE_API_URL;
 
+// ================== Helper: گرفتن CSRF از کوکی ==================
+function getCookie(name) {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="));
+  return cookieValue ? decodeURIComponent(cookieValue.split("=")[1]) : null;
+}
+
+// ================== Helper: اطمینان از دریافت CSRF ==================
+export async function ensureCSRFToken() {
+  let csrfToken = getCookie("csrftoken");
+  if (!csrfToken) {
+    await fetch(`${API_BASE}/csrf/`, { credentials: "include" });
+    csrfToken = getCookie("csrftoken");
+  }
+  return csrfToken;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isRefreshing = useRef(false);
-  const lastVerify = useRef(0); // جلوگیری از race condition
 
-  // ------------------- refresh token -------------------
+  const isRefreshing = useRef(false);
+  const lastVerify = useRef(0);
+
+  // ================= refresh token =================
   const tryRefreshToken = useCallback(async () => {
-    if (isRefreshing.current) {
-      console.log("⏳ Already refreshing, skipping...");
-      return false;
-    }
+    if (isRefreshing.current) return false;
     isRefreshing.current = true;
 
     try {
-      console.log("🔄 Trying to refresh token...");
       const res = await fetch(`${API_BASE}/refresh/`, {
         method: "POST",
         credentials: "include",
       });
-      console.log("📡 Refresh response status:", res.status);
-
       if (!res.ok) return false;
 
-      // بعد از refresh موفق، user رو دوباره verify می‌کنیم
       const verifyRes = await fetch(`${API_BASE}/verify/`, {
         method: "GET",
         credentials: "include",
       });
-
       if (verifyRes.ok) {
         const result = await verifyRes.json();
         setUser({ isAuthenticated: true, ...result });
-        console.log("✅ Token refreshed and user updated");
         return true;
       }
-
-      console.log("❌ Verify after refresh failed");
       return false;
     } catch (err) {
-      console.log("💥 Refresh error:", err.message);
+      console.error("Refresh error:", err.message);
       return false;
     } finally {
       isRefreshing.current = false;
     }
   }, []);
 
-  // ------------------- verify auth -------------------
+  // ================= verify auth =================
   const verifyAuth = useCallback(async () => {
     const currentVerify = Date.now();
     lastVerify.current = currentVerify;
-
     setLoading(true);
-    console.log("🔍 Starting verifyAuth...");
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
-      console.log("⏰ Verify timeout!");
-      controller.abort();
-    }, 10000); // کمی طولانی‌تر
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     try {
       const res = await fetch(`${API_BASE}/verify/`, {
@@ -77,40 +80,34 @@ export function AuthProvider({ children }) {
         credentials: "include",
         signal: controller.signal,
       });
-      console.log("📡 Verify response status:", res.status);
 
       if (res.ok) {
         const result = await res.json();
-        if (lastVerify.current !== currentVerify) return; // جلوگیری از race
+        if (lastVerify.current !== currentVerify) return;
         setUser({ isAuthenticated: true, ...result });
-        console.log("✅ Verify success:", result);
         return;
       }
 
       if (res.status === 401) {
-        console.log("⚠️ Got 401, trying refresh...");
         const refreshed = await tryRefreshToken();
-        if (!refreshed) {
-          console.log("❌ Refresh failed, user must login");
-          if (lastVerify.current === currentVerify) {
-            setUser({ isAuthenticated: false });
-          }
+        if (!refreshed && lastVerify.current === currentVerify) {
+          setUser({ isAuthenticated: false });
         }
         return;
       }
 
-      throw new Error(`Auth failed with status ${res.status}`);
+      throw new Error("Verify failed");
     } catch (err) {
-      console.log("💥 Verify error:", err.message);
-      if (lastVerify.current === currentVerify) setUser({ isAuthenticated: false });
+      if (lastVerify.current === currentVerify) {
+        setUser({ isAuthenticated: false });
+      }
     } finally {
       clearTimeout(timeout);
       if (lastVerify.current === currentVerify) setLoading(false);
-      console.log("🏁 verifyAuth finished, loading:", false);
     }
   }, [tryRefreshToken]);
 
-  // ------------------- login methods -------------------
+  // ================= auth handlers =================
   const handleAuthResponse = async (res) => {
     const result = await res.json();
     if (!res.ok) throw result;
@@ -141,60 +138,48 @@ export function AuthProvider({ children }) {
       credentials: "include",
       body: JSON.stringify({ phone, otp, fullname }),
     }).then(handleAuthResponse);
-const logout = useCallback(async () => {
-  try {
-    console.log("🚪 Logging out...");
-    const res = await fetch(`${API_BASE}/logout/`, {
-      method: "POST",
-      credentials: "include",
-    });
 
-    console.log("📡 Logout status:", res.status);
-  } catch (err) {
-    console.log("💥 Logout error:", err.message);
-  } finally {
-    // پاک کردن state و هر token محلی
-    setUser({ isAuthenticated: false });
-  }
-}, []);
+  // ================= logout =================
+  const logout = useCallback(async () => {
+    try {
+      const csrfToken = await ensureCSRFToken();
+      await fetch(`${API_BASE}/logout/`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "X-CSRFToken": csrfToken },
+      });
+    } catch (err) {
+      console.error("Logout error:", err.message);
+    } finally {
+      setUser({ isAuthenticated: false });
+    }
+  }, []);
 
-
-  // ------------------- effects -------------------
+  // ================= effects =================
   useEffect(() => {
-    console.log("🚀 Component mounted, calling verifyAuth...");
     verifyAuth();
   }, []);
 
   useEffect(() => {
-    if (!user?.isAuthenticated) {
-      console.log("👤 User not authenticated, skipping refresh interval");
-      return;
-    }
-
-    console.log("⏰ Setting up refresh interval");
+    if (!user?.isAuthenticated) return;
     const interval = setInterval(() => {
-      console.log("🔄 Interval refresh triggered");
       tryRefreshToken();
     }, 25 * 60 * 1000);
-
-    return () => {
-      console.log("🧹 Cleaning up refresh interval");
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [user?.isAuthenticated, tryRefreshToken]);
-
-  console.log("🎨 Render - user:", user, "loading:", loading);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        setUser,
         loading,
         isAuthenticated: user?.isAuthenticated === true,
         loginWithPassword,
         loginWithOTP,
         registerWithOTP,
         logout,
+        verifyAuth,
       }}
     >
       {children}

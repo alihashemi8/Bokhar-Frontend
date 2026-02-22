@@ -47,7 +47,7 @@ function SettingItem({ title, onClick }) {
 
 export default function CustomersDashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+const { logout, user } = useAuth();
 
   // حالت اولیه را از localStorage یا کلاس dark روی <html> می‌خوانیم
   const [theme, setTheme] = useState(() => {
@@ -82,12 +82,15 @@ export default function CustomersDashboard() {
           👤
         </div>
         <div className="flex-1">
-          <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-            علی هاشمی
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            09*********
-          </p>
+<p className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+  {user?.fullname || "—"}
+</p>
+
+<p className="text-sm text-gray-500 dark:text-gray-400">
+  {user?.phone || ""}
+
+</p>
+
         </div>
         <button
           onClick={() => navigate("/customer-dashboard/edit")}
