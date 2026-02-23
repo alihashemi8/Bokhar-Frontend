@@ -22,12 +22,15 @@ export function ProfileProvider({ children }) {
     });
 
     const contentType = res.headers.get("Content-Type") || "";
-    if (!contentType.includes("application/json")) {
+    let result;
+
+    if (contentType.includes("application/json")) {
+      result = await res.json();
+    } else {
       const text = await res.text();
-      throw new Error(`Unexpected response: ${text}`);
+      throw new Error("خطای سرور. دوباره تلاش کنید.");
     }
 
-    const result = await res.json();
     if (!res.ok) throw result;
 
     setUser((prev) => ({ ...prev, fullname }));
@@ -39,7 +42,7 @@ export function ProfileProvider({ children }) {
     const csrfToken = await ensureCSRFToken();
 
     const res = await fetch(`${API_BASE}/edit/password/`, {
-      method: "POST",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken,
@@ -48,7 +51,20 @@ export function ProfileProvider({ children }) {
       body: JSON.stringify(data),
     });
 
-    const result = await res.json();
+    const contentType = res.headers.get("Content-Type") || "";
+    let result;
+
+    if (contentType.includes("application/json")) {
+      try {
+        result = await res.json();
+      } catch {
+        throw new Error("خطای سرور. دوباره تلاش کنید.");
+      }
+    } else {
+      const text = await res.text();
+      throw new Error("خطای سرور. دوباره تلاش کنید.");
+    }
+
     if (!res.ok) throw result;
     return result;
   };
