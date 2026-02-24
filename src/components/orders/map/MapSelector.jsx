@@ -7,6 +7,7 @@ import SearchLocation from "./SearchLocation";
 import AddressModal from "./AddressModal";
 import AddressDropdown from "./AddressDropdown";
 import SavedAddressButtons from "./SavedAddressButtons";
+import SavedAddressList from "./SavedAddressList";
 
 export default function MapSelector({
   initialPosition,
@@ -142,14 +143,31 @@ export default function MapSelector({
   };
 
   const handleSelectSavedAddress = (item) => {
-    setCoords(item.coords);
-    setAddress(item.address);
-    setPlaque(item.plaque);
-    setUnit(item.unit);
-    setTitle(item.title);
-    setDescription(item.description || "");
+  setCoords(item.coords);
+  setAddress(item.address);
+  setPlaque(item.plaque);
+  setUnit(item.unit);
+  setTitle(item.title);
+  setDescription(item.description || "");
+};
+const selectAddressAndOpen = (item) => {
+  handleSelectSavedAddress(item);
+
+  if (isMobile) {
     setOpen(true);
-  };
+    return;
+  }
+
+  // اسکرول قطعی به بالای صفحه
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+  setTimeout(() => {
+    setOpen(true);
+  }, 350);
+};
 
   // --- دکمه Current Location ---
   const handleCurrentLocation = () => {
@@ -176,9 +194,72 @@ export default function MapSelector({
   const closeModalSafely = () => {
     if (open) window.history.back();
   };
+const topRef = useRef(null);
+const openAddressDesktop = () => {
+  if (isMobile) {
+    setOpen(true);
+    return;
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+
+  setTimeout(() => {
+    setOpen(true);
+  }, 350);
+};
+
+const handleSelectAndNext = (item) => {
+  // ست کردن state
+  setCoords(item.coords);
+  setAddress(item.address);
+  setPlaque(item.plaque);
+  setUnit(item.unit);
+  setTitle(item.title);
+  setDescription(item.description || "");
+
+  // فراخوانی callback والد
+  onLocationSelect({
+    coords: item.coords,
+    address: item.address,
+    plaque: item.plaque,
+    unit: item.unit,
+    title: item.title,
+    description: item.description || "",
+  });
+
+  // رفتن به مرحله بعد
+  goToNextStep?.();
+};
+
+const handleSelectSavedAddressAndNext = (item) => {
+  // 1. ست کردن state داخلی
+  setCoords(item.coords);
+  setAddress(item.address);
+  setPlaque(item.plaque);
+  setUnit(item.unit);
+  setTitle(item.title);
+  setDescription(item.description || "");
+
+  // 2. فراخوانی callback والد
+  onLocationSelect({
+    coords: item.coords,
+    address: item.address,
+    plaque: item.plaque,
+    unit: item.unit,
+    title: item.title,
+    description: item.description || "",
+  });
+
+  // 3. رفتن به مرحله بعد
+  goToNextStep?.();
+};
+
 
   return (
-    <div className="relative flex flex-col gap-5">
+    <div ref={topRef} className="relative flex flex-col gap-5">
       <div
         className="relative rounded-2xl border border-sky-200 overflow-hidden
         shadow-md shadow-sky-300/50 z-0 w-[90%] md:w-[75%] mx-auto"
@@ -207,18 +288,19 @@ export default function MapSelector({
           />
         </div>
 
-        <SavedAddressButtons
-          addresses={savedAddresses}
-          onSelect={handleSelectSavedAddress}
-          onDelete={handleDeleteAddress}
-          onCurrentLocation={handleCurrentLocation} 
-        />
+<SavedAddressButtons
+  addresses={savedAddresses}
+  onSelect={handleSelectSavedAddressAndNext} // ← همین تغییر کرد
+  onDelete={handleDeleteAddress}
+  onCurrentLocation={handleCurrentLocation} 
+/>
+
       </div>
 
 
       <button
-        onClick={() => setOpen(true)}
-        className="w-[75%] mx-auto px-3 py-2 mb-20 md:mb-0 rounded-xl font-bold transition
+        onClick={openAddressDesktop}
+        className="w-[75%] mx-auto px-3 py-2 rounded-xl font-bold transition
         bg-sky-100 text-gray-700 border border-sky-300 shadow-md
         hover:bg-sky-200 
         dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
@@ -227,6 +309,13 @@ export default function MapSelector({
       >
         تایید موقعیت
       </button>
+
+<SavedAddressList
+  addresses={savedAddresses} 
+  onSelect={handleSelectAndNext}
+  onEdit={(item) => selectAddressAndOpen(item)} 
+  onDelete={handleDeleteAddress}
+/>
 
       {isMobile ? (
         <AddressModal
