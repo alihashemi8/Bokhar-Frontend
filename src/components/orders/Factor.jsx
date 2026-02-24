@@ -220,8 +220,8 @@ export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }
 
         {/* جمع کل */}
         {cartItems.length > 0 && (
-          <div className="flex justify-between items-center pt-4 border-t border-sky-200 dark:border-sky-700">
-            <span className="text-gray-600 dark:text-gray-100">مبلغ نهایی</span>
+          <div className="flex justify-between items-center pt-4 ">
+            <span className="text-gray-800 dark:text-gray-100 font-semibold">مبلغ نهایی</span>
             <span className="text-2xl font-bold text-sky-700 dark:text-gray-100">
               {totalPrice.toLocaleString()} تومان
             </span>

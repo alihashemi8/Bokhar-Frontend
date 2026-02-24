@@ -89,6 +89,15 @@ export default function MapView({
     ? createMarkerIcon("#8b5cf6") // بنفش
     : createMarkerIcon("#0ea5e9"); // آبی
 
+  /* ===== انتخاب TileLayer بر اساس حالت دارک ===== */
+  const tileUrl = isDark
+    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+  const tileAttribution = isDark
+    ? '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+    : '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>';
+
   return (
     <MapContainer
       center={position}
@@ -97,10 +106,7 @@ export default function MapView({
       zoomControl={false}
       className="h-[300px] md:h-[400px] w-full rounded-2xl"
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer attribution={tileAttribution} url={tileUrl} />
 
       <FlyToLocation targetPosition={position} />
 

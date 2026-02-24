@@ -119,17 +119,16 @@ export default function Order() {
   }, [step]);
 
   // modal & history
-useEffect(() => {
-  if (!isMobile) return;
+  useEffect(() => {
+    if (!isMobile) return;
 
-  const prevOverflow = document.body.style.overflow;
-  document.body.style.overflow = modalOpen ? "hidden" : prevOverflow;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = modalOpen ? "hidden" : prevOverflow;
 
-  return () => {
-    document.body.style.overflow = prevOverflow;
-  };
-}, [modalOpen, isMobile]);
-
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [modalOpen, isMobile]);
 
   // -------------------- modal handlers --------------------
   const closeModalSafely = useCallback(() => {
@@ -347,6 +346,8 @@ useEffect(() => {
                 discountCode={orderData.discountCode}
                 datetime={orderData.datetime}
                 location={orderData.location}
+                goToTimeStep={() => dispatch({ type: "SET_STEP", payload: 2 })}
+                goToLocationStep={goToLocationStep}
                 setDiscountCode={(code) =>
                   dispatch({
                     type: "SET_ORDER_DATA",

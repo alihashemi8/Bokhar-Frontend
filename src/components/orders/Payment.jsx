@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Tag, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import {
+  CreditCard,
+  Tag,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Edit2,
+} from "lucide-react";
 
 export default function Payment({
   subtotal,
@@ -10,6 +17,8 @@ export default function Payment({
   setDiscountCode,
   applyDiscount,
   handlePayment,
+  goToTimeStep,
+  goToLocationStep,
   datetime,
   location,
 }) {
@@ -96,9 +105,11 @@ export default function Payment({
             <span className="font-semibold text-gray-700 dark:text-gray-100">
               زمان تحویل دادن:
             </span>
-            <span className="text-gray-600 dark:text-gray-200">
-              {datetime?.delivery?.date} — {datetime?.delivery?.time}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600 dark:text-gray-200">
+                {datetime?.delivery?.date} — {datetime?.delivery?.time}
+              </span>
+            </div>
           </div>
 
           {/* زمان تحویل گرفتن */}
@@ -106,19 +117,29 @@ export default function Payment({
             <span className="font-semibold text-gray-700 dark:text-gray-100">
               زمان تحویل گرفتن:
             </span>
-            <span className="text-gray-600 dark:text-gray-200">
-              {datetime?.pickup?.date} — {datetime?.pickup?.time}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600 dark:text-gray-200">
+                {datetime?.pickup?.date} — {datetime?.pickup?.time}
+              </span>
+
+            </div>
           </div>
 
           {/* آدرس */}
-          <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-100">
-              آدرس:
-            </span>
-            <span className="text-gray-600 dark:text-gray-200 leading-relaxed pr-2">
-              {location?.address} پلاک {location?.plaque}، واحد {location?.unit}
-            </span>
+          <div className="flex justify-between items-start">
+            <div>
+              <span className="font-semibold text-gray-700 dark:text-gray-100">
+                آدرس:
+              </span>
+              <span className="text-gray-600 dark:text-gray-200 leading-relaxed pr-2">
+                {location?.address} پلاک {location?.plaque}، واحد{" "}
+                {location?.unit}
+              </span>
+            </div>
+            <Edit2
+              className="size-4 cursor-pointer text-sky-600 dark:text-sky-300 mt-1"
+              onClick={() => goToLocationStep()}
+            />
           </div>
         </div>
 
