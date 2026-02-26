@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { CalendarDaysIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { IoShirtSharp } from "react-icons/io5";
+import { MdOutlineIron } from "react-icons/md";
+import { GiWashingMachine } from "react-icons/gi";
+
 import bubble7 from "../assets/bubble7.png";
 import bubble11 from "../assets/bubble11.png";
 import bubble12 from "../assets/bubble12.png";
@@ -325,19 +328,20 @@ export default function Landing() {
           >
             <h2 className="text-lg font-bold mb-2 text-center">خشکشویی سریع</h2>
             <img
-              src={Group}
+              src={Group2}
               alt="خدمات خشکشویی"
               className="w-full bg-amber-50 p-3 sm:p-4 rounded-3xl shadow-xl object-contain"
             />
             <p className="mt-2 text-center text-sm text-gray-600">
-              تحویل سریع و بدون دردسر، مناسب زندگی‌های پرمشغله.
+              تحویل و دریافت آسان برای صرفه‌جویی در وقت شما. نظافت با کیفیت بالا
+              برای حفظ بهترین ظاهر شما.{" "}
             </p>
           </motion.div>
 
           {/* متن‌ها سمت راست */}
           <div
             dir="rtl"
-            className="flex-1 min-w-0 text-right space-y-8 md:order-2 "
+            className="flex-1 min-w-0 text-right space-y-8 md:order-2"
           >
             <motion.div
               style={{
@@ -345,12 +349,14 @@ export default function Landing() {
                 opacity: useTransform(secondProgress, [0.1, 0.4], [0, 1]),
               }}
             >
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
-                کیفیت تضمینی
+              <h2 className="flex items-center text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                <GiWashingMachine  className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 flex-shrink-0 mt-1" />
+                تمیز کردن و لکه‌بری تخصصی
               </h2>
               <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
-                تمامی لباس‌ها با بالاترین استانداردها شسته و آماده تحویل
-                می‌شوند.
+                ما به دقت برچسب مراقبت را دنبال می‌کنیم و لباس‌های شما را از نظر
+                لکه بررسی می‌کنیم تا مطمئن شویم که بهترین روش برای لکه‌بری روی
+                آنها اعمال می‌شود.
               </p>
             </motion.div>
 
@@ -360,12 +366,14 @@ export default function Landing() {
                 opacity: useTransform(secondProgress, [0.3, 0.6], [0, 1]),
               }}
             >
-              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
-                بسته‌بندی مرتب
+              <h2 className="flex items-center text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                <MdOutlineIron  className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 flex-shrink-0 mt-1" />
+                اتو شده و روی چوب‌لباسی برگردانده می‌شوند
               </h2>
               <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
-                لباس‌ها به صورت مرتب و جفت شده تحویل داده می‌شوند تا آماده
-                استفاده باشند.
+                لباس‌های شما پس از اتو شدن، روی چوب‌لباسی قرار داده شده، در
+                کیسه‌های محافظ لباس قرار داده شده و آماده پوشیدن، درب منزل شما
+                تحویل داده می‌شوند.
               </p>
             </motion.div>
           </div>
