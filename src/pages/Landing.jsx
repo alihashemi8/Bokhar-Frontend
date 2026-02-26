@@ -1,4 +1,8 @@
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { CalendarDaysIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
+import { IoShirtSharp } from "react-icons/io5";
 import bubble7 from "../assets/bubble7.png";
 import bubble11 from "../assets/bubble11.png";
 import bubble12 from "../assets/bubble12.png";
@@ -8,8 +12,20 @@ import bubble15 from "../assets/bubble15.png";
 import iron1 from "../assets/iron1.png";
 import iron2 from "../assets/iron2.png";
 import Group from "../assets/Group.png";
+
 export default function Landing() {
   const { scrollY } = useScroll();
+  const navigate = useNavigate();
+  const aboutRef = useRef(null);
+
+  // تشخیص موبایل
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const bubbles = [
     {
@@ -88,6 +104,33 @@ export default function Landing() {
     },
   ];
 
+  const { scrollYProgress } = useScroll({
+    target: aboutRef,
+    offset: ["start end", "end start"],
+  });
+
+  // هدرها
+  const h1X = useTransform(scrollYProgress, [0.1, 0.25], [-80, 0]);
+  const h1Opacity = useTransform(scrollYProgress, [0.1, 0.25], [0, 1]);
+
+  const h2X = useTransform(scrollYProgress, [0.25, 0.4], [-80, 0]);
+  const h2Opacity = useTransform(scrollYProgress, [0.25, 0.4], [0, 1]);
+
+  const h3X = useTransform(scrollYProgress, [0.4, 0.55], [-80, 0]);
+  const h3Opacity = useTransform(scrollYProgress, [0.4, 0.55], [0, 1]);
+
+  // عکس درباره ما با breakpoint موبایل
+  const imgX = useTransform(
+    scrollYProgress,
+    isMobile ? [0.1, 0.35] : [0.15, 0.4],
+    isMobile ? [40, 0] : [80, 0]
+  );
+  const imgOpacity = useTransform(
+    scrollYProgress,
+    isMobile ? [0.1, 0.5] : [0.2, 0.6],
+    [0, 1]
+  );
+
   return (
     <div className="relative min-h-[200vh] bg-gradient-to-br from-pink-50 to-blue-500 overflow-hidden">
       {/* حباب‌ها */}
@@ -102,7 +145,6 @@ export default function Landing() {
       ))}
 
       <div className="flex items-start justify-between px-4 sm:px-6 md:px-10 mt-0 flex-nowrap">
-        {/* تصاویر سمت چپ */}
         <div className="flex gap-3 sm:gap-6 flex-shrink-0 z-50 mt-0">
           <img
             src={iron2}
@@ -116,7 +158,6 @@ export default function Landing() {
           />
         </div>
 
-        {/* هدر سمت راست */}
         <h1
           className="font-extrabold text-gray-800 mt-16 sm:mt-20 md:mt-24 md:mr-10 ml-4 z-10 flex-shrink whitespace-nowrap"
           style={{ fontSize: "clamp(1.3rem, 5vw, 3rem)" }}
@@ -125,17 +166,94 @@ export default function Landing() {
         </h1>
       </div>
 
-      {/* دکمه‌ها */}
       <div className="flex flex-col items-end gap-1 sm:gap-3 pr-6 sm:pr-10 md:pr-20 mt-5 sm:mt-0 relative z-10">
-        <button className=" px-10 py-3 sm:px-14 sm:py-6 md:px-18 md:py-7 rounded-full bg-purple-50 text-[#202374] text-md sm:text-lg md:text-2xl font-semibold hover:bg-white transition duration-300 shadow-lg cursor-pointer">
+        <button
+          onClick={() => navigate("/shop")}
+          className=" px-10 py-3 sm:px-14 sm:py-6 md:px-18 md:py-7 rounded-full bg-purple-50 text-[#202374] text-md sm:text-lg md:text-2xl font-semibold hover:bg-white transition duration-300 shadow-lg cursor-pointer"
+        >
           ثبت سفارش
         </button>
 
-        <button className="px-8 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md">
+        <button
+          onClick={() => navigate("/about")}
+          className="px-8 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md"
+        >
           تماس با ما
         </button>
       </div>
 
+      <div ref={aboutRef} className="relative z-10 mt-20 px-4 sm:px-6 md:px-20">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
+          <motion.div
+            className="
+              w-32 sm:w-32 md:mt-10
+              md:w-48 lg:w-64 xl:w-72
+              flex-shrink-0
+              md:order-2
+            "
+            style={{ x: imgX, opacity: imgOpacity }}
+          >
+            <img
+              src={Group}
+              alt=""
+              className="w-full bg-amber-50 p-3 sm:p-4 rounded-3xl shadow-xl object-contain"
+            />
+          </motion.div>
+
+          <div
+            dir="rtl"
+            className="flex-1 min-w-0 text-right space-y-8 md:order-1"
+          >
+            <motion.div style={{ x: h1X, opacity: h1Opacity }}>
+              <div className="flex items-start gap-3">
+                <CalendarDaysIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <div>
+                  <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                    زمان بندی شخصی
+                  </h2>
+                  <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
+                    شما می‌توانید هر روز هفته برای تحویل لباس وقت تعیین کنید.
+                    متصدی شما بین ساعت ۷ تا ۱۰ شب با کیسه‌های شستشوی رایگان و
+                    شخصی شما خواهد آمد.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div style={{ x: h2X, opacity: h2Opacity }}>
+              <div className="flex items-start gap-3">
+                <ShieldCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <div>
+                  <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                    مراقبت‌های حرفه‌ای
+                  </h2>
+                  <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
+                    لباس‌های روشن و تیره از هم جدا شده و با آب سرد شسته می‌شوند.
+                    مواد شوینده و نرم‌کننده پارچه ضد حساسیت بنا به درخواست
+                    رایگان ارائه می‌شود.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div style={{ x: h3X, opacity: h3Opacity }}>
+              <div className="flex items-start gap-3">
+                <IoShirtSharp className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <div>
+                  <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                    آماده برای پوشیدن
+                  </h2>
+                  <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
+                    لباس‌های شما درب منزل تحویل داده می‌شوند، کاملاً تا شده‌اند
+                    و جوراب‌هایتان جفت شده‌اند، آماده برای پوشیدن یا قرار دادن
+                    در کشوها.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
