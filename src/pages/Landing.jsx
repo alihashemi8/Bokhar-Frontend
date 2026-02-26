@@ -315,7 +315,7 @@ export default function Landing() {
 
       <div
         ref={secondSectionRef}
-        className="relative z-10 my-20 px-4 sm:px-6 md:px-20 md:pb-10"
+        className="relative z-10 my-20 px-4 sm:px-6 md:px-20 pb-5 md:pb-10"
       >
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
           {/* عکس سمت چپ */}
