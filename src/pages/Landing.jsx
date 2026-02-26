@@ -12,6 +12,7 @@ import bubble15 from "../assets/bubble15.png";
 import iron1 from "../assets/iron1.png";
 import iron2 from "../assets/iron2.png";
 import Group from "../assets/Group.png";
+import Group2 from "../assets/Group2.png";
 
 export default function Landing() {
   const { scrollY } = useScroll();
@@ -27,80 +28,122 @@ export default function Landing() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const secondSectionRef = useRef(null);
+  const { scrollYProgress: secondProgress } = useScroll({
+    target: secondSectionRef,
+    offset: ["start end", "end start"],
+  });
+
   const bubbles = [
+    // ردیف اول - بالا
     {
       img: bubble11,
-      y: useTransform(scrollY, [0, 800], [0, 250]),
-      x: useTransform(scrollY, [0, 800], [-200, -50]),
-      rotate: useTransform(scrollY, [0, 800], [0, 180]),
-      className: "top-10 right-10 w-16 sm:w-20 md:w-24 opacity-70",
+      y: useTransform(scrollY, [0, 1000], [0, 150]),
+      x: useTransform(scrollY, [0, 1000], [0, 80]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 120]),
+      className: "top-[5%] left-[10%] w-16 sm:w-20 md:w-24 opacity-70",
     },
     {
       img: bubble12,
-      y: useTransform(scrollY, [0, 800], [0, -200]),
-      x: useTransform(scrollY, [0, 800], [50, 150]),
-      rotate: useTransform(scrollY, [0, 800], [0, -220]),
-      className: "bottom-20 left-10 sm:left-20 w-20 sm:w-24 md:w-28 opacity-60",
+      y: useTransform(scrollY, [0, 1000], [0, -120]),
+      x: useTransform(scrollY, [0, 1000], [0, -60]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -150]),
+      className: "top-[8%] right-[15%] w-20 sm:w-24 md:w-28 opacity-60",
     },
     {
       img: bubble13,
-      y: useTransform(scrollY, [0, 800], [0, 200]),
-      x: useTransform(scrollY, [0, 800], [0, 220]),
-      rotate: useTransform(scrollY, [0, 800], [0, 300]),
-      className: "top-1/3 left-10 sm:left-1/4 w-16 sm:w-20 md:w-24 opacity-50",
+      y: useTransform(scrollY, [0, 1000], [0, 100]),
+      x: useTransform(scrollY, [0, 1000], [0, -100]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 200]),
+      className: "top-[15%] left-[40%] w-14 sm:w-16 md:w-20 opacity-50",
     },
+    // ردیف دوم - بالای متوسط
     {
       img: bubble14,
-      y: useTransform(scrollY, [0, 800], [0, -180]),
-      x: useTransform(scrollY, [0, 800], [-150, 100]),
-      rotate: useTransform(scrollY, [0, 800], [0, 260]),
-      className: "top-40 right-10 sm:right-1/3 w-14 sm:w-16 md:w-20 opacity-40",
+      y: useTransform(scrollY, [0, 1000], [0, -180]),
+      x: useTransform(scrollY, [0, 1000], [0, 120]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 250]),
+      className: "top-[25%] right-[5%] w-16 sm:w-20 md:w-24 opacity-60",
     },
     {
       img: bubble15,
-      y: useTransform(scrollY, [0, 800], [0, 300]),
-      x: useTransform(scrollY, [0, 800], [150, -100]),
-      rotate: useTransform(scrollY, [0, 800], [0, -300]),
-      className:
-        "bottom-10 right-10 sm:right-1/4 w-20 sm:w-28 md:w-32 opacity-50",
+      y: useTransform(scrollY, [0, 1000], [0, 200]),
+      x: useTransform(scrollY, [0, 1000], [0, -80]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -180]),
+      className: "top-[30%] left-[5%] w-18 sm:w-22 md:w-26 opacity-55",
     },
     {
       img: bubble7,
-      y: useTransform(scrollY, [0, 800], [0, 350]),
-      x: useTransform(scrollY, [0, 800], [100, -50]),
-      rotate: useTransform(scrollY, [0, 800], [0, 200]),
-      className:
-        "bottom-20 left-20 sm:left-1/3 w-20 sm:w-28 md:w-32 opacity-50",
+      y: useTransform(scrollY, [0, 1000], [0, -150]),
+      x: useTransform(scrollY, [0, 1000], [0, 60]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 300]),
+      className: "top-[35%] right-[35%] w-20 sm:w-24 md:w-28 opacity-50",
     },
+    // ردیف سوم - وسط صفحه
     {
       img: bubble11,
-      y: useTransform(scrollY, [0, 800], [0, -250]),
-      x: useTransform(scrollY, [0, 800], [-100, 50]),
-      rotate: useTransform(scrollY, [0, 800], [0, 150]),
-      className: "top-20 left-5 sm:left-1/4 w-16 sm:w-20 md:w-24 opacity-60",
+      y: useTransform(scrollY, [0, 1000], [0, 120]),
+      x: useTransform(scrollY, [0, 1000], [0, -120]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -200]),
+      className: "top-[45%] left-[20%] w-16 sm:w-20 md:w-24 opacity-65",
     },
     {
       img: bubble12,
-      y: useTransform(scrollY, [0, 800], [0, 300]),
-      x: useTransform(scrollY, [0, 800], [120, -150]),
-      rotate: useTransform(scrollY, [0, 800], [0, -180]),
-      className:
-        "bottom-10 right-10 sm:right-1/3 w-20 sm:w-24 md:w-28 opacity-55",
+      y: useTransform(scrollY, [0, 1000], [0, -100]),
+      x: useTransform(scrollY, [0, 1000], [0, 100]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 150]),
+      className: "top-[50%] right-[25%] w-14 sm:w-18 md:w-22 opacity-50",
     },
     {
       img: bubble13,
-      y: useTransform(scrollY, [0, 800], [0, 200]),
-      x: useTransform(scrollY, [0, 800], [-80, 180]),
-      rotate: useTransform(scrollY, [0, 800], [0, 270]),
-      className: "top-1/2 left-30 sm:left-1/2 w-16 sm:w-20 md:w-24 opacity-50",
+      y: useTransform(scrollY, [0, 1000], [0, 180]),
+      x: useTransform(scrollY, [0, 1000], [0, 40]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -250]),
+      className: "top-[55%] left-[50%] w-12 sm:w-16 md:w-20 opacity-45",
     },
+    // ردیف چهارم - پایین
     {
       img: bubble14,
-      y: useTransform(scrollY, [0, 800], [0, -150]),
-      x: useTransform(scrollY, [0, 800], [200, -100]),
-      rotate: useTransform(scrollY, [0, 800], [0, 320]),
-      className:
-        "bottom-1/4 left-5 sm:left-1/4 w-14 sm:w-16 md:w-20 opacity-40",
+      y: useTransform(scrollY, [0, 1000], [0, -200]),
+      x: useTransform(scrollY, [0, 1000], [0, -60]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 280]),
+      className: "top-[65%] right-[10%] w-16 sm:w-20 md:w-24 opacity-60",
+    },
+    {
+      img: bubble15,
+      y: useTransform(scrollY, [0, 1000], [0, 150]),
+      x: useTransform(scrollY, [0, 1000], [0, 100]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -120]),
+      className: "top-[70%] left-[8%] w-20 sm:w-24 md:w-28 opacity-55",
+    },
+    {
+      img: bubble7,
+      y: useTransform(scrollY, [0, 1000], [0, -120]),
+      x: useTransform(scrollY, [0, 1000], [0, -100]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 200]),
+      className: "top-[75%] right-[40%] w-18 sm:w-22 md:w-26 opacity-50",
+    },
+    // ردیف پنجم - ته صفحه
+    {
+      img: bubble11,
+      y: useTransform(scrollY, [0, 1000], [0, 100]),
+      x: useTransform(scrollY, [0, 1000], [0, -40]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 180]),
+      className: "top-[85%] left-[30%] w-14 sm:w-18 md:w-22 opacity-60",
+    },
+    {
+      img: bubble12,
+      y: useTransform(scrollY, [0, 1000], [0, -150]),
+      x: useTransform(scrollY, [0, 1000], [0, 80]),
+      rotate: useTransform(scrollY, [0, 1000], [0, -300]),
+      className: "top-[90%] right-[20%] w-16 sm:w-20 md:w-24 opacity-55",
+    },
+    {
+      img: bubble13,
+      y: useTransform(scrollY, [0, 1000], [0, 200]),
+      x: useTransform(scrollY, [0, 1000], [0, -60]),
+      rotate: useTransform(scrollY, [0, 1000], [0, 250]),
+      className: "top-[95%] left-[60%] w-12 sm:w-16 md:w-20 opacity-40",
     },
   ];
 
@@ -122,17 +165,17 @@ export default function Landing() {
   // عکس درباره ما با breakpoint موبایل
   const imgX = useTransform(
     scrollYProgress,
-    isMobile ? [0.1, 0.35] : [0.15, 0.4],
-    isMobile ? [40, 0] : [80, 0]
+    isMobile ? [0, 0.35] : [0.15, 0.4],
+    isMobile ? [40, 0] : [80, 0],
   );
   const imgOpacity = useTransform(
     scrollYProgress,
     isMobile ? [0.1, 0.5] : [0.2, 0.6],
-    [0, 1]
+    [0, 1],
   );
 
   return (
-    <div className="relative min-h-[200vh] bg-gradient-to-br from-pink-50 to-blue-500 overflow-hidden">
+    <div className="relative min-h-[200vh] bg-gradient-to-br from-pink-50 to-blue-50 overflow-hidden">
       {/* حباب‌ها */}
       {bubbles.map((bubble, index) => (
         <motion.img
@@ -186,18 +229,30 @@ export default function Landing() {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
           <motion.div
             className="
-              w-32 sm:w-32 md:mt-10
-              md:w-48 lg:w-64 xl:w-72
-              flex-shrink-0
-              md:order-2
-            "
+    w-32 sm:w-32 md:mt-10
+    md:w-48 lg:w-64 xl:w-72
+    flex-shrink-0
+    md:order-2
+    flex flex-col items-center
+  "
             style={{ x: imgX, opacity: imgOpacity }}
           >
+            {/* هدر بالای عکس */}
+            <h2 className="text-lg font-bold mb-2 text-center">
+              شستشو و تا کردن
+            </h2>
+
+            {/* عکس */}
             <img
               src={Group}
               alt=""
               className="w-full bg-amber-50 p-3 sm:p-4 rounded-3xl shadow-xl object-contain"
             />
+
+            {/* متن پایین عکس */}
+            <p className="mt-2 text-center text-sm text-gray-600">
+              مراقبت آسان از لباس‌ها، طراحی شده برای زندگی‌های پرمشغله.{" "}
+            </p>
           </motion.div>
 
           <div
@@ -206,7 +261,7 @@ export default function Landing() {
           >
             <motion.div style={{ x: h1X, opacity: h1Opacity }}>
               <div className="flex items-start gap-3">
-                <CalendarDaysIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <CalendarDaysIcon className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 flex-shrink-0 mt-1" />
                 <div>
                   <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
                     زمان بندی شخصی
@@ -222,7 +277,7 @@ export default function Landing() {
 
             <motion.div style={{ x: h2X, opacity: h2Opacity }}>
               <div className="flex items-start gap-3">
-                <ShieldCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <ShieldCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 flex-shrink-0 mt-1" />
                 <div>
                   <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
                     مراقبت‌های حرفه‌ای
@@ -238,7 +293,7 @@ export default function Landing() {
 
             <motion.div style={{ x: h3X, opacity: h3Opacity }}>
               <div className="flex items-start gap-3">
-                <IoShirtSharp className="w-6 h-6 sm:w-7 sm:h-7 text-white flex-shrink-0 mt-1" />
+                <IoShirtSharp className="w-6 h-6 sm:w-7 sm:h-7 text-gray-800 flex-shrink-0 mt-1" />
                 <div>
                   <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
                     آماده برای پوشیدن
@@ -254,6 +309,73 @@ export default function Landing() {
           </div>
         </div>
       </div>
+
+      <div
+        ref={secondSectionRef}
+        className="relative z-10 my-20 px-4 sm:px-6 md:px-20 md:pb-10"
+      >
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">
+          {/* عکس سمت چپ */}
+          <motion.div
+            className="w-32 sm:w-32 md:w-48 lg:w-64 xl:w-72 flex-shrink-0 flex flex-col items-center md:order-1"
+            style={{
+              x: useTransform(secondProgress, [0.0, 0.3], [-80, 0]),
+              opacity: useTransform(secondProgress, [0.0, 0.3], [0, 1]),
+            }}
+          >
+            <h2 className="text-lg font-bold mb-2 text-center">خشکشویی سریع</h2>
+            <img
+              src={Group}
+              alt="خدمات خشکشویی"
+              className="w-full bg-amber-50 p-3 sm:p-4 rounded-3xl shadow-xl object-contain"
+            />
+            <p className="mt-2 text-center text-sm text-gray-600">
+              تحویل سریع و بدون دردسر، مناسب زندگی‌های پرمشغله.
+            </p>
+          </motion.div>
+
+          {/* متن‌ها سمت راست */}
+          <div
+            dir="rtl"
+            className="flex-1 min-w-0 text-right space-y-8 md:order-2 "
+          >
+            <motion.div
+              style={{
+                x: useTransform(secondProgress, [0.1, 0.4], [80, 0]),
+                opacity: useTransform(secondProgress, [0.1, 0.4], [0, 1]),
+              }}
+            >
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                کیفیت تضمینی
+              </h2>
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
+                تمامی لباس‌ها با بالاترین استانداردها شسته و آماده تحویل
+                می‌شوند.
+              </p>
+            </motion.div>
+
+            <motion.div
+              style={{
+                x: useTransform(secondProgress, [0.3, 0.5], [80, 0]),
+                opacity: useTransform(secondProgress, [0.3, 0.6], [0, 1]),
+              }}
+            >
+              <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800">
+                بسته‌بندی مرتب
+              </h2>
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 mt-2 leading-relaxed">
+                لباس‌ها به صورت مرتب و جفت شده تحویل داده می‌شوند تا آماده
+                استفاده باشند.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* فوتر مینیمال با رنگ برند */}
+      <footer className="w-full py-4 text-center text-white bg-[#202374] mt-20">
+        ساخته شده توسط تیم پالس وب
+      </footer>
     </div>
   );
 }

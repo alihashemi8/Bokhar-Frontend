@@ -75,7 +75,7 @@ export default function MobileNavbar() {
             if (window.location.hash === "#/") {
               window.scrollTo({ top: 0, behavior: "smooth" });
             } else {
-              navigate("/");
+              navigate("/shop");
             }
           }}
           active={location.pathname === "/"}
