@@ -1,157 +1,141 @@
-import { useState, useMemo, useEffect } from "react";
-import CategoryTabs from "../components/CategoryTabs";
-import Card from "../components/Card";
-import Search from "../components/Search";
-
-// کامپوننت‌ها و داده‌ها
-import ShirtsPants, {
-  shirtsPantsData,
-} from "../components/categories/ShirtsPants";
-import Men, { menData } from "../components/categories/Men";
-import Women, { womenData } from "../components/categories/Women";
-import HomeAndBed, {
-  homeAndBedData,
-} from "../components/categories/HomeAndBed";
-import Bags, { bagsData } from "../components/categories/Bags";
-import Shoes, { shoesData } from "../components/categories/Shoes";
-import WarmClothes, {
-  warmClothesData,
-} from "../components/categories/WarmClothes";
-import Sports, { sportsData } from "../components/categories/Sports";
-import Others, { othersData } from "../components/categories/Others";
-import Kids, { kidsData } from "../components/categories/Kids";
-
-// اتصال دسته به کامپوننت و داده
-const categoryComponents = {
-  پیراهن: { component: ShirtsPants, data: shirtsPantsData },
-  شلوار: { component: ShirtsPants, data: shirtsPantsData },
-  مردانه: { component: Men, data: menData },
-  زنانه: { component: Women, data: womenData },
-  بچگانه: { component: Kids, data: kidsData },
-  "خانه و خواب": { component: HomeAndBed, data: homeAndBedData },
-  کیف: { component: Bags, data: bagsData },
-  کفش: { component: Shoes, data: shoesData },
-  "لباس گرم": { component: WarmClothes, data: warmClothesData },
-  ورزشی: { component: Sports, data: sportsData },
-  سایر: { component: Others, data: othersData },
-};
-
+import { motion, useScroll, useTransform } from "framer-motion";
+import bubble7 from "../assets/bubble7.png";
+import bubble11 from "../assets/bubble11.png";
+import bubble12 from "../assets/bubble12.png";
+import bubble13 from "../assets/bubble13.png";
+import bubble14 from "../assets/bubble14.png";
+import bubble15 from "../assets/bubble15.png";
+import iron1 from "../assets/iron1.png";
+import iron2 from "../assets/iron2.png";
+import Group from "../assets/Group.png";
 export default function Landing() {
-  const [activeCategory, setActiveCategory] = useState("پیراهن");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCard, setSelectedCard] = useState(null);
+  const { scrollY } = useScroll();
 
-  const { data: activeData } = categoryComponents[activeCategory];
-
-  // جمع کردن همه داده‌ها برای سرچ
-  const allItems = useMemo(() => {
-    return [
-      ...shirtsPantsData.map((c) => ({ ...c, category: "پیراهن" })),
-      ...menData.map((c) => ({ ...c, category: "مردانه" })),
-      ...womenData.map((c) => ({ ...c, category: "زنانه" })),
-      ...homeAndBedData.map((c) => ({ ...c, category: "خانه و خواب" })),
-      ...bagsData.map((c) => ({ ...c, category: "کیف" })),
-      ...shoesData.map((c) => ({ ...c, category: "کفش" })),
-      ...warmClothesData.map((c) => ({ ...c, category: "لباس گرم" })),
-      ...sportsData.map((c) => ({ ...c, category: "ورزشی" })),
-      ...othersData.map((c) => ({ ...c, category: "سایر" })),
-      ...kidsData.map((c) => ({ ...c, category: "بچگانه" })),
-    ];
-  }, []);
-
-  // فیلتر فارسی
-  const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-
-    const normalize = (text) =>
-      text
-        .toLowerCase()
-        .replace(/[اآ]/g, "ا")
-        .replace(/[يی]/g, "ی")
-        .replace(/\s+/g, " ")
-        .trim();
-
-    const query = normalize(searchQuery);
-
-    return allItems.filter((item) => {
-      if (!item.title) return false;
-      return normalize(item.title).includes(query);
-    });
-  }, [searchQuery, allItems]);
-
-  const handleSelectSuggestion = (card) => {
-    setSearchQuery(card.title);
-    setSelectedCard(card);
-    setActiveCategory(card.category);
-  };
-
-  // اگر سرچ خالی شد، کارت انتخاب‌شده ریست شود
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSelectedCard(null);
-    }
-  }, [searchQuery]);
+  const bubbles = [
+    {
+      img: bubble11,
+      y: useTransform(scrollY, [0, 800], [0, 250]),
+      x: useTransform(scrollY, [0, 800], [-200, -50]),
+      rotate: useTransform(scrollY, [0, 800], [0, 180]),
+      className: "top-10 right-10 w-16 sm:w-20 md:w-24 opacity-70",
+    },
+    {
+      img: bubble12,
+      y: useTransform(scrollY, [0, 800], [0, -200]),
+      x: useTransform(scrollY, [0, 800], [50, 150]),
+      rotate: useTransform(scrollY, [0, 800], [0, -220]),
+      className: "bottom-20 left-10 sm:left-20 w-20 sm:w-24 md:w-28 opacity-60",
+    },
+    {
+      img: bubble13,
+      y: useTransform(scrollY, [0, 800], [0, 200]),
+      x: useTransform(scrollY, [0, 800], [0, 220]),
+      rotate: useTransform(scrollY, [0, 800], [0, 300]),
+      className: "top-1/3 left-10 sm:left-1/4 w-16 sm:w-20 md:w-24 opacity-50",
+    },
+    {
+      img: bubble14,
+      y: useTransform(scrollY, [0, 800], [0, -180]),
+      x: useTransform(scrollY, [0, 800], [-150, 100]),
+      rotate: useTransform(scrollY, [0, 800], [0, 260]),
+      className: "top-40 right-10 sm:right-1/3 w-14 sm:w-16 md:w-20 opacity-40",
+    },
+    {
+      img: bubble15,
+      y: useTransform(scrollY, [0, 800], [0, 300]),
+      x: useTransform(scrollY, [0, 800], [150, -100]),
+      rotate: useTransform(scrollY, [0, 800], [0, -300]),
+      className:
+        "bottom-10 right-10 sm:right-1/4 w-20 sm:w-28 md:w-32 opacity-50",
+    },
+    {
+      img: bubble7,
+      y: useTransform(scrollY, [0, 800], [0, 350]),
+      x: useTransform(scrollY, [0, 800], [100, -50]),
+      rotate: useTransform(scrollY, [0, 800], [0, 200]),
+      className:
+        "bottom-20 left-20 sm:left-1/3 w-20 sm:w-28 md:w-32 opacity-50",
+    },
+    {
+      img: bubble11,
+      y: useTransform(scrollY, [0, 800], [0, -250]),
+      x: useTransform(scrollY, [0, 800], [-100, 50]),
+      rotate: useTransform(scrollY, [0, 800], [0, 150]),
+      className: "top-20 left-5 sm:left-1/4 w-16 sm:w-20 md:w-24 opacity-60",
+    },
+    {
+      img: bubble12,
+      y: useTransform(scrollY, [0, 800], [0, 300]),
+      x: useTransform(scrollY, [0, 800], [120, -150]),
+      rotate: useTransform(scrollY, [0, 800], [0, -180]),
+      className:
+        "bottom-10 right-10 sm:right-1/3 w-20 sm:w-24 md:w-28 opacity-55",
+    },
+    {
+      img: bubble13,
+      y: useTransform(scrollY, [0, 800], [0, 200]),
+      x: useTransform(scrollY, [0, 800], [-80, 180]),
+      rotate: useTransform(scrollY, [0, 800], [0, 270]),
+      className: "top-1/2 left-30 sm:left-1/2 w-16 sm:w-20 md:w-24 opacity-50",
+    },
+    {
+      img: bubble14,
+      y: useTransform(scrollY, [0, 800], [0, -150]),
+      x: useTransform(scrollY, [0, 800], [200, -100]),
+      rotate: useTransform(scrollY, [0, 800], [0, 320]),
+      className:
+        "bottom-1/4 left-5 sm:left-1/4 w-14 sm:w-16 md:w-20 opacity-40",
+    },
+  ];
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-dvh w-full text-gray-900 dark:text-gray-100"
-    >
-      {/* هدر */}
-      <section className="p-8 text-center">
-        <h1 className="text-3xl font-bold md:mt-10">خشکشویی</h1>
-        <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-          خدمات خشکشویی، سفیدشویی، اتو و تعمیر رنگ
-        </p>
-      </section>
+    <div className="relative min-h-[200vh] bg-gradient-to-br from-pink-50 to-blue-500 overflow-hidden">
+      {/* حباب‌ها */}
+      {bubbles.map((bubble, index) => (
+        <motion.img
+          key={index}
+          src={bubble.img}
+          style={{ y: bubble.y, x: bubble.x, rotate: bubble.rotate }}
+          className={`absolute pointer-events-none ${bubble.className}`}
+          alt=""
+        />
+      ))}
 
-      {/* سرچ */}
-      <div className="px-4 mt-4 flex justify-center ">
-        <div className="w-full md:w-2/3 lg:w-1/2 ">
-          <span className="flex mr-2 my-1 dark:text-gray-100">چی میخوای پیدا کنی؟</span>
-
-          <Search
-            value={searchQuery}
-            onChange={(val) => {
-              setSearchQuery(val);
-              if (!val.trim()) setSelectedCard(null);
-            }}
-            items={searchQuery.trim() ? filteredItems.slice(0, 6) : []}
-            onSelect={handleSelectSuggestion}
-            placeholder="پتو، مانتو، شلوار ..."
-            renderItem={(item) => (
-              <div className="flex justify-between text-sm ">
-                <span>{item.title}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-100">{item.category}</span>
-              </div>
-            )}
+      <div className="flex items-start justify-between px-4 sm:px-6 md:px-10 mt-0 flex-nowrap">
+        {/* تصاویر سمت چپ */}
+        <div className="flex gap-3 sm:gap-6 flex-shrink-0 z-50 mt-0">
+          <img
+            src={iron2}
+            alt="iron"
+            className="w-20 sm:w-28 md:w-36 lg:w-44 xl:w-52 h-[100%] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] max-w-full object-contain object-top"
+          />
+          <img
+            src={iron1}
+            alt="iron"
+            className="w-20 sm:w-28 md:w-36 lg:w-44 xl:w-52 h-[100%] sm:h-[220px] md:h-[270px] lg:h-[320px] xl:h-[380px] max-w-full object-contain object-top"
           />
         </div>
+
+        {/* هدر سمت راست */}
+        <h1
+          className="font-extrabold text-gray-800 mt-16 sm:mt-20 md:mt-24 md:mr-10 ml-4 z-10 flex-shrink whitespace-nowrap"
+          style={{ fontSize: "clamp(1.3rem, 5vw, 3rem)" }}
+        >
+          خشکشویی افشار
+        </h1>
       </div>
 
-      {/* تب‌ها */}
-      <div className="mt-4 px-4 py-3 overflow-x-auto">
-        <CategoryTabs
-          onCategoryChange={(cat) => {
-            setActiveCategory(cat);
-            setSelectedCard(null);
-            setSearchQuery("");
-          }}
-        />
+      {/* دکمه‌ها */}
+      <div className="flex flex-col items-end gap-1 sm:gap-3 pr-6 sm:pr-10 md:pr-20 mt-5 sm:mt-0 relative z-10">
+        <button className=" px-10 py-3 sm:px-14 sm:py-6 md:px-18 md:py-7 rounded-full bg-purple-50 text-[#202374] text-md sm:text-lg md:text-2xl font-semibold hover:bg-white transition duration-300 shadow-lg cursor-pointer">
+          ثبت سفارش
+        </button>
+
+        <button className="px-8 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md">
+          تماس با ما
+        </button>
       </div>
 
-      {/* کارت‌ها */}
-      <section className="p-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 mb-16">
-          {selectedCard ? (
-            <Card {...selectedCard} />
-          ) : (
-            activeData.map((card) => (
-              <Card key={`${activeCategory}-${card.id}`} {...card} />
-            ))
-          )}
-        </div>
-      </section>
     </div>
   );
 }

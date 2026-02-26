@@ -62,8 +62,8 @@ export default function DesktopNavbar() {
         {/* بخش چپ */}
         <div className="flex items-center gap-6">
           {/* حالت تاریک */}
-          <div className="hidden md:flex items-center gap-4">
-            <DarkMode />
+          <div className="hidden md:flex items-center gap-4 cursor-pointer">
+            <DarkMode /> 
           </div>
 
           {/* پروفایل یا ورود */}

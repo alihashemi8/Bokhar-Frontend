@@ -290,7 +290,7 @@ const handleSelectSavedAddressAndNext = (item) => {
 
 <SavedAddressButtons
   addresses={savedAddresses}
-  onSelect={handleSelectSavedAddressAndNext} // ← همین تغییر کرد
+  onSelect={handleSelectSavedAddressAndNext} 
   onDelete={handleDeleteAddress}
   onCurrentLocation={handleCurrentLocation} 
 />

@@ -18,6 +18,7 @@ import SecurityPrivacy from "./components/customers/Privacy";
 import Support from "./components/customers/Support";
 
 import Landing from "./pages/Landing";
+import Shop from "./pages/Shop";
 import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
@@ -48,7 +49,7 @@ function AppContent() {
   }, [location]);
 
   // مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
-  const hideNavbar = currentPath.startsWith("/admin-dashboard");
+const hideNavbar = currentPath === "/" || currentPath.startsWith("/admin-dashboard");
 
   return (
     <div className="bg-gradient-to-bl from-sky-200/80 via-pink-100/60 to-sky-200/80
@@ -65,6 +66,7 @@ function AppContent() {
 
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/shop"element={<Shop />} />
         <Route path="/order" element={<Order />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
