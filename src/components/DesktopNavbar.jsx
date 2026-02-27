@@ -27,7 +27,7 @@ export default function DesktopNavbar() {
         <div className="flex items-center gap-6">
           {/* لوگو */}
           <div
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/shop")}
             className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
           >
             <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">

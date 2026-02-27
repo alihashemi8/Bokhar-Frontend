@@ -5,6 +5,7 @@ import { CalendarDaysIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { IoShirtSharp } from "react-icons/io5";
 import { MdOutlineIron } from "react-icons/md";
 import { GiWashingMachine } from "react-icons/gi";
+import { LuWashingMachine } from "react-icons/lu";
 
 import bubble7 from "../assets/bubble7.png";
 import bubble11 from "../assets/bubble11.png";
@@ -176,7 +177,6 @@ export default function Landing() {
     isMobile ? [0.1, 0.5] : [0.2, 0.6],
     [0, 1],
   );
-
   return (
     <div className="relative min-h-[200vh] bg-gradient-to-br from-pink-50 to-blue-50 overflow-hidden">
       {/* حباب‌ها */}
@@ -212,6 +212,7 @@ export default function Landing() {
         </h1>
       </div>
 
+      
       <div className="flex flex-col items-end gap-1 sm:gap-3 pr-6 sm:pr-10 md:pr-20 mt-5 sm:mt-0 relative z-10">
         <button
           onClick={() => navigate("/shop")}
@@ -381,9 +382,28 @@ export default function Landing() {
       </div>
 
       {/* فوتر مینیمال با رنگ برند */}
-      <footer className="w-full py-4 text-center text-white bg-[#202374] mt-20">
-        ساخته شده توسط تیم پالس وب
-      </footer>
+<footer className="relative w-full mt-20 text-white">
+  {/* موج بالای فوتر */}
+  <div className="absolute  bottom-0 w-full overflow-hidden leading-none ">
+    <svg
+      className="relative block w-full h-24 md:h-40" // ارتفاع موج بزرگ شد
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 320"
+      preserveAspectRatio="none"
+    >
+      <path
+        fill="#6B7EB7"
+        fillOpacity="1"
+        d="M0,160L48,138.7C96,117,192,75,288,74.7C384,75,480,117,576,117.3C672,117,768,75,864,74.7C960,75,1056,117,1152,138.7C1248,160,1344,160,1392,160L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+      ></path>
+    </svg>
+  </div>
+
+  {/* محتوای فوتر */}
+  <div className="relative z-10 py-6 md:py-10 text-center  rounded-t-4xl">
+    ساخته شده توسط تیم پالس وب
+  </div>
+</footer>
     </div>
   );
 }
