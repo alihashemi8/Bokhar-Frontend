@@ -3,10 +3,9 @@ import { useCart } from "../../context/CartContext";
 import ServiceModalMobile from "./ServiceModalMobile";
 import ServiceModalDesktop from "./ServiceModalDesktop";
 
-export default function ServiceModal({ onClose, cardOptions }) {
+export default function ServiceModal({ onClose, pricing, onAddToCart }) {
   const { addToCart } = useCart();
 
-  // ---------- Detect mobile immediately ----------
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== "undefined") return window.innerWidth < 768;
     return false;
@@ -16,29 +15,33 @@ export default function ServiceModal({ onClose, cardOptions }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  const defaultServices = [
-    { name: "خشکشویی", price: 50000 },
-    { name: "اتو", price: 30000 },
-    { name: "خشکشویی ویژه", price: 90000 },
-  ];
+  // سرویس‌های اصلی (از تب‌ها)
+  const mainServices = Object.keys(pricing || {}).map((tab) => ({
+    name: tab,
+    price: 0, // قیمت اصلی انتخاب نمی‌شود. آپشن انتخاب می‌شود.
+  }));
 
-  const cardServices = cardOptions?.map((opt) => ({ ...opt, type: "select" })) || [];
+  // ساخت ساختار cardServices برای گزینه‌های اضافه
+  const cardServices = Object.entries(pricing || {}).map(([tabName, tab]) => ({
+    name: tabName,
+    choices: Object.entries(tab.materialPrices).map(([mat, price]) => ({
+      label: mat,
+      price: Number(price),
+    })),
+  }));
 
-  // ---------- Handle resize ----------
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // ---------- Lock scroll ----------
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => (document.body.style.overflow = prev);
   }, []);
 
-  // ---------- Handlers ----------
   const handleMainSelect = (service) => {
     setSelectedMain(service);
     setQuantity(1);
@@ -62,14 +65,13 @@ export default function ServiceModal({ onClose, cardOptions }) {
   };
 
   const totalPrice =
-    (selectedMain?.price || 0) * quantity +
     Object.entries(selectedOptions).reduce((sum, [key, val]) => {
       if (key.includes("_price_")) return sum;
       return (
         sum +
         val.reduce((s, v) => s + (selectedOptions[`${key}_price_${v}`] || 0), 0)
       );
-    }, 0);
+    }, 0) * quantity;
 
   const handleAdd = () => {
     if (!selectedMain) return;
@@ -82,7 +84,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
     addToCart({
       id: selectedMain.name,
       name: selectedMain.name,
-      price: selectedMain.price,
+      price: 0,
       qty: quantity,
       options,
     });
@@ -94,7 +96,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
           id: `${k}-${v}`,
           name: `${k}: ${v}`,
           price: selectedOptions[`${k}_price_${v}`] || 0,
-          qty: 1,
+          qty: quantity,
           options: {},
         })
       );
@@ -108,7 +110,7 @@ export default function ServiceModal({ onClose, cardOptions }) {
 
   const sharedProps = {
     onClose,
-    defaultServices,
+    defaultServices: mainServices, 
     cardServices,
     selectedMain,
     quantity,
@@ -120,7 +122,6 @@ export default function ServiceModal({ onClose, cardOptions }) {
     handleAdd,
   };
 
-  // ---------- Render Mobile or Desktop ----------
   return isMobile ? (
     <ServiceModalMobile {...sharedProps} />
   ) : (
