@@ -225,7 +225,7 @@ export default function AdminServices() {
               {visibleCategories.map((c) => (
                 <div
                   key={c}
-                  className="truncate px-4 py-2 rounded-xl border bg-gradient-to-r from-sky-100 to-sky-200 shadow-lg text-gray-800 flex items-center gap-3"
+                  className="truncate px-4 py-2 rounded-xl border border-gray-300 bg-gradient-to-r from-sky-100 to-sky-200 shadow-lg text-gray-800 flex items-center gap-3"
                 >
                   <span className="truncate">{c}</span>
                   <button

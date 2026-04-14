@@ -20,22 +20,29 @@ const mergePricing = (saved = {}) => {
     const tabData = saved?.[tab];
     if (!tabData) continue;
 
-    if (tabData.materialPrices) {
-      base[tab] = {
-        materialPrices: tabData.materialPrices,
-        sizeType: tabData.sizeType || "",
-      };
-    } else {
-      const { sizeType, ...materials } = tabData;
-      base[tab] = {
-        materialPrices: materials,
-        sizeType: sizeType || "",
-      };
+    let materialPrices = {};
+
+    // اگر backend فرمت آرایه فرستاده بود
+    if (Array.isArray(tabData.materialPrices)) {
+      materialPrices = Object.fromEntries(
+        tabData.materialPrices.map((mp) => [mp.material, mp.price])
+      );
     }
+
+    // اگر دیکشنری بود (فرمت قدیمی/فرانت)
+    else if (typeof tabData.materialPrices === "object") {
+      materialPrices = tabData.materialPrices;
+    }
+
+    base[tab] = {
+      materialPrices,
+      sizeType: tabData.sizeType || "",
+    };
   }
 
   return base;
 };
+
 
 
 function Toast({ message, type = "error", onClose }) {
