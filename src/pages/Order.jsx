@@ -151,28 +151,45 @@ export default function Order() {
     [modalType, orderData.datetime],
   );
 
-  const handleModalConfirm = useCallback(() => {
-    const dt = orderData.datetime;
+const handleModalConfirm = useCallback(() => {
+  const dt = orderData.datetime;
 
-    if (modalType === "delivery") {
-      if (!dt.delivery?.date || !dt.delivery?.time) {
-        toast.error("لطفاً زمان تحویل دادن را کامل انتخاب کنید.");
-        return;
-      }
-      setModalType("pickup");
+  // مرحله تحویل دادن
+  if (modalType === "delivery") {
+    if (!dt.delivery?.date || !dt.delivery?.time) {
+      toast.error("لطفاً زمان تحویل دادن را کامل انتخاب کنید.");
       return;
     }
 
-    if (modalType === "pickup") {
-      if (!dt.pickup?.date || !dt.pickup?.time) {
-        toast.error("لطفاً زمان تحویل گرفتن را کامل انتخاب کنید.");
-        return;
-      }
-      closeModalSafely();
-      const nextStep = isMobile ? 2 : 3;
-      if (step !== nextStep) dispatch({ type: "SET_STEP", payload: nextStep });
+    // برو به انتخاب pickup
+    setModalType("pickup");
+    return;
+  }
+
+  // مرحله تحویل گرفتن
+  if (modalType === "pickup") {
+    if (!dt.pickup?.date || !dt.pickup?.time) {
+      toast.error("لطفاً زمان تحویل گرفتن را کامل انتخاب کنید.");
+      return;
     }
-  }, [modalType, orderData.datetime, step, isMobile, closeModalSafely]);
+
+    // ✅ فقط وقتی pickup کامل بود
+    closeModalSafely();
+
+    const nextStep = isMobile ? 2 : 3;
+    if (step !== nextStep) {
+      dispatch({ type: "SET_STEP", payload: nextStep });
+      dispatch({ type: "SET_MAX_STEP", payload: nextStep });
+    }
+  }
+}, [
+  modalType,
+  orderData.datetime,
+  step,
+  isMobile,
+  closeModalSafely,
+]);
+
 
   // -------------------- step handlers --------------------
   const handleNext = useCallback(() => {
