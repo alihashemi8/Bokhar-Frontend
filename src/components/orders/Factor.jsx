@@ -1,249 +1,292 @@
+import { motion, AnimatePresence } from "framer-motion";
 import { FiTrash2 } from "react-icons/fi";
-import { useEffect, useMemo } from "react";
 import { useCart } from "../../context/CartContext";
-import { motion } from "framer-motion";
+import { useToast } from "../../context/ToastContext";
+import { useModal } from "../../context/ModalContext";
+import { useEffect, useMemo } from "react";
 
-const optionLabels = {
-  wash: "شستشو",
-  polish: "واکس",
-  deodorize: "ضدعفونی و بوگیری",
-  clean: "تمیزکاری",
-  stain: "لکه‌گیری",
-  zipper: "تعمیر زیپ",
-  waterproof: "ضدآب کردن",
-  repair: "تعمیر بند",
-  wheel: "بررسی چرخ‌ها",
-  size: "سایز",
-  material: "جنس",
-  color: "رنگ",
-};
-
-export default function Factor({ onTotalChange, initialTotal = 0, goToTimeStep }) {
+export default function Factor({ onTotalChange, goToTimeStep }) {
   const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
+  const { addToast } = useToast();
+  const { showConfirm } = useModal();
 
-  const totalPrice = useMemo(
-    () =>
-      cartItems?.reduce(
-        (sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1),
-        0
-      ),
-    [cartItems]
-  );
+  // محاسبه مجموع کل
+  const totalPrice = useMemo(() => {
+    return cartItems?.reduce(
+      (sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1),
+      0,
+    );
+  }, [cartItems]);
 
   useEffect(() => {
-    if (onTotalChange && totalPrice !== initialTotal) {
-      onTotalChange(totalPrice);
-    }
+    if (onTotalChange) onTotalChange(totalPrice);
   }, [totalPrice]);
 
-  if (!cartItems) return null;
+  // حذف با Modal
+  const handleRemove = (item) => {
+    const name = item.name || "محصول";
+    const service = item.options?.service || "";
+
+    showConfirm({
+      title: "حذف آیتم",
+      message: `می‌خوای «${name}» ${service ? `(${service})` : ""} را حذف کنی؟`,
+      confirmText: "بله، حذف کن",
+      cancelText: "انصراف",
+      onConfirm: () => {
+        removeFromCart(item);
+        addToast(`«${name}» حذف شد.`, "success");
+      },
+    });
+  };
 
   return (
     <motion.div
       dir="rtl"
-      className="w-full max-w-5xl mx-auto mt-8"
-      initial={{ opacity: 0, y: 16 }}
+      className="w-full max-w-5xl mx-auto mt-10"
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <div
         className="
-          rounded-3xl p-6 space-y-6 border shadow-xl
-          bg-sky-50
-          dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-          border-sky-200 dark:border-sky-700
-          shadow-sky-200/40 dark:shadow-black/40
+          p-6 rounded-3xl shadow-2xl border 
+          bg-white/90 dark:bg-slate-900/60 backdrop-blur-xl 
+          border-slate-200 dark:border-slate-700
         "
       >
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+        <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-white">
           فاکتور خرید
         </h2>
 
-        {/* --- جدول دسکتاپ --- */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="min-w-full text-sm border-collapse">
+        {/* Desktop Table */}
+        <div className="hidden md:block">
+          <table className="min-w-full text-sm rounded-xl overflow-hidden">
             <thead>
-              <tr className="text-gray-700 dark:text-gray-200 border-b border-sky-200 dark:border-sky-700">
-                <th className="py-3 px-3 text-right">محصول</th>
-                <th className="py-3 px-3 text-center">تعداد</th>
-                <th className="py-3 px-3 text-center">خدمات</th>
-                <th className="py-3 px-3 text-center">جنس</th>
-                <th className="py-3 px-3 text-right">قیمت واحد</th>
-                <th className="py-3 px-3 text-right">قیمت کل</th>
-                <th className="py-3 px-3 text-center">حذف</th>
+              <tr className="bg-slate-100/70 dark:bg-slate-800/70 text-slate-500 dark:text-slate-300">
+                <th className="py-3 px-4 text-right">محصول</th>
+                <th className="py-3 px-4 text-center">تعداد</th>
+                <th className="py-3 px-4 text-center">خدمت</th>
+                <th className="py-3 px-4 text-center">جنس</th>
+                <th className="py-3 px-4 text-right">قیمت واحد</th>
+                <th className="py-3 px-4 text-right">قیمت کل</th>
+                <th className="py-3 px-4 text-center"></th>
               </tr>
             </thead>
 
             <tbody>
-              {cartItems.length ? (
-                cartItems.map((item, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-sky-100 dark:border-sky-700/60"
-                  >
-                    <td className="py-3 font-medium text-gray-800 dark:text-gray-100">{item.name}</td>
+              <AnimatePresence>
+                {cartItems.length ? (
+                  cartItems.map((item) => (
+                    <motion.tr
+                      key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25 }}
+                      className="border-b border-slate-200/60 dark:border-slate-700/50"
+                    >
+                      {/* نام محصول */}
+                      <td className="py-4 px-4 text-slate-900 dark:text-slate-200 font-semibold">
+                        {item.name}
+                      </td>
 
-                    <td className="py-3 px-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => decreaseQty(item)}
-                          className="px-2 py-0.5 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-white/80 dark:hover:bg-white/90"
-                        >
-                          -
-                        </button>
-                        {item.qty}
-                        <button
-                          onClick={() => increaseQty(item)}
-                          className="px-2 py-0.5 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-white/80 dark:hover:bg-white/90"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="py-3 text-center text-sm">
-                      {Object.entries(item.options || {})
-                        .filter(([_, v]) => typeof v === "boolean" && v)
-                        .map(([key]) => (
-                          <div
-                            key={key}
-                            className="text-gray-800 dark:text-gray-300"
+                      {/* تعداد */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => decreaseQty(item)}
+                            disabled={item.qty <= 1}
+                            className={`
+                              w-8 h-8 flex items-center justify-center rounded-lg text-lg
+                              transition 
+                              ${
+                                item.qty <= 1
+                                  ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
+                                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                              }
+                            `}
                           >
-                            {optionLabels[key] || key}
-                          </div>
-                        ))}
-                    </td>
+                            −
+                          </button>
 
-                    <td className="py-3 text-center text-sm">
-                      {Object.entries(item.options || {})
-                        .filter(([_, v]) => typeof v === "string")
-                        .map(([key, v]) => (
-                          <div
-                            key={key}
-                            className="text-gray-800 dark:text-gray-300"
+                          <span className="text-base font-bold text-slate-700 dark:text-slate-200">
+                            {item.qty}
+                          </span>
+
+                          <button
+                            onClick={() => increaseQty(item)}
+                            className="
+                              w-8 h-8 flex items-center justify-center rounded-lg text-lg
+                              bg-slate-100 hover:bg-slate-200 
+                              dark:bg-slate-800 dark:hover:bg-slate-700
+                            "
                           >
-                            {optionLabels[key] || key}: {v}
-                          </div>
-                        ))}
-                    </td>
+                            +
+                          </button>
+                        </div>
+                      </td>
 
-                    <td className="py-3 text-right text-gray-800 dark:text-gray-300">{item.totalPrice?.toLocaleString()}</td>
+                      {/* خدمات */}
+                      <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
+                        {item.options?.service || "-"}
+                      </td>
 
-                    <td className="py-3 text-right text-gray-800 dark:text-gray-300 font-semibold">
-                      {(item.totalPrice * item.qty).toLocaleString()}
-                    </td>
+                      {/* جنس */}
+                      <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
+                        {item.options?.material || "-"}
+                      </td>
 
-                    <td className="py-3 text-center">
-                      <button
-                        onClick={() => removeFromCart(item)}
-                        className="text-red-500 hover:text-red-600 transition"
-                      >
-                        <FiTrash2 size={18} />
-                      </button>
+                      {/* قیمت */}
+                      <td className="py-4 px-4 text-right text-slate-800 dark:text-slate-200">
+                        {(item.totalPrice || 0).toLocaleString()}
+                      </td>
+
+                      {/* جمع */}
+                      <td className="py-4 px-4 text-right text-slate-900 dark:text-white font-bold">
+                        {(
+                          (item.totalPrice || 0) * (item.qty || 1)
+                        ).toLocaleString()}
+                      </td>
+
+                      {/* حذف */}
+                      <td className="py-4 px-4 text-center">
+                        <button
+                          onClick={() => handleRemove(item)}
+                          className="text-red-500 hover:text-red-600 transition"
+                        >
+                          <FiTrash2 size={20} />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-10 text-center text-slate-400 dark:text-slate-300"
+                    >
+                      سبد خرید خالی است
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="py-8 text-center text-gray-400 dark:text-gray-300"
-                  >
-                    سبد خرید خالی است
-                  </td>
-                </tr>
-              )}
+                )}
+              </AnimatePresence>
             </tbody>
           </table>
         </div>
 
-        {/* --- کارت موبایل با دکمه + / - --- */}
-        <div className="grid grid-cols-1 gap-4 md:hidden mt-4">
-          {cartItems.map((item, idx) => (
-            <div
-              key={idx}
-              className="
-                p-4 rounded-2xl border shadow-sm
-                bg-white border-sky-200
-                dark:bg-sky-900/60 dark:border-sky-700
-              "
-            >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-medium text-gray-800 dark:text-gray-100">{item.name}</h3>
-                <button
-                  onClick={() => removeFromCart(item)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <FiTrash2 />
-                </button>
-              </div>
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-4">
+          <AnimatePresence>
+            {cartItems.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="
+                  p-4 rounded-2xl border bg-white dark:bg-slate-900 
+                  border-slate-200 dark:border-slate-700 shadow-sm
+                "
+              >
+                <div className="flex justify-between items-center">
+                  <span>
+                    {(
+                      (item.totalPrice || 0) * (item.qty || 1)
+                    ).toLocaleString()}{" "}
+                    تومان
+                  </span>
 
-              {/* تعداد با دکمه‌های کم و زیاد */}
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <button
-                  onClick={() => decreaseQty(item)}
-                  className="px-3 py-1 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-white/80 dark:hover:bg-white/90"
-                >
-                  -
-                </button>
-                <span className="text-gray-700 dark:text-gray-200 font-semibold">{item.qty}</span>
-                <button
-                  onClick={() => increaseQty(item)}
-                  className="px-3 py-1 rounded-lg bg-sky-100 hover:bg-sky-200 dark:bg-white/80 dark:hover:bg-white/90"
-                >
-                  +
-                </button>
-              </div>
+                  <button
+                    onClick={() => handleRemove(item)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    <FiTrash2 size={20} />
+                  </button>
+                </div>
 
-              {/* قیمت کل */}
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mt-2">
-                <span>قیمت کل:</span>
-                <span>{(item.totalPrice * item.qty).toLocaleString()} تومان</span>
-              </div>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-slate-700 dark:text-slate-300 text-sm">
+                    تعداد:
+                  </span>
 
-              {/* ویژگی‌ها */}
-              <div className="mt-2 text-sm flex flex-col gap-1">
-                {Object.entries(item.options || {})
-                  .filter(([_, v]) => v)
-                  .map(([key, v]) => (
-                    <span
-                      key={key}
-                      className="text-sky-700 dark:text-sky-300"
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => decreaseQty(item)}
+                      disabled={item.qty <= 1}
+                      className={`
+                        w-9 h-9 rounded-xl flex items-center justify-center text-lg
+                        ${
+                          item.qty <= 1
+                            ? "bg-slate-300 dark:bg-slate-700 opacity-40"
+                            : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
+                        }
+                      `}
                     >
-                      {optionLabels[key] || key}
-                      {typeof v === "string" ? `: ${v}` : ""}
+                      −
+                    </button>
+
+                    <span className="text-slate-900 dark:text-white text-lg font-bold">
+                      {item.qty}
                     </span>
-                  ))}
-              </div>
-            </div>
-          ))}
+
+                    <button
+                      onClick={() => increaseQty(item)}
+                      className="
+                        w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 
+                        hover:bg-slate-200 flex items-center justify-center text-lg
+                      "
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-3 text-sm text-slate-500 dark:text-slate-300 leading-relaxed">
+                  <p>خدمت: {item.options?.service || "-"}</p>
+                  <p>جنس: {item.options?.material || "-"}</p>
+                </div>
+
+                <div className="flex justify-between mt-4 text-sm font-bold text-slate-900 dark:text-slate-100">
+                  <span>قیمت کل:</span>
+                  <span>
+                    {(item.totalPrice * item.qty).toLocaleString()} تومان
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
 
-        {/* جمع کل */}
+        {/* Footer: Total */}
         {cartItems.length > 0 && (
-          <div className="flex justify-between items-center pt-4 ">
-            <span className="text-gray-800 dark:text-gray-100 font-semibold">مبلغ نهایی</span>
-            <span className="text-2xl font-bold text-sky-700 dark:text-gray-100">
-              {totalPrice.toLocaleString()} تومان
-            </span>
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-5 mt-8">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-700 dark:text-slate-300 font-semibold">
+                مبلغ نهایی
+              </span>
+
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {totalPrice.toLocaleString()} تومان
+              </span>
+            </div>
+
+            {goToTimeStep && (
+              <button
+                onClick={goToTimeStep}
+                className="
+    hidden md:block
+    w-full h-14 mt-6 rounded-2xl
+    bg-sky-600 hover:bg-sky-700 
+    dark:bg-sky-700 dark:hover:bg-sky-600
+    text-white font-bold text-lg
+    shadow-xl shadow-sky-600/30 
+    transition-all
+  "
+              >
+                انتخاب زمان
+              </button>
+            )}
           </div>
         )}
-
-        {/* دکمه ادامه */}
-{cartItems.length > 0 && goToTimeStep && (
-  <button
-    onClick={goToTimeStep}
-    className="
-      hidden md:block
-      w-full h-12 rounded-2xl font-bold transition
-      bg-sky-600 hover:bg-sky-700 text-white
-      dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
-      dark:hover:from-purple-600 dark:hover:to-purple-700
-    "
-  >
-    انتخاب زمان
-  </button>
-)}
-
       </div>
     </motion.div>
   );

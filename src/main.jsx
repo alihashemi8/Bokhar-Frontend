@@ -7,6 +7,8 @@ import { AuthProvider } from "./context/AuthContext";
 import { ProfileProvider } from "./context/ProfileContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import ToastContainer from "./context/ToastContainer";
+import { ModalProvider } from "./context/ModalContext";
+
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -14,12 +16,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <AuthProvider>
       <ProfileProvider>
         <ThemeProvider>
+           <ModalProvider>
           <ToastProvider>
             <ToastContainer />
             <CartProvider>
               <App />
             </CartProvider>
           </ToastProvider>
+          </ModalProvider>
         </ThemeProvider>
       </ProfileProvider>
     </AuthProvider>

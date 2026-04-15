@@ -19,9 +19,12 @@ export default function ServiceModal({
       let materialPrices = {};
       if (Array.isArray(tabData.materialPrices)) {
         materialPrices = Object.fromEntries(
-          tabData.materialPrices.map((mp) => [mp.material, String(mp.price)])
+          tabData.materialPrices.map((mp) => [mp.material, String(mp.price)]),
         );
-      } else if (typeof tabData.materialPrices === "object" && tabData.materialPrices !== null) {
+      } else if (
+        typeof tabData.materialPrices === "object" &&
+        tabData.materialPrices !== null
+      ) {
         materialPrices = tabData.materialPrices;
       }
       normalized[tab] = { ...tabData, materialPrices };
@@ -32,13 +35,13 @@ export default function ServiceModal({
   const availableTabs = Object.keys(normalizedPricing).filter(
     (tab) =>
       normalizedPricing[tab] &&
-      Object.keys(normalizedPricing[tab].materialPrices || {}).length > 0
+      Object.keys(normalizedPricing[tab].materialPrices || {}).length > 0,
   );
 
   const [activeTab, setActiveTab] = useState(availableTabs[0] || "");
-  
+
   // ساختار جدید وضعیت: ذخیره بر اساس تب
-  const [quantities, setQuantities] = useState({}); 
+  const [quantities, setQuantities] = useState({});
 
   useEffect(() => {
     if (availableTabs.length > 0) {
@@ -75,38 +78,48 @@ export default function ServiceModal({
   /* -------------------------------------------------------
    * 3) Total price (محاسبه مجموع تمام تب‌ها)
    ------------------------------------------------------- */
-  const totalPrice = Object.entries(quantities).reduce((acc, [tabName, mats]) => {
-    const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
-    const tabSum = Object.entries(mats).reduce((sum, [mat, qty]) => {
-      const price = parseFloat(tabPriceData[mat] || 0);
-      return sum + price * qty;
-    }, 0);
-    return acc + tabSum;
-  }, 0);
+  const totalPrice = Object.entries(quantities).reduce(
+    (acc, [tabName, mats]) => {
+      const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+      const tabSum = Object.entries(mats).reduce((sum, [mat, qty]) => {
+        const price = parseFloat(tabPriceData[mat] || 0);
+        return sum + price * qty;
+      }, 0);
+      return acc + tabSum;
+    },
+    0,
+  );
 
   /* -------------------------------------------------------
    * 4) Add to cart (افزودن تمام انتخاب‌ها از تمام تب‌ها)
    ------------------------------------------------------- */
-  const handleAdd = () => {
-    const allItems = Object.entries(quantities);
-    if (allItems.length === 0) return;
+const handleAdd = () => {
+  const allItems = Object.entries(quantities);
+  if (allItems.length === 0) return;
 
-    allItems.forEach(([tabName, mats]) => {
-      const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
-      Object.entries(mats).forEach(([mat, qty]) => {
-        const price = parseFloat(tabPriceData[mat] || 0);
-        addToCart({
-          title: itemTitle,
-          tab: tabName,
+  allItems.forEach(([tabName, mats]) => {
+    const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+
+    Object.entries(mats).forEach(([mat, qty]) => {
+      const price = parseFloat(tabPriceData[mat] || 0);
+
+      addToCart({
+        id: `${itemTitle}-${tabName}-${mat}`,
+        name: itemTitle,
+        qty: qty,
+        price: price,
+        totalPrice: price,
+        options: {
+          service: tabName,
           material: mat,
-          price,
-          quantity: qty,
-        });
+        },
       });
     });
+  });
 
-    onClose();
-  };
+  onClose();
+};
+
 
   /* -------------------------------------------------------
    * 5) UI logic (ارسال مقادیر تب جاری به لیست)
@@ -116,47 +129,49 @@ export default function ServiceModal({
    * 6) افزودن badge بالای تب
    ------------------------------------------------------- */
   const getTabCount = (tab) => {
-  const tabItems = quantities[tab] || {};
-  return Object.values(tabItems).reduce((sum, q) => sum + q, 0);
-};
-
+    const tabItems = quantities[tab] || {};
+    return Object.values(tabItems).reduce((sum, q) => sum + q, 0);
+  };
 
   return (
-    <BaseModal isOpen={isOpen} onClose={onClose} title={itemTitle} maxWidth="md">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={itemTitle}
+      maxWidth="md"
+    >
       {/* TABS */}
       {availableTabs.length > 1 && (
-<div className="flex gap-2 mt-2 mb-4">
-{availableTabs.map((tab) => {
-  const count = getTabCount(tab);
-  const isActive = activeTab === tab;
-  const hasItems = count > 0;
+        <div className="flex gap-2 mt-2 mb-4">
+          {availableTabs.map((tab) => {
+            const count = getTabCount(tab);
+            const isActive = activeTab === tab;
+            const hasItems = count > 0;
 
-  return (
-    <button
-      key={tab}
-      onClick={() => setActiveTab(tab)}
-      className={`relative flex-1 py-2 rounded-xl text-sm transition border ${
-        isActive
-          ? "bg-white dark:bg-sky-800 shadow-sm font-semibold border-sky-500 text-sky-700 dark:text-sky-300"
-          : hasItems
-            ? "bg-white/80 dark:bg-gray-800 border-sky-300 text-gray-700 dark:text-gray-300"
-            : "bg-gray-200 dark:bg-gray-700 border border-sky-200 text-gray-700 dark:text-gray-400"
-      }`}
-    >
-      {tab}
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative flex-1 py-2 rounded-xl text-sm transition border ${
+                  isActive
+                    ? "bg-white dark:bg-sky-800 shadow-sm font-semibold border-sky-500 text-sky-700 dark:text-sky-300"
+                    : hasItems
+                      ? "bg-white/80 dark:bg-gray-800 border-sky-300 text-gray-700 dark:text-gray-300"
+                      : "bg-gray-200 dark:bg-gray-700 border border-sky-200 text-gray-700 dark:text-gray-400"
+                }`}
+              >
+                {tab}
 
-      {/* Badge */}
-      {hasItems && (
-        <span className="absolute -top-2 -right-2 bg-sky-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
-          {count}
-        </span>
-      )}
-    </button>
-  );
-})}
-
-</div>
-
+                {/* Badge */}
+                {hasItems && (
+                  <span className="absolute -top-2 -right-2 bg-sky-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {/* MATERIAL LIST */}
@@ -190,9 +205,10 @@ export default function ServiceModal({
                   }`}
                 >
                   −
-
                 </button>
-                <span className={`w-6 text-center font-bold ${selected ? "text-gray-900" : ""}`}>
+                <span
+                  className={`w-6 text-center font-bold ${selected ? "text-gray-900" : ""}`}
+                >
                   {qty}
                 </span>
                 <button
@@ -211,7 +227,9 @@ export default function ServiceModal({
       <div className="flex justify-between items-center mt-4 pt-4 border-t dark:border-gray-700">
         <div className="font-bold text-gray-700">
           مجموع:
-          <span className="text-gray-900 mx-1">{totalPrice.toLocaleString()} تومان</span>
+          <span className="text-gray-900 mx-1">
+            {totalPrice.toLocaleString()} تومان
+          </span>
         </div>
         <button
           onClick={handleAdd}
