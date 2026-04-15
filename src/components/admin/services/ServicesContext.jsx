@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import { api } from "./servicesApi"; 
+import api from "./servicesApi";
 
 export const ServicesContext = createContext();
 
@@ -35,21 +35,18 @@ export function ServicesProvider({ children }) {
     localStorage.setItem("services", JSON.stringify(svcs));
   };
 
-  // 🔹 تابع جدید برای ری‌فرش کردن داده از بک‌اند
   const refreshData = async () => {
     try {
       const cats = await api.getCategories();
       const products = await api.getProducts();
-      setCategories(cats.map((c) => c.name)); // فقط نام‌ها برای فرنـت
+      // آبجکت کامل { id, name } نگه می‌داریم
+      setCategories(cats);
       setServices(products);
-      localStorage.setItem("categories", JSON.stringify(cats.map((c) => c.name)));
-      localStorage.setItem("services", JSON.stringify(products));
     } catch (err) {
       console.error("خطا در ری‌فرش داده‌ها:", err);
     }
   };
 
-  // 🔹 لود اولیه داده‌ها از سرور (اختیاری برای هم‌گام‌سازی اولیه)
   useEffect(() => {
     refreshData();
   }, []);

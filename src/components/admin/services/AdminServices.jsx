@@ -1,11 +1,10 @@
-// AdminServices.jsx
 import { useState, useContext } from "react";
 import { FiPlus, FiTrash2, FiEdit } from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
 import Search from "../../Search";
-import { api } from "./servicesApi";
+import api from "./servicesApi";
 
 function ConfirmToast({ message, onConfirm, onCancel }) {
   if (!message) return null;
@@ -62,7 +61,7 @@ export default function AdminServices() {
 
   const addCategory = async () => {
     const c = newCat.trim();
-    if (c && !categories.includes(c)) {
+    if (c && !categories.find((cat) => cat.name === c)) {
       try {
         await api.createCategory(c);
         await refreshData();
@@ -75,14 +74,10 @@ export default function AdminServices() {
   };
 
   const deleteCategory = (cat) => {
-    showConfirm(`آیا از حذف "${cat}" اطمینان دارید؟`, async () => {
+    showConfirm(`آیا از حذف "${cat.name}" اطمینان دارید؟`, async () => {
       setConfirm({ message: "", onConfirm: null });
       try {
-        const cats = await api.getCategories();
-        const catObj = cats.find((c) => c.name === cat);
-        if (catObj) {
-          await api.deleteCategory(catObj.id);
-        }
+        await api.deleteCategory(cat.id);
         await refreshData();
         showToast("دسته‌بندی حذف شد");
       } catch (err) {
@@ -94,8 +89,8 @@ export default function AdminServices() {
   const saveService = async (data) => {
     setIsLoading(true);
     try {
-      const cats = await api.getCategories();
-      const catObj = cats.find((c) => c.name === data.category);
+      // categories الان آبجکت کامل { id, name } هست
+      const catObj = categories.find((c) => c.name === data.category);
       const categoryId = catObj ? catObj.id : null;
 
       const apiData = {
@@ -154,10 +149,13 @@ export default function AdminServices() {
   };
 
   const filteredServices = services.filter((s) =>
-    s.title?.toLowerCase().includes(search.toLowerCase()),
+    s.title?.toLowerCase().includes(search.toLowerCase())
   );
 
   const activeServices = filteredServices.filter((s) => s.status === "active");
+
+  // نام دسته‌بندی‌ها برای modal
+  const categoryNames = categories.map((c) => c.name);
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">
@@ -168,7 +166,6 @@ export default function AdminServices() {
         setActiveMenu={setActiveMenu}
       />
 
-      {/* Toast Notification */}
       {toast.message && (
         <div
           className={`fixed top-5 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl text-white shadow-xl z-[9999] transition-all ${
@@ -179,7 +176,6 @@ export default function AdminServices() {
         </div>
       )}
 
-      {/* Confirm Dialog */}
       <ConfirmToast
         message={confirm.message}
         onConfirm={confirm.onConfirm}
@@ -224,10 +220,10 @@ export default function AdminServices() {
             <div className="flex flex-wrap gap-3">
               {visibleCategories.map((c) => (
                 <div
-                  key={c}
+                  key={c.id}
                   className="truncate px-4 py-2 rounded-xl border border-gray-300 bg-gradient-to-r from-sky-100 to-sky-200 shadow-lg text-gray-800 flex items-center gap-3"
                 >
-                  <span className="truncate">{c}</span>
+                  <span className="truncate">{c.name}</span>
                   <button
                     onClick={() => deleteCategory(c)}
                     disabled={isLoading}
@@ -303,7 +299,6 @@ export default function AdminServices() {
                     >
                       <FiEdit />
                     </button>
-
                     <button
                       className="text-red-600"
                       onClick={() => deleteService(srv.id)}
@@ -319,7 +314,7 @@ export default function AdminServices() {
           {modalOpen && (
             <ServicesModal
               isOpen={modalOpen}
-              categories={categories}
+              categories={categoryNames}
               editItem={editItem}
               onClose={() => setModalOpen(false)}
               onSave={saveService}

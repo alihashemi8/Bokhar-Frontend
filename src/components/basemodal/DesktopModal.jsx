@@ -24,6 +24,7 @@ export default function DesktopModal({
       onClick={onClose}
     >
       <div
+      dir="rtl"
         onClick={(e) => e.stopPropagation()}
         className={`
           rounded-3xl shadow-xl w-full

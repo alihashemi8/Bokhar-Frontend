@@ -1,145 +1,136 @@
-import ReactDOM from "react-dom";
 import { X } from "lucide-react";
+import DesktopModal from "../BaseModal/DesktopModal";
 
 export default function ServiceModalDesktop({
+  isOpen,
   onClose,
-  defaultServices,
-  cardServices,
-  selectedMain,
-  quantity,
-  selectedOptions,
+  itemTitle,
+  availableTabs,
+  activeTab,
+  setActiveTab,
+  currentMaterials,
+  quantities,
+  changeQuantity,
   totalPrice,
-  handleMainSelect,
-  handleQuantityChange,
-  handleOptionToggle,
   handleAdd,
 }) {
-  return ReactDOM.createPortal(
-    <div
-      className="fixed inset-0 bg-black/40 dark:bg-black/60 z-[9999] flex justify-center items-center backdrop-blur-[1px]"
-      onClick={onClose}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="
-          bg-gradient-to-bl from-sky-50 via-sky-100 to-sky-200
-          dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-          rounded-3xl
-          w-[550px]
-          max-h-[88vh]
-          overflow-hidden
-          shadow-[0_20px_40px_rgba(0,0,0,0.2)]
-          p-5 flex flex-col
-        "
-      >
-        {/* Header */}
-        <div
-          dir="rtl"
-          className="flex justify-between items-center mb-4 text-gray-900 dark:text-gray-100"
-        >
-          <h2 className="text-lg font-semibold">خدمات قابل انتخاب</h2>
-          <button onClick={onClose}>
-            <X />
+  if (!availableTabs.length) return null;
+
+  return (
+    <DesktopModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="lg"
+      title={
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+            {itemTitle}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+          >
+            <X size={24} />
           </button>
         </div>
+      }
+    >
+      {/* TABS */}
+      <div className="flex gap-2 mb-4">
+        {availableTabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 py-2 rounded-xl text-sm transition ${
+              activeTab === tab
+                ? "bg-white dark:bg-sky-800 shadow font-semibold border border-sky-300 dark:border-sky-700"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-        {/* Content */}
-        <div
-          dir="rtl"
-          className="flex-1 overflow-y-auto space-y-4 pb-2 px-1 text-gray-900 dark:text-gray-100"
-        >
-          {/* سرویس‌های اصلی */}
-          <div className="flex gap-2 flex-wrap justify-center">
-            {defaultServices.map((service) => (
-              <button
-                key={service.name}
-                onClick={() => handleMainSelect(service)}
-                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-300 shadow-lg
-                  ${
-                    selectedMain?.name === service.name
-                      ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 text-gray-800 dark:text-white/90 shadow-indigo-300 scale-105"
-                      : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border border-gray-200 text-gray-800 shadow-md"
-                  }`}
-              >
-                {service.name}
-              </button>
-            ))}
-          </div>
+      {/* MATERIAL LIST */}
+      <div className="space-y-3 max-h-[55vh] overflow-y-auto pb-4">
+        {Object.entries(currentMaterials).map(([mat, price]) => {
+          const qty = quantities[mat] || 0;
+          const selected = qty > 0;
 
-          {/* تعداد */}
-          {selectedMain && (
-            <div className="flex items-center gap-4 justify-center mt-2">
-              <button
-                onClick={() => handleQuantityChange(-1)}
-                className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
-              >
-                −
-              </button>
-              <span className="w-10 text-center font-semibold">{quantity}</span>
-              <button
-                onClick={() => handleQuantityChange(1)}
-                className="w-9 h-9 rounded-full bg-sky-50 shadow-md dark:bg-gray-600"
-              >
-                +
-              </button>
-            </div>
-          )}
-
-          {/* گزینه‌های اضافه */}
-          {cardServices.map((item, idx) => (
+          return (
             <div
-              key={`${item.name}-${idx}`}
-              className="
-                rounded-xl p-3
-                bg-white dark:bg-gray-700/40
-                border border-sky-200 dark:border-gray-600
-                shadow-lg
-              "
+              key={mat}
+              className={`flex justify-between items-center p-4 rounded-xl border transition ${
+                selected
+                  ? "border-sky-600 bg-sky-50 dark:bg-sky-900/40"
+                  : "border-gray-300 dark:border-gray-700"
+              }`}
             >
-              <span className="block font-semibold mb-2 text-sm">
-                {item.name}
-              </span>
-              <div className="flex gap-2 flex-wrap">
-                {item.choices?.map((choice, cIdx) => (
-                  <button
-                    key={`${item.name}-${choice.label}-${cIdx}`}
-                    onClick={() =>
-                      handleOptionToggle(
-                        item.name,
-                        choice.label,
-                        choice.price
-                      )
+              <div className="text-right">
+                <div className="font-bold text-gray-800 dark:text-gray-100">
+                  {mat}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  {Number(price).toLocaleString()} تومان
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => changeQuantity(mat, -1)}
+                  disabled={qty === 0}
+                  className={`w-8 h-8 rounded-lg text-lg font-bold flex items-center justify-center
+                    ${
+                      qty === 0
+                        ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+                        : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-500"
                     }
-                    className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all duration-300
-                      ${
-                        selectedOptions[item.name]?.includes(choice.label)
-                          ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 text-gray-800 dark:text-white/90 shadow-md shadow-indigo-300 scale-105"
-                          : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border border-gray-200 text-gray-800 shadow"
-                      }`}
-                  >
-                    {choice.label}
-                  </button>
-                ))}
+                  `}
+                >
+                  –
+                </button>
+
+                <span
+                  className={`w-6 text-center font-bold ${
+                    selected
+                      ? "text-sky-600 dark:text-sky-300"
+                      : "text-gray-800 dark:text-gray-100"
+                  }`}
+                >
+                  {qty}
+                </span>
+
+                <button
+                  onClick={() => changeQuantity(mat, 1)}
+                  className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100 text-lg font-bold hover:bg-gray-300 dark:hover:bg-gray-500"
+                >
+                  +
+                </button>
               </div>
             </div>
-          ))}
+          );
+        })}
+      </div>
+
+      {/* FOOTER */}
+      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
+        <div className="font-bold text-gray-800 dark:text-gray-100">
+          مجموع کل:
+          <span className="text-sky-600 dark:text-sky-300 mx-1">
+            {totalPrice.toLocaleString()} تومان
+          </span>
         </div>
 
-        {/* Bottom */}
-        <div className="border-t border-sky-200 dark:border-gray-600 p-4 flex justify-between items-center text-gray-900 dark:text-gray-100">
-          <span className="text-sm">
-            مجموع: {totalPrice.toLocaleString()} تومان
-          </span>
-          <button
-            onClick={handleAdd}
-            disabled={!selectedMain}
-            className="px-4 py-2 rounded-xl bg-sky-600 dark:bg-purple-800 text-white disabled:opacity-40"
-          >
-            افزودن به سبد
-          </button>
-        </div>
+        <button
+          onClick={handleAdd}
+          disabled={totalPrice === 0}
+          className="px-6 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 
+                   dark:bg-sky-700 dark:hover:bg-sky-600 text-white font-bold disabled:opacity-40"
+        >
+          افزودن به سبد
+        </button>
       </div>
-    </div>,
-    document.getElementById("modal-root")
+    </DesktopModal>
   );
 }

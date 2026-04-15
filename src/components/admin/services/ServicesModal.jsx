@@ -1,5 +1,4 @@
-// ServicesModal.jsx
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import BaseModal from "../../basemodal/BaseModal";
 
@@ -12,7 +11,7 @@ const makeEmptyPricing = () =>
     {}
   );
 
-// ادغام pricing ذخیره‌شده با ساختار پایه
+// ادغام pricing دریافتی از بک‌اند (آرایه) با ساختار پایه
 const mergePricing = (saved = {}) => {
   const base = makeEmptyPricing();
 
@@ -22,15 +21,12 @@ const mergePricing = (saved = {}) => {
 
     let materialPrices = {};
 
-    // اگر backend فرمت آرایه فرستاده بود
     if (Array.isArray(tabData.materialPrices)) {
+      // فرمت بک‌اند: آرایه → دیکشنری
       materialPrices = Object.fromEntries(
-        tabData.materialPrices.map((mp) => [mp.material, mp.price])
+        tabData.materialPrices.map((mp) => [mp.material, String(mp.price)])
       );
-    }
-
-    // اگر دیکشنری بود (فرمت قدیمی/فرانت)
-    else if (typeof tabData.materialPrices === "object") {
+    } else if (typeof tabData.materialPrices === "object" && tabData.materialPrices !== null) {
       materialPrices = tabData.materialPrices;
     }
 
@@ -42,8 +38,6 @@ const mergePricing = (saved = {}) => {
 
   return base;
 };
-
-
 
 function Toast({ message, type = "error", onClose }) {
   useEffect(() => {
@@ -131,7 +125,6 @@ export default function ServicesModal({
   });
   const [toast, setToast] = useState({ message: "", type: "error" });
 
-  // هر بار که مودال باز میشه یا editItem عوض میشه، فرم ریست/پر میشه
   useEffect(() => {
     setActiveTab(0);
     if (editItem) {
@@ -147,7 +140,7 @@ export default function ServicesModal({
         pricing: makeEmptyPricing(),
       });
     }
-  }, [editItem, isOpen, categories]); // isOpen هم اضافه شد تا با هر بار باز شدن ریست شه
+  }, [editItem, isOpen, categories]);
 
   const currentTab = tabs[activeTab];
   const data = form.pricing[currentTab];
@@ -226,10 +219,7 @@ export default function ServicesModal({
     let hasAnyMaterial = false;
     for (const tab of tabs) {
       const tabData = form.pricing[tab];
-      if (
-        tabData.materialPrices &&
-        Object.keys(tabData.materialPrices).length > 0
-      ) {
+      if (tabData.materialPrices && Object.keys(tabData.materialPrices).length > 0) {
         hasAnyMaterial = true;
         for (const [mat, price] of Object.entries(tabData.materialPrices)) {
           if (!price || isNaN(parseInt(price)) || parseInt(price) < 0) {
@@ -254,27 +244,35 @@ export default function ServicesModal({
     return true;
   };
 
-  const handleSave = () => {
-    if (!validateForm()) return;
 
-    const cleanPricing = {};
-    for (const [tab, tabData] of Object.entries(form.pricing)) {
-      const cleanMaterials = {};
-      for (const [mat, price] of Object.entries(tabData.materialPrices || {})) {
-        if (price !== "" && price !== null && price !== undefined) {
-          cleanMaterials[mat] = String(price);
-        }
-      }
-      if (Object.keys(cleanMaterials).length > 0 || tabData.sizeType) {
-        cleanPricing[tab] = {
-          materialPrices: cleanMaterials,
-          sizeType: tabData.sizeType || "",
-        };
+const handleSave = () => {
+  if (!validateForm()) return;
+
+  const cleanPricing = {};
+
+  for (const [tab, tabData] of Object.entries(form.pricing)) {
+    const cleanMaterials = {};
+
+    for (const [mat, price] of Object.entries(
+      tabData.materialPrices || {}
+    )) {
+      if (price !== "" && price !== null && !isNaN(price)) {
+        cleanMaterials[mat] = String(price);
       }
     }
 
-    onSave({ ...form, pricing: cleanPricing });
-  };
+    // ✅ فقط اگر حداقل یک جنس قیمت‌گذاری شده باشد
+    if (Object.keys(cleanMaterials).length > 0) {
+      cleanPricing[tab] = {
+        materialPrices: cleanMaterials,
+        sizeType: tabData.sizeType || "",
+      };
+    }
+  }
+
+  onSave({ ...form, pricing: cleanPricing });
+};
+
 
   const isValid = form.title.trim() && form.category;
 
@@ -286,7 +284,6 @@ export default function ServicesModal({
         title={editItem ? "ویرایش سرویس" : "سرویس جدید"}
       >
         <div dir="rtl" className="space-y-4 max-h-[80vh] overflow-y-auto">
-          {/* عنوان و دسته‌بندی */}
           <div className="flex gap-2 mt-1 mb-2">
             <input
               value={form.title}
@@ -298,9 +295,7 @@ export default function ServicesModal({
             <div className="flex-1 relative">
               <select
                 value={form.category}
-                onChange={(e) =>
-                  setForm({ ...form, category: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
                 className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
                 disabled={isLoading}
               >

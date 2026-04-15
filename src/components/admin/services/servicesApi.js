@@ -21,8 +21,7 @@ async function fetchWithAuth(url, options = {}) {
   return response.json();
 }
 
-export const api = {
-  // Categories
+const api = {
   getCategories: () => fetchWithAuth("/categories/"),
   createCategory: (name) =>
     fetchWithAuth("/categories/", {
@@ -32,7 +31,6 @@ export const api = {
   deleteCategory: (id) =>
     fetchWithAuth(`/categories/${id}/`, { method: "DELETE" }),
 
-  // Products/Services
   getProducts: () => fetchWithAuth("/products/"),
   getProduct: (id) => fetchWithAuth(`/products/${id}/`),
 
@@ -41,16 +39,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-
   updateProduct: (id, data) =>
     fetchWithAuth(`/products/${id}/update/`, {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-
   deleteProduct: (id) =>
     fetchWithAuth(`/products/${id}/delete/`, { method: "DELETE" }),
 
   searchProducts: (q) =>
     fetchWithAuth(`/products/search/?q=${encodeURIComponent(q)}`),
 };
+
+export default api;   
