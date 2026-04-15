@@ -61,7 +61,7 @@ export default function Landing() {
   };
 
   return (
-    <div dir="rtl" className="min-h-dvh w-full text-gray-900">
+    <div dir="rtl" className="min-h-dvh w-full text-gray-900 md:pt-15.5">
       {/* هدر */}
       <section className="p-8 text-center">
         <h1 className="text-3xl font-bold">خشکشویی</h1>

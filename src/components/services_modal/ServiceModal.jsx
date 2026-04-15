@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react"; // اضافه کردن useMemo برای بهینه سازی
 import { useCart } from "../../context/CartContext";
 import BaseModal from "../BaseModal/BaseModal";
 
@@ -13,23 +13,21 @@ export default function ServiceModal({
   /* -------------------------------------------------------
    * 1) Normalize backend pricing
    ------------------------------------------------------- */
-  const normalizedPricing = {};
-  for (const [tab, tabData] of Object.entries(pricing || {})) {
-    let materialPrices = {};
-
-    if (Array.isArray(tabData.materialPrices)) {
-      materialPrices = Object.fromEntries(
-        tabData.materialPrices.map((mp) => [mp.material, String(mp.price)])
-      );
-    } else if (
-      typeof tabData.materialPrices === "object" &&
-      tabData.materialPrices !== null
-    ) {
-      materialPrices = tabData.materialPrices;
+  const normalizedPricing = useMemo(() => {
+    const normalized = {};
+    for (const [tab, tabData] of Object.entries(pricing || {})) {
+      let materialPrices = {};
+      if (Array.isArray(tabData.materialPrices)) {
+        materialPrices = Object.fromEntries(
+          tabData.materialPrices.map((mp) => [mp.material, String(mp.price)])
+        );
+      } else if (typeof tabData.materialPrices === "object" && tabData.materialPrices !== null) {
+        materialPrices = tabData.materialPrices;
+      }
+      normalized[tab] = { ...tabData, materialPrices };
     }
-
-    normalizedPricing[tab] = { ...tabData, materialPrices };
-  }
+    return normalized;
+  }, [pricing]);
 
   const availableTabs = Object.keys(normalizedPricing).filter(
     (tab) =>
@@ -38,60 +36,72 @@ export default function ServiceModal({
   );
 
   const [activeTab, setActiveTab] = useState(availableTabs[0] || "");
-  const [quantities, setQuantities] = useState({});
+  
+  // ساختار جدید وضعیت: ذخیره بر اساس تب
+  const [quantities, setQuantities] = useState({}); 
 
-  /* Reset activeTab and quantities when pricing changes */
   useEffect(() => {
     if (availableTabs.length > 0) {
       setActiveTab(availableTabs[0]);
-      setQuantities({});
+      setQuantities({}); // فقط وقتی کل دیتای pricing عوض شد ریست شود
     }
   }, [pricing]);
 
-  const currentMaterials =
-    normalizedPricing[activeTab]?.materialPrices || {};
+  const currentMaterials = normalizedPricing[activeTab]?.materialPrices || {};
 
   /* -------------------------------------------------------
-   * 2) Quantity handlers
+   * 2) Quantity handlers (اصلاح شده برای پشتیبانی از چند تب)
    ------------------------------------------------------- */
   const changeQuantity = (material, delta) => {
     setQuantities((prev) => {
-      const current = prev[material] || 0;
-      const next = Math.max(0, current + delta);
+      const tabQuantities = prev[activeTab] || {};
+      const currentQty = tabQuantities[material] || 0;
+      const nextQty = Math.max(0, currentQty + delta);
 
-      const updated = { ...prev };
-      if (next === 0) delete updated[material];
-      else updated[material] = next;
+      const updatedTabQuantities = { ...tabQuantities };
+      if (nextQty === 0) {
+        delete updatedTabQuantities[material];
+      } else {
+        updatedTabQuantities[material] = nextQty;
+      }
 
-      return updated;
+      return {
+        ...prev,
+        [activeTab]: updatedTabQuantities,
+      };
     });
   };
 
   /* -------------------------------------------------------
-   * 3) Total price
+   * 3) Total price (محاسبه مجموع تمام تب‌ها)
    ------------------------------------------------------- */
-  const totalPrice = Object.entries(quantities).reduce(
-    (sum, [mat, qty]) => {
-      const price = parseFloat(currentMaterials[mat] || 0);
+  const totalPrice = Object.entries(quantities).reduce((acc, [tabName, mats]) => {
+    const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+    const tabSum = Object.entries(mats).reduce((sum, [mat, qty]) => {
+      const price = parseFloat(tabPriceData[mat] || 0);
       return sum + price * qty;
-    },
-    0
-  );
+    }, 0);
+    return acc + tabSum;
+  }, 0);
 
   /* -------------------------------------------------------
-   * 4) Add to cart
+   * 4) Add to cart (افزودن تمام انتخاب‌ها از تمام تب‌ها)
    ------------------------------------------------------- */
   const handleAdd = () => {
-    if (!Object.keys(quantities).length) return;
+    const allItems = Object.entries(quantities);
+    if (allItems.length === 0) return;
 
-    Object.entries(quantities).forEach(([mat, qty]) => {
-      const price = parseFloat(currentMaterials[mat] || 0);
-      addToCart({
-        title: itemTitle,
-        tab: activeTab,
-        material: mat,
-        price,
-        quantity: qty,
+    allItems.forEach(([tabName, mats]) => {
+      const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+      Object.entries(mats).forEach(([mat, qty]) => {
+        const price = parseFloat(tabPriceData[mat] || 0);
+        addToCart({
+          title: itemTitle,
+          tab: tabName,
+          material: mat,
+          price,
+          quantity: qty,
+        });
       });
     });
 
@@ -99,41 +109,60 @@ export default function ServiceModal({
   };
 
   /* -------------------------------------------------------
-   * 5) UI inside BaseModal
+   * 5) UI logic (ارسال مقادیر تب جاری به لیست)
    ------------------------------------------------------- */
+  const currentTabQuantities = quantities[activeTab] || {};
+  /* -------------------------------------------------------
+   * 6) افزودن badge بالای تب
+   ------------------------------------------------------- */
+  const getTabCount = (tab) => {
+  const tabItems = quantities[tab] || {};
+  return Object.values(tabItems).reduce((sum, q) => sum + q, 0);
+};
+
+
   return (
-    <BaseModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={itemTitle}
-      maxWidth="md"
-    >
+    <BaseModal isOpen={isOpen} onClose={onClose} title={itemTitle} maxWidth="md">
       {/* TABS */}
-      {availableTabs.length > 0 && (
-        <div className="flex gap-2 mt-1 mb-4">
-          {availableTabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setQuantities({});
-              }}
-              className={`flex-1 py-2 rounded-xl text-sm transition ${
-                activeTab === tab
-                  ? "bg-white dark:bg-sky-800 shadow font-semibold border border-sky-300 dark:border-sky-700"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+      {availableTabs.length > 1 && (
+<div className="flex gap-2 mt-2 mb-4">
+{availableTabs.map((tab) => {
+  const count = getTabCount(tab);
+  const isActive = activeTab === tab;
+  const hasItems = count > 0;
+
+  return (
+    <button
+      key={tab}
+      onClick={() => setActiveTab(tab)}
+      className={`relative flex-1 py-2 rounded-xl text-sm transition border ${
+        isActive
+          ? "bg-white dark:bg-sky-800 shadow-sm font-semibold border-sky-500 text-sky-700 dark:text-sky-300"
+          : hasItems
+            ? "bg-white/80 dark:bg-gray-800 border-sky-300 text-gray-700 dark:text-gray-300"
+            : "bg-gray-200 dark:bg-gray-700 border border-sky-200 text-gray-700 dark:text-gray-400"
+      }`}
+    >
+      {tab}
+
+      {/* Badge */}
+      {hasItems && (
+        <span className="absolute -top-2 -right-2 bg-sky-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+          {count}
+        </span>
+      )}
+    </button>
+  );
+})}
+
+</div>
+
       )}
 
       {/* MATERIAL LIST */}
       <div className="space-y-3 max-h-[55vh] overflow-y-auto pb-4">
         {Object.entries(currentMaterials).map(([mat, price]) => {
-          const qty = quantities[mat] || 0;
+          const qty = currentTabQuantities[mat] || 0; // استفاده از کوانتیتی تب جاری
           const selected = qty > 0;
 
           return (
@@ -141,8 +170,8 @@ export default function ServiceModal({
               key={mat}
               className={`flex justify-between items-center p-4 rounded-xl border transition ${
                 selected
-                  ? "border-sky-600 bg-sky-50 dark:bg-sky-900/40"
-                  : "border-gray-300 dark:border-gray-700"
+                  ? "border-sky-600 bg-white dark:bg-sky-900/40 shadow-lg"
+                  : "border border-gray-400 bg-white/50 dark:border-gray-700"
               }`}
             >
               <div className="text-right">
@@ -156,28 +185,19 @@ export default function ServiceModal({
                 <button
                   onClick={() => changeQuantity(mat, -1)}
                   disabled={qty === 0}
-                  className={`w-8 h-8 rounded-lg text-lg font-bold flex items-center justify-center
-                    ${
-                      qty === 0
-                        ? "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
-                        : "bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                    }
-                  `}
-                >
-                  –
-                </button>
-
-                <span
-                  className={`w-6 text-center font-bold ${
-                    selected ? "text-sky-600 dark:text-sky-300" : ""
+                  className={`w-8 h-8 rounded-lg text-lg  font-bold flex items-center justify-center ${
+                    qty === 0 ? "opacity-30" : "bg-gray-200 dark:bg-gray-600"
                   }`}
                 >
+                  −
+
+                </button>
+                <span className={`w-6 text-center font-bold ${selected ? "text-gray-900" : ""}`}>
                   {qty}
                 </span>
-
                 <button
                   onClick={() => changeQuantity(mat, 1)}
-                  className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100 text-lg font-bold"
+                  className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-600 text-lg font-bold"
                 >
                   +
                 </button>
@@ -189,18 +209,14 @@ export default function ServiceModal({
 
       {/* FOOTER */}
       <div className="flex justify-between items-center mt-4 pt-4 border-t dark:border-gray-700">
-        <div className="font-bold text-gray-800 dark:text-gray-100">
+        <div className="font-bold text-gray-700">
           مجموع:
-          <span className="text-sky-600 dark:text-sky-300 mx-1">
-            {totalPrice.toLocaleString()} تومان
-          </span>
+          <span className="text-gray-900 mx-1">{totalPrice.toLocaleString()} تومان</span>
         </div>
-
         <button
           onClick={handleAdd}
           disabled={totalPrice === 0}
-          className="px-6 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 active:bg-sky-800 
-                   dark:bg-sky-700 dark:hover:bg-sky-600 text-white font-bold disabled:opacity-40"
+          className="px-6 py-3 rounded-xl bg-sky-600 text-white font-bold disabled:opacity-40"
         >
           افزودن
         </button>
