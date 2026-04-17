@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import BaseModal from "../../../basemodal/BaseModal";
 import {
   createCoupon,
   updateCoupon
@@ -20,6 +21,13 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
       setUsageLimit(editItem.usage_limit);
       setMinOrder(editItem.min_order_amount);
       setIsActive(editItem.is_active);
+    } else {
+      setCode("");
+      setType("percent");
+      setValue("");
+      setUsageLimit("");
+      setMinOrder("");
+      setIsActive(true);
     }
   }, [editItem]);
 
@@ -44,24 +52,25 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-      <div className="w-full max-w-lg bg-white/80 dark:bg-gray-900/90 p-6 rounded-3xl">
-
-        <h2 className="text-xl font-bold mb-4">
-          {editItem ? "ویرایش کد تخفیف" : "افزودن کد تخفیف"}
-        </h2>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={editItem ? "ویرایش کد تخفیف" : "افزودن کد تخفیف"}
+      maxWidth="lg"
+    >
+      <div className="flex flex-col gap-4">
 
         <input
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="کد تخفیف..."
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         />
 
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         >
           <option value="percent">درصدی</option>
           <option value="amount">مبلغ</option>
@@ -71,24 +80,24 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="مقدار..."
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         />
 
         <input
           value={usageLimit}
           onChange={(e) => setUsageLimit(e.target.value)}
           placeholder="حداکثر تعداد استفاده (اختیاری)"
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         />
 
         <input
           value={minOrder}
           onChange={(e) => setMinOrder(e.target.value)}
           placeholder="حداقل مبلغ سفارش (اختیاری)"
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         />
 
-        <label className="flex items-center gap-2 mb-4">
+        <label className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isActive}
@@ -97,16 +106,23 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
           فعال باشد
         </label>
 
-        <div className="flex justify-between">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl">
+        <div className="flex justify-between mt-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl"
+          >
             بستن
           </button>
 
-          <button onClick={submit} className="px-4 py-2 bg-purple-700 text-white rounded-xl">
+          <button
+            onClick={submit}
+            className="px-4 py-2 bg-purple-700 text-white rounded-xl"
+          >
             ذخیره
           </button>
         </div>
+
       </div>
-    </div>
+    </BaseModal>
   );
 }

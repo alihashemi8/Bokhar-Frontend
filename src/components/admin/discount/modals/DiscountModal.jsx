@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
+import BaseModal from "../../../basemodal/BaseModal";
+
 import {
   fetchServiceTabs,
   fetchServiceMaterials,
   createProductDiscount
 } from "../../../../api/discountsApi";
-
 
 export default function DiscountModal({ isOpen, onClose, service }) {
   const [materials, setMaterials] = useState([]);
@@ -17,9 +18,11 @@ export default function DiscountModal({ isOpen, onClose, service }) {
   const [priceTab, setPriceTab] = useState("");
 
   useEffect(() => {
-    loadTabs();
-    loadMaterials();
-  }, []);
+    if (service?.id) {
+      loadTabs();
+      loadMaterials();
+    }
+  }, [service]);
 
   const loadTabs = async () => {
     const data = await fetchServiceTabs(service.id);
@@ -45,18 +48,19 @@ export default function DiscountModal({ isOpen, onClose, service }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4 z-50">
-      <div className="w-full max-w-lg bg-white/80 dark:bg-gray-900/90 border p-6 rounded-3xl">
-
-        <h2 className="text-xl font-bold mb-4">
-          تنظیم تخفیف برای {service.title}
-        </h2>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`تنظیم تخفیف برای ${service?.title ?? ""}`}
+      maxWidth="lg"
+    >
+      <div className="flex flex-col gap-4">
 
         {/* هدف */}
         <select
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         >
           <option value="product">کل سرویس</option>
           <option value="category">دسته‌بندی سرویس</option>
@@ -68,9 +72,9 @@ export default function DiscountModal({ isOpen, onClose, service }) {
           <select
             value={material}
             onChange={(e) => setMaterial(e.target.value)}
-            className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+            className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
           >
-            <option>انتخاب جنس</option>
+            <option value="">انتخاب جنس</option>
             {materials.map((m) => (
               <option key={m.id} value={m.id}>{m.name}</option>
             ))}
@@ -81,9 +85,9 @@ export default function DiscountModal({ isOpen, onClose, service }) {
           <select
             value={priceTab}
             onChange={(e) => setPriceTab(e.target.value)}
-            className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+            className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
           >
-            <option>انتخاب تب قیمت</option>
+            <option value="">انتخاب تب قیمت</option>
             {tabs.map((t) => (
               <option key={t.id} value={t.id}>{t.label}</option>
             ))}
@@ -94,7 +98,7 @@ export default function DiscountModal({ isOpen, onClose, service }) {
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         >
           <option value="percent">درصدی</option>
           <option value="amount">مبلغ</option>
@@ -104,19 +108,26 @@ export default function DiscountModal({ isOpen, onClose, service }) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="مقدار تخفیف..."
-          className="w-full p-3 rounded-xl mb-4 bg-white/50 dark:bg-white/10 border"
+          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
         />
 
-        <div className="flex justify-between">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl">
+        <div className="flex justify-between pt-2">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl"
+          >
             بستن
           </button>
 
-          <button onClick={submit} className="px-4 py-2 bg-purple-700 text-white rounded-xl">
+          <button
+            onClick={submit}
+            className="px-4 py-2 bg-purple-700 text-white rounded-xl"
+          >
             ذخیره
           </button>
         </div>
+
       </div>
-    </div>
+    </BaseModal>
   );
 }
