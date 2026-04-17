@@ -1,14 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 async function fetchWithAuth(url, options = {}) {
-  const token = localStorage.getItem("access_token");
-
   const response = await fetch(`${API_BASE}${url}`, {
+    credentials: "include",  
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
-      ...options.headers,
+      ...options.headers,      
     },
   });
 
