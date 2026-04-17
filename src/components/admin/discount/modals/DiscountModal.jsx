@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import BaseModal from "../../../basemodal/BaseModal";
-
 import {
   fetchServiceTabs,
   fetchServiceMaterials,
-  createProductDiscount
+  createProductDiscount,
 } from "../../../../api/discountsApi";
 
 export default function DiscountModal({ isOpen, onClose, service }) {
@@ -47,6 +47,8 @@ export default function DiscountModal({ isOpen, onClose, service }) {
     onClose();
   };
 
+  const isValid = value && service;
+
   return (
     <BaseModal
       isOpen={isOpen}
@@ -54,79 +56,109 @@ export default function DiscountModal({ isOpen, onClose, service }) {
       title={`تنظیم تخفیف برای ${service?.title ?? ""}`}
       maxWidth="lg"
     >
-      <div className="flex flex-col gap-4">
-
-        {/* هدف */}
-        <select
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
-        >
-          <option value="product">کل سرویس</option>
-          <option value="category">دسته‌بندی سرویس</option>
-          <option value="material">جنس‌ها</option>
-          <option value="price_tab">تب قیمت‌ها</option>
-        </select>
-
-        {target === "material" && (
+      <div dir="rtl" className="space-y-4 max-h-[80vh] overflow-y-auto">
+        {/* هدف تخفیف */}
+        <div className="relative">
           <select
-            value={material}
-            onChange={(e) => setMaterial(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
           >
-            <option value="">انتخاب جنس</option>
-            {materials.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
+            <option value="product">کل سرویس</option>
+            <option value="category">دسته‌بندی سرویس</option>
+            <option value="material">جنس</option>
+            <option value="price_tab">تب قیمت</option>
           </select>
+          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+            ▼
+          </div>
+        </div>
+
+        {/* انتخاب جنس */}
+        {target === "material" && (
+          <div className="relative">
+            <select
+              value={material}
+              onChange={(e) => setMaterial(e.target.value)}
+              className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
+            >
+              <option value="">انتخاب جنس</option>
+              {materials.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+              ▼
+            </div>
+          </div>
         )}
 
+        {/* انتخاب تب قیمت */}
         {target === "price_tab" && (
-          <select
-            value={priceTab}
-            onChange={(e) => setPriceTab(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
-          >
-            <option value="">انتخاب تب قیمت</option>
-            {tabs.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={priceTab}
+              onChange={(e) => setPriceTab(e.target.value)}
+              className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
+            >
+              <option value="">انتخاب تب قیمت</option>
+              {tabs.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+              ▼
+            </div>
+          </div>
         )}
 
         {/* نوع تخفیف */}
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
-        >
-          <option value="percent">درصدی</option>
-          <option value="amount">مبلغ</option>
-        </select>
+        <div className="relative">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
+          >
+            <option value="percent">درصدی</option>
+            <option value="amount">مبلغ ثابت</option>
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
+            ▼
+          </div>
+        </div>
 
+        {/* مقدار */}
         <input
+          type="number"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="مقدار تخفیف..."
-          className="w-full p-3 rounded-xl bg-white/50 dark:bg-white/10 border"
+          placeholder="مقدار تخفیف"
+          className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100"
         />
 
+        {/* Footer */}
         <div className="flex justify-between pt-2">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 dark:bg-gray-700 rounded-xl"
+            className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
           >
-            بستن
+            انصراف
           </button>
 
           <button
+            type="button"
             onClick={submit}
-            className="px-4 py-2 bg-purple-700 text-white rounded-xl"
+            disabled={!isValid}
+            className="px-6 py-2 rounded-xl bg-purple-600 text-white disabled:opacity-50 hover:bg-purple-700 transition"
           >
             ذخیره
           </button>
         </div>
-
       </div>
     </BaseModal>
   );
