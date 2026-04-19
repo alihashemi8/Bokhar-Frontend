@@ -1,8 +1,6 @@
-// src/api/discountsApi.js
-
 const API_BASE = import.meta.env.VITE_API_URL;
 
-// Helper fetch wrapper
+// ---------- Helper Request ----------
 async function request(endpoint, method = "GET", body = null) {
   const options = {
     method,
@@ -11,44 +9,59 @@ async function request(endpoint, method = "GET", body = null) {
     },
   };
 
-  if (body) options.body = JSON.stringify(body);
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
 
   const res = await fetch(`${API_BASE}${endpoint}`, options);
 
   if (!res.ok) {
     const errorText = await res.text();
     console.error("API Error:", errorText);
-    throw new Error(errorText);
+    throw new Error(`API Error ${res.status}`);
   }
 
   return res.json();
 }
 
-// ****** SERVICES ******
+// =====================================================
+// PRODUCTS (همان سرویس‌هایی که در بک‌اند داری)
+// =====================================================
 
-// دسته‌بندی سرویس‌ها
-export const fetchCategories = () =>
-  request("/services/categories/");
+// گرفتن همه محصولات
+export const fetchProducts = () => request("/products/");
 
-// سرویس‌ها با جستجو
-export const fetchServices = (query = "") =>
-  request(`/services/?search=${query}`);
+// گرفتن یک محصول
+export const fetchProduct = (id) => request(`/products/${id}/`);
 
-// تب‌های قیمت سرویس
-export const fetchServiceTabs = (serviceId) =>
-  request(`/services/${serviceId}/tabs/`);
+// جستجوی محصول
+export const searchProducts = (query = "") =>
+  request(`/products/search/?search=${encodeURIComponent(query)}`);
 
-// متریال‌های سرویس
-export const fetchServiceMaterials = (serviceId) =>
-  request(`/services/${serviceId}/materials/`);
+// گرفتن ساختار کامل قیمت محصول
+export const fetchProductFullPricing = (id) =>
+  request(`/products/${id}/`);
 
+// =====================================================
+// CATEGORIES
+// =====================================================
 
-// ****** PRODUCT DISCOUNT ******
+export const fetchCategories = () => request("/categories/");
+
+export const fetchCategory = (id) =>
+  request(`/categories/${id}/`);
+
+// =====================================================
+// PRODUCT DISCOUNTS
+// =====================================================
+
 export const createProductDiscount = (data) =>
   request("/discounts/product-discounts/", "POST", data);
 
+// =====================================================
+// GLOBAL DISCOUNTS
+// =====================================================
 
-// ****** GLOBAL DISCOUNT ******
 export const fetchGlobalDiscounts = () =>
   request("/discounts/global-discounts/");
 
@@ -58,8 +71,10 @@ export const createGlobalDiscount = (data) =>
 export const updateGlobalDiscount = (id, data) =>
   request(`/discounts/global-discounts/${id}/`, "PUT", data);
 
+// =====================================================
+// COUPONS
+// =====================================================
 
-// ****** COUPON ******
 export const fetchCoupons = () =>
   request("/discounts/coupons/");
 

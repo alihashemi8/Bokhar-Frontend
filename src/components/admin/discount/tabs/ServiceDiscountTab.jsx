@@ -48,7 +48,10 @@ export default function ServiceDiscountTab() {
   // ---------------------------
   // Handlers
   // ---------------------------
-  const openProductModal = (p) => setProductModal(p);
+  const openProductModal = async (product) => {
+    const fullData = await api.getProduct(product.id);
+    setProductModal(fullData);
+  };
   const closeProductModal = () => setProductModal(null);
 
   const openCategoryModal = (c) => setCategoryModal(c);
@@ -59,13 +62,14 @@ export default function ServiceDiscountTab() {
   // ---------------------------
   return (
     <div className="w-full max-w-[1400px] mx-auto space-y-8 px-3 md:px-4 overflow-x-hidden">
-
       {/* دسته‌ها */}
-      <div className="
+      <div
+        className="
         w-full p-4 md:p-5 rounded-2xl
         bg-white/70 dark:bg-neutral-800/60 backdrop-blur-md
         border border-sky-200 dark:border-indigo-600 shadow-lg
-      ">
+      "
+      >
         <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
           تخفیف روی دسته‌بندی‌ها
         </h3>
@@ -90,11 +94,13 @@ export default function ServiceDiscountTab() {
       </div>
 
       {/* محصولات */}
-      <div className="
+      <div
+        className="
         w-full p-4 md:p-5 rounded-2xl
         bg-white/70 dark:bg-neutral-800/60 backdrop-blur-md
         border border-sky-200 dark:border-indigo-600 shadow-lg
-      ">
+      "
+      >
         <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
           تخفیف روی محصولات
         </h3>
@@ -115,7 +121,6 @@ export default function ServiceDiscountTab() {
         {/* دسته‌بندی محصولات */}
         <div className="w-full overflow-x-auto pb-2 mb-4 no-scrollbar">
           <div className="flex gap-2 w-max">
-
             <button
               onClick={() => setSelectedCategory("all")}
               className={`
@@ -168,7 +173,7 @@ export default function ServiceDiscountTab() {
                 <div>
                   <div className="w-full aspect-square mb-2.5">
                     <img
-                      src={p.image || '/images/placeholder.png'}
+                      src={p.image || "/images/placeholder.png"}
                       alt={p.title}
                       className="w-full h-full object-cover rounded-lg border border-sky-200 dark:border-indigo-600"
                     />
@@ -214,10 +219,11 @@ export default function ServiceDiscountTab() {
       {/* مودال محصول */}
       {productModal && (
         <DiscountModal
-          product={productModal}
-          isOpen={true}
-          onClose={closeProductModal}
-        />
+  product={productModal}
+  isOpen={true}
+  onClose={closeProductModal}
+/>
+
       )}
     </div>
   );

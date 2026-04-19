@@ -283,7 +283,7 @@ const handleSave = () => {
         onClose={onClose}
         title={editItem ? "ویرایش سرویس" : "سرویس جدید"}
       >
-        <div dir="rtl" className="space-y-4 max-h-[80vh] overflow-y-auto">
+        <div dir="rtl" className="space-y-4 max-h-[80vh] px-1 overflow-y-auto">
           <div className="flex gap-2 mt-1 mb-2">
             <input
               value={form.title}
