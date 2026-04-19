@@ -33,18 +33,18 @@ export default function AdminDiscounts() {
           : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
       }`}
           >
-            تخفیف سرویس‌ها
+             سرویس‌ها
           </button>
           <button
             onClick={() => setActiveTab("global")}
-            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition
+            className={`px-5 py-3 text-sm  sm:text-base rounded-full font-semibold border transition
       ${
         activeTab === "global"
           ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
           : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
       }`}
           >
-            تخفیف عمومی
+             عمومی
           </button>
           <button
             onClick={() => setActiveTab("coupon")}

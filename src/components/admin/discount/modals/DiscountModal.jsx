@@ -24,7 +24,7 @@ function DiscountTimeInputs({ days, hours, setDays, setHours }) {
 
   return (
     <div className="grid grid-cols-2 gap-3 mb-4">
-      <div className="flex items-center bg-gray-100 rounded-xl h-12 px-3">
+      <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
         <input
           type="number"
           value={days}
@@ -37,7 +37,7 @@ function DiscountTimeInputs({ days, hours, setDays, setHours }) {
         <span className="text-gray-500 text-sm">روز</span>
       </div>
 
-      <div className="flex items-center bg-gray-100 rounded-xl h-12 px-3">
+      <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
         <input
           type="number"
           value={hours}
