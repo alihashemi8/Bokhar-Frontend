@@ -190,3 +190,15 @@
 .animate-fade-in-up {
   animation: fade-in-up 0.25s ease-out;
 }
+
+
+/* Remove number input arrows */
+.remove-arrows::-webkit-inner-spin-button,
+.remove-arrows::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.remove-arrows {
+  -moz-appearance: textfield; /* Firefox */
+}
