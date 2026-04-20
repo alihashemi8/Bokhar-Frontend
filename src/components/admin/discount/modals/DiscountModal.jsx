@@ -251,34 +251,46 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
 
   const target = product || category;
 
-  useEffect(() => {
-    if (!isOpen || !product?.id) return;
+useEffect(() => {
+  if (!isOpen || !product?.id) return;
 
-    (async () => {
-      try {
-        setLoading(true);
+  (async () => {
+    try {
+      setLoading(true);
 
-        const data = await fetchProductFullPricing(product.id);
+      const data = await fetchProductFullPricing(product.id);
 
-        const tabNames = Object.keys(data.pricing);
+      const tabNames = Object.keys(data.pricing);
 
-        setTabs(tabNames);
-        setPricing(data.pricing);
+      setTabs(tabNames);
+      setPricing(data.pricing);
 
-        const empty = {};
-        tabNames.forEach((t) => {
-          empty[t] = {};
+      const initialDiscounts = {};
+
+      tabNames.forEach((tabName) => {
+        const tab = data.pricing[tabName];
+        initialDiscounts[tabName] = {};
+
+        tab.materialPrices.forEach((mat) => {
+          if (mat.discount_amount && Number(mat.discount_amount) > 0) {
+            initialDiscounts[tabName][mat.material] = {
+              percent: "",
+              amount: mat.discount_amount,
+            };
+          }
         });
+      });
 
-        setDiscounts(empty);
-        setActiveTab(0);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [isOpen, product]);
+      setDiscounts(initialDiscounts);
+      setActiveTab(0);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, [isOpen, product]);
+
 
   const currentTab = tabs[activeTab];
   const tabPricing = pricing[currentTab] || { materialPrices: [] };
