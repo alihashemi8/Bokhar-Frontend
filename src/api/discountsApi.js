@@ -4,6 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
 async function request(endpoint, method = "GET", body = null) {
   const options = {
     method,
+    credentials: "include",   // ✅ این خط بسیار مهم است
     headers: {
       "Content-Type": "application/json",
     },
@@ -23,6 +24,7 @@ async function request(endpoint, method = "GET", body = null) {
 
   return res.json();
 }
+
 
 // =====================================================
 // PRODUCTS (همان سرویس‌هایی که در بک‌اند داری)

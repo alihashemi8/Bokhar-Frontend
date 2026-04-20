@@ -5,10 +5,7 @@ import {
   createProductDiscount,
 } from "../../../../api/discountsApi";
 
-// -------------------------
 // Time Input Component
-// -------------------------
-
 function DiscountTimeInputs({ days, hours, setDays, setHours }) {
   const handleDays = (v) => {
     if (v === "") return setDays("");
@@ -53,10 +50,7 @@ function DiscountTimeInputs({ days, hours, setDays, setHours }) {
   );
 }
 
-// -------------------------
 // Input Component
-// -------------------------
-
 function MaterialDiscountInput({
   material,
   percentValue,
@@ -203,11 +197,7 @@ function MaterialDiscountInput({
     </div>
   );
 }
-
-// -------------------------
 // Price Display Component
-// -------------------------
-
 function PriceDisplay({ basePrice, percent, amount }) {
   const hasPercent = percent !== undefined && percent !== "" && !isNaN(percent);
   const hasAmount = amount !== undefined && amount !== "" && !isNaN(amount);
@@ -239,19 +229,15 @@ function PriceDisplay({ basePrice, percent, amount }) {
         <span className="text-gray-500 mr-1">
           (
           {hasAmount
-            ? `${Number(amount).toLocaleString()} تومان`
-            : `${percent}%`}
-          تخفیف)
+            ? `${Number(amount).toLocaleString()}  تومان `
+            : `${percent}%تخفیف`}
+          )
         </span>
       </span>
     </div>
   );
 }
-
-// -------------------------
 // Main Discount Modal
-// -------------------------
-
 export default function DiscountModal({ isOpen, onClose, product, category }) {
   const [loading, setLoading] = useState(false);
 
@@ -359,49 +345,90 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
     [currentTab],
   );
 
-  const handleSave = async () => {
-    const clean = {};
+const handleSave = async () => {
+  // ۱) داده‌ها را پاکسازی کن
+  const clean = {};
 
-    for (const [tab, materials] of Object.entries(discounts)) {
-      const filtered = {};
+  for (const [tabName, materials] of Object.entries(discounts)) {
+    const filtered = {};
 
-      for (const [mat, d] of Object.entries(materials)) {
-        if (
-          (d.percent !== "" && !isNaN(d.percent)) ||
-          (d.amount !== "" && !isNaN(d.amount))
-        ) {
-          filtered[mat] = {};
-
-          if (d.percent !== "") filtered[mat].percent = Number(d.percent);
-          if (d.amount !== "") filtered[mat].amount = Number(d.amount);
-        }
+    for (const [matName, d] of Object.entries(materials)) {
+      if (
+        (d.percent !== "" && !isNaN(d.percent)) ||
+        (d.amount !== "" && !isNaN(d.amount))
+      ) {
+        filtered[matName] = {
+          percent: d.percent !== "" ? Number(d.percent) : null,
+          amount: d.amount !== "" ? Number(d.amount) : null,
+        };
       }
-
-      if (Object.keys(filtered).length) clean[tab] = filtered;
     }
 
-    if (!Object.keys(clean).length) return;
+    if (Object.keys(filtered).length > 0) {
+      clean[tabName] = filtered;
+    }
+  }
 
-    try {
-      setLoading(true);
+  if (!Object.keys(clean).length) return;
 
-      await createProductDiscount({
+  // ۲) زمان شروع و پایان
+  const start = new Date();
+  const end = new Date(
+    start.getTime() +
+      ((Number(days) || 0) * 24 + (Number(hours) || 0)) *
+        3600 *
+        1000
+  );
+
+  const startISO = start.toISOString();
+  const endISO = end.toISOString();
+
+  // ۳) ساخت payload نهایی
+  const payload = [];
+
+  for (const [tabName, materials] of Object.entries(clean)) {
+    const tabData = pricing[tabName];
+    const tabId = tabData.id; // *** بعد از اصلاح backend داریم ***
+
+    for (const [matName, d] of Object.entries(materials)) {
+      // پیدا کردن material object با id
+      const matObj = tabData.materialPrices.find(
+        (m) => m.material === matName
+      );
+
+      if (!matObj) continue;
+
+      const isPercent = d.percent !== null;
+      const type = isPercent ? "percent" : "fixed";
+      const value = isPercent ? d.percent : d.amount;
+
+      payload.push({
         product: product.id,
-        discounts: clean,
-        duration: {
-          days: Number(days) || 0,
-          hours: Number(hours) || 0,
-        },
+        pricing_tab: tabId,
+        material: matObj.id,
+        type,
+        value,
+        start_at: startISO,
+        end_at: endISO,
       });
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      alert("خطا در ذخیره تخفیف");
-    } finally {
-      setLoading(false);
     }
-  };
+  }
+
+  try {
+    setLoading(true);
+
+    // ۴) ارسال همه تخفیف‌ها
+    await Promise.all(payload.map((item) => createProductDiscount(item)));
+
+    onClose();
+  } catch (err) {
+    console.error(err);
+    alert("خطا در ذخیره تخفیف");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <BaseModal
