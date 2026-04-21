@@ -5,46 +5,74 @@ import {
   createProductDiscount,
 } from "../../../../api/discountsApi";
 
-// Time Input Component
-function DiscountTimeInputs({ days, hours, setDays, setHours }) {
-  const handleDays = (v) => {
-    if (v === "") return setDays("");
-    const num = Math.max(0, Math.min(365, Number(v)));
-    setDays(num);
-  };
-
-  const handleHours = (v) => {
-    if (v === "") return setHours("");
-    const num = Math.max(0, Math.min(23, Number(v)));
-    setHours(num);
-  };
-
+function DiscountTimeInputs({
+  startDate,
+  endDate,
+  startTime,
+  endTime,
+  setStartDate,
+  setEndDate,
+  setStartTime,
+  setEndTime,
+}) {
   return (
-    <div className="grid grid-cols-2 gap-3 mb-4">
-      <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-        <input
-          type="number"
-          value={days}
-          onChange={(e) => handleDays(e.target.value)}
-          placeholder="روز"
-          min="0"
-          max="365"
-          className="w-full bg-transparent outline-none text-sm remove-arrows"
-        />
-        <span className="text-gray-500 text-sm">روز</span>
+    <div className="space-y-3 mb-4">
+      {/* Row 1: Calendar Fields */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500 mr-1">تاریخ شروع</label>
+          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full bg-transparent outline-none text-sm"
+              dir="ltr"
+            />
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500 mr-1">تاریخ پایان</label>
+          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full bg-transparent outline-none text-sm"
+              dir="ltr"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-        <input
-          type="number"
-          value={hours}
-          onChange={(e) => handleHours(e.target.value)}
-          placeholder="0"
-          min="0"
-          max="23"
-          className="w-full bg-transparent outline-none text-sm remove-arrows"
-        />
-        <span className="text-gray-500 text-sm">ساعت</span>
+      {/* Row 2: Time Fields */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500 mr-1">ساعت شروع</label>
+          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
+            <input
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full bg-transparent outline-none text-sm"
+              dir="ltr"
+            />
+          </div>
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500 mr-1">ساعت پایان</label>
+          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
+            <input
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              className="w-full bg-transparent outline-none text-sm"
+              dir="ltr"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -197,6 +225,7 @@ function MaterialDiscountInput({
     </div>
   );
 }
+
 // Price Display Component
 function PriceDisplay({ basePrice, percent, amount }) {
   const hasPercent = percent !== undefined && percent !== "" && !isNaN(percent);
@@ -237,6 +266,7 @@ function PriceDisplay({ basePrice, percent, amount }) {
     </div>
   );
 }
+
 // Main Discount Modal
 export default function DiscountModal({ isOpen, onClose, product, category }) {
   const [loading, setLoading] = useState(false);
@@ -246,51 +276,70 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
   const [activeTab, setActiveTab] = useState(0);
 
   const [discounts, setDiscounts] = useState({});
-  const [days, setDays] = useState("");
-  const [hours, setHours] = useState("");
+  
+  // New Date/Time States instead of days/hours
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("23:59");
 
   const target = product || category;
 
-useEffect(() => {
-  if (!isOpen || !product?.id) return;
-
-  (async () => {
-    try {
-      setLoading(true);
-
-      const data = await fetchProductFullPricing(product.id);
-
-      const tabNames = Object.keys(data.pricing);
-
-      setTabs(tabNames);
-      setPricing(data.pricing);
-
-      const initialDiscounts = {};
-
-      tabNames.forEach((tabName) => {
-        const tab = data.pricing[tabName];
-        initialDiscounts[tabName] = {};
-
-        tab.materialPrices.forEach((mat) => {
-          if (mat.discount_amount && Number(mat.discount_amount) > 0) {
-            initialDiscounts[tabName][mat.material] = {
-              percent: "",
-              amount: mat.discount_amount,
-            };
-          }
-        });
-      });
-
-      setDiscounts(initialDiscounts);
-      setActiveTab(0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Initialize default dates when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      
+      const formatDate = (d) => d.toISOString().split('T')[0];
+      const formatTime = (d) => d.toTimeString().slice(0, 5);
+      
+      setStartDate(formatDate(now));
+      setStartTime(formatTime(now));
+      setEndDate(formatDate(nextWeek));
+      setEndTime("23:59");
     }
-  })();
-}, [isOpen, product]);
+  }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !product?.id) return;
+
+    (async () => {
+      try {
+        setLoading(true);
+
+        const data = await fetchProductFullPricing(product.id);
+
+        const tabNames = Object.keys(data.pricing);
+
+        setTabs(tabNames);
+        setPricing(data.pricing);
+
+        const initialDiscounts = {};
+
+        tabNames.forEach((tabName) => {
+          const tab = data.pricing[tabName];
+          initialDiscounts[tabName] = {};
+
+          tab.materialPrices.forEach((mat) => {
+            if (mat.discount_amount && Number(mat.discount_amount) > 0) {
+              initialDiscounts[tabName][mat.material] = {
+                percent: "",
+                amount: mat.discount_amount,
+              };
+            }
+          });
+        });
+
+        setDiscounts(initialDiscounts);
+        setActiveTab(0);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [isOpen, product]);
 
   const currentTab = tabs[activeTab];
   const tabPricing = pricing[currentTab] || { materialPrices: [] };
@@ -357,90 +406,95 @@ useEffect(() => {
     [currentTab],
   );
 
-const handleSave = async () => {
-  // ۱) داده‌ها را پاکسازی کن
-  const clean = {};
+  const handleSave = async () => {
+    // Validation
+    if (!startDate || !endDate) {
+      alert("لطفاً تاریخ شروع و پایان را انتخاب کنید");
+      return;
+    }
 
-  for (const [tabName, materials] of Object.entries(discounts)) {
-    const filtered = {};
+    // Create ISO strings from date and time inputs
+    const start = new Date(`${startDate}T${startTime}`);
+    const end = new Date(`${endDate}T${endTime}`);
+    
+    if (end <= start) {
+      alert("تاریخ پایان باید بعد از تاریخ شروع باشد");
+      return;
+    }
 
-    for (const [matName, d] of Object.entries(materials)) {
-      if (
-        (d.percent !== "" && !isNaN(d.percent)) ||
-        (d.amount !== "" && !isNaN(d.amount))
-      ) {
-        filtered[matName] = {
-          percent: d.percent !== "" ? Number(d.percent) : null,
-          amount: d.amount !== "" ? Number(d.amount) : null,
-        };
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+
+    // ۱) داده‌ها را پاکسازی کن
+    const clean = {};
+
+    for (const [tabName, materials] of Object.entries(discounts)) {
+      const filtered = {};
+
+      for (const [matName, d] of Object.entries(materials)) {
+        if (
+          (d.percent !== "" && !isNaN(d.percent)) ||
+          (d.amount !== "" && !isNaN(d.amount))
+        ) {
+          filtered[matName] = {
+            percent: d.percent !== "" ? Number(d.percent) : null,
+            amount: d.amount !== "" ? Number(d.amount) : null,
+          };
+        }
+      }
+
+      if (Object.keys(filtered).length > 0) {
+        clean[tabName] = filtered;
       }
     }
 
-    if (Object.keys(filtered).length > 0) {
-      clean[tabName] = filtered;
+    if (!Object.keys(clean).length) return;
+
+    // ۳) ساخت payload نهایی
+    const payload = [];
+
+    for (const [tabName, materials] of Object.entries(clean)) {
+      const tabData = pricing[tabName];
+      const tabId = tabData.id;
+
+      for (const [matName, d] of Object.entries(materials)) {
+        // پیدا کردن material object با id
+        const matObj = tabData.materialPrices.find(
+          (m) => m.material === matName
+        );
+
+        if (!matObj) continue;
+
+        const isPercent = d.percent !== null;
+        const type = isPercent ? "percent" : "fixed";
+        const value = isPercent ? d.percent : d.amount;
+
+        payload.push({
+          product: product.id,
+          pricing_tab: tabId,
+          material: matObj.id,
+          type,
+          value,
+          start_at: startISO,
+          end_at: endISO,
+        });
+      }
     }
-  }
 
-  if (!Object.keys(clean).length) return;
+    try {
+      setLoading(true);
 
-  // ۲) زمان شروع و پایان
-  const start = new Date();
-  const end = new Date(
-    start.getTime() +
-      ((Number(days) || 0) * 24 + (Number(hours) || 0)) *
-        3600 *
-        1000
-  );
+      // ۴) ارسال همه تخفیف‌ها
+      await Promise.all(payload.map((item) => createProductDiscount(item)));
 
-  const startISO = start.toISOString();
-  const endISO = end.toISOString();
-
-  // ۳) ساخت payload نهایی
-  const payload = [];
-
-  for (const [tabName, materials] of Object.entries(clean)) {
-    const tabData = pricing[tabName];
-    const tabId = tabData.id; // *** بعد از اصلاح backend داریم ***
-
-    for (const [matName, d] of Object.entries(materials)) {
-      // پیدا کردن material object با id
-      const matObj = tabData.materialPrices.find(
-        (m) => m.material === matName
-      );
-
-      if (!matObj) continue;
-
-      const isPercent = d.percent !== null;
-      const type = isPercent ? "percent" : "fixed";
-      const value = isPercent ? d.percent : d.amount;
-
-      payload.push({
-        product: product.id,
-        pricing_tab: tabId,
-        material: matObj.id,
-        type,
-        value,
-        start_at: startISO,
-        end_at: endISO,
-      });
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("خطا در ذخیره تخفیف");
+    } finally {
+      setLoading(false);
     }
-  }
-
-  try {
-    setLoading(true);
-
-    // ۴) ارسال همه تخفیف‌ها
-    await Promise.all(payload.map((item) => createProductDiscount(item)));
-
-    onClose();
-  } catch (err) {
-    console.error(err);
-    alert("خطا در ذخیره تخفیف");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <BaseModal
@@ -451,10 +505,14 @@ const handleSave = async () => {
     >
       <div dir="rtl" className="py-1 max-h-[80vh] px-3 overflow-y-auto">
         <DiscountTimeInputs
-          days={days}
-          hours={hours}
-          setDays={setDays}
-          setHours={setHours}
+          startDate={startDate}
+          endDate={endDate}
+          startTime={startTime}
+          endTime={endTime}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          setStartTime={setStartTime}
+          setEndTime={setEndTime}
         />
 
         {loading && (
