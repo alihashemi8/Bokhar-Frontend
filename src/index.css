@@ -202,3 +202,28 @@
 .remove-arrows {
   -moz-appearance: textfield; /* Firefox */
 }
+
+/* افکت پالس آب مخصوص کارت‌هایی که پس‌زمینه sky دارند */
+.discount-glow {
+  animation: border-sky-pulse 2.4s ease-in-out infinite both;
+}
+
+.animate-restart {
+  animation: none !important;
+}
+
+@keyframes border-sky-pulse {
+  0% {
+    border-color: rgba(56, 189, 248, 0.05);
+    box-shadow: 0 0 0px rgba(56, 189, 248, 0.00);
+  }
+  50% {
+    border-color: rgba(56, 189, 248, 1.0); /* شدت بسیار زیاد → Chrome نمی‌تواند merge کند */
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.7);
+  }
+  100% {
+    border-color: rgba(56, 189, 248, 0.05);
+    box-shadow: 0 0 0px rgba(56, 189, 248, 0.00);
+  }
+}
+
