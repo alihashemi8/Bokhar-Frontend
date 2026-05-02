@@ -1,31 +1,364 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  useReducer,
+  useMemo,
+  memo,
+} from "react";
 import BaseModal from "../../../basemodal/BaseModal";
 import {
   fetchProductFullPricing,
   createProductDiscount,
 } from "../../../../api/discountsApi";
 
-function DiscountTimeInputs({
-  startDate,
-  endDate,
-  startTime,
-  endTime,
-  setStartDate,
-  setEndDate,
-  setStartTime,
-  setEndTime,
+// ==========================================
+// Utility Functions
+// ==========================================
+
+const formatDateForInput = (date) => {
+  if (!date) return "";
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
+};
+
+const formatTimeForInput = (date) => {
+  if (!date) return "";
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    return d.toTimeString().slice(0, 5);
+  } catch {
+    return "";
+  }
+};
+
+const parseDateTime = (dateStr, timeStr) => {
+  if (!dateStr) return null;
+  try {
+    const time = timeStr || "00:00";
+    const date = new Date(`${dateStr}T${time}`);
+    return isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
+};
+
+// ==========================================
+// Reducer & State Management
+// ==========================================
+
+const initialState = {
+  loading: false,
+  tabs: [],
+  pricing: {},
+  activeTab: 0,
+  discounts: {},
+  schedule: {
+    startDate: "",
+    endDate: "",
+    startTime: "00:00",
+    endTime: "23:59",
+  },
+  errors: {},
+};
+
+function discountReducer(state, action) {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+    
+    case "INIT_DATA":
+      return {
+        ...state,
+        tabs: action.payload.tabs,
+        pricing: action.payload.pricing,
+        discounts: action.payload.discounts,
+        schedule: action.payload.schedule,
+        activeTab: 0,
+        errors: {},
+      };
+    
+    case "SET_ACTIVE_TAB":
+      return { ...state, activeTab: action.payload };
+    
+    case "TOGGLE_MATERIAL":
+      return {
+        ...state,
+        discounts: {
+          ...state.discounts,
+          [state.activeTab]: {
+            ...state.discounts[state.activeTab],
+            [action.payload]: state.discounts[state.activeTab]?.[action.payload]
+              ? undefined
+              : { percent: "", amount: "" },
+          },
+        },
+      };
+    
+    case "UPDATE_DISCOUNT_VALUE":
+      return {
+        ...state,
+        discounts: {
+          ...state.discounts,
+          [state.activeTab]: {
+            ...state.discounts[state.activeTab],
+            [action.payload.material]: {
+              ...state.discounts[state.activeTab]?.[action.payload.material],
+              [action.payload.field]: action.payload.value,
+            },
+          },
+        },
+      };
+    
+    case "SET_SCHEDULE":
+      return {
+        ...state,
+        schedule: { ...state.schedule, ...action.payload },
+        errors: { ...state.errors, ...action.payload.errors },
+      };
+    
+    case "SET_ERROR":
+      return {
+        ...state,
+        errors: { ...state.errors, [action.payload.field]: action.payload.message },
+      };
+    
+    case "CLEAR_ERRORS":
+      return { ...state, errors: {} };
+    
+    default:
+      return state;
+  }
+}
+
+// ==========================================
+// Custom Hook
+// ==========================================
+
+function useDiscountModal(product, isOpen) {
+  const [state, dispatch] = useReducer(discountReducer, initialState);
+
+  useEffect(() => {
+    if (!isOpen || !product?.id) return;
+
+    const loadData = async () => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      
+      try {
+        const data = await fetchProductFullPricing(product.id);
+        const tabs = Object.keys(data.pricing);
+        
+        if (tabs.length === 0) {
+          dispatch({ type: "SET_LOADING", payload: false });
+          return;
+        }
+
+        // Initialize discounts from existing data
+        const initialDiscounts = {};
+        tabs.forEach((tabName, index) => {
+          initialDiscounts[index] = {};
+          const tabData = data.pricing[tabName];
+          
+          tabData.materialPrices?.forEach((mat) => {
+            if (mat.has_discount && mat.discount_value != null) {
+              initialDiscounts[index][mat.material] = {
+                percent: mat.discount_type === "percent" ? mat.discount_value : "",
+                amount: mat.discount_type === "fixed" ? mat.discount_value : "",
+              };
+            }
+          });
+        });
+
+        // Extract schedule from first available discount
+        let schedule = {
+          startDate: "",
+          endDate: "",
+          startTime: "00:00",
+          endTime: "23:59",
+        };
+
+        for (const tabName of tabs) {
+          const tabData = data.pricing[tabName];
+          const matWithDiscount = tabData.materialPrices?.find(
+            (m) => m.has_discount && m.discount_start_at && m.discount_end_at
+          );
+          
+          if (matWithDiscount) {
+            schedule = {
+              startDate: formatDateForInput(matWithDiscount.discount_start_at),
+              endDate: formatDateForInput(matWithDiscount.discount_end_at),
+              startTime: formatTimeForInput(matWithDiscount.discount_start_at),
+              endTime: formatTimeForInput(matWithDiscount.discount_end_at),
+            };
+            break;
+          }
+        }
+
+        dispatch({
+          type: "INIT_DATA",
+          payload: {
+            tabs,
+            pricing: data.pricing,
+            discounts: initialDiscounts,
+            schedule,
+          },
+        });
+      } catch {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { field: "global", message: "خطا در دریافت اطلاعات" },
+        });
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    };
+
+    loadData();
+  }, [isOpen, product?.id]);
+
+  const validateAndSave = useCallback(async () => {
+    const { schedule, discounts, tabs, pricing } = state;
+    
+    // Clear previous errors
+    dispatch({ type: "CLEAR_ERRORS" });
+    
+    // Validation
+    if (!schedule.startDate || !schedule.endDate) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { field: "schedule", message: "تاریخ شروع و پایان الزامی است" },
+      });
+      return false;
+    }
+
+    const start = parseDateTime(schedule.startDate, schedule.startTime);
+    const end = parseDateTime(schedule.endDate, schedule.endTime);
+
+    if (!start || !end) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { field: "schedule", message: "فرمت تاریخ نامعتبر است" },
+      });
+      return false;
+    }
+
+    if (end <= start) {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { field: "schedule", message: "تاریخ پایان باید بعد از شروع باشد" },
+      });
+      return false;
+    }
+
+    // Prepare payload
+    const payload = [];
+    const startISO = start.toISOString();
+    const endISO = end.toISOString();
+
+    Object.entries(discounts).forEach(([tabIndex, materials]) => {
+      const tabName = tabs[tabIndex];
+      const tabData = pricing[tabName];
+      if (!tabData) return;
+
+Object.entries(materials).forEach(([matName, values]) => {
+  const matObj = tabData.materialPrices?.find(
+    (m) => m.material === matName
+  );
+  if (!matObj) return;
+
+  const hasPercent =
+    values?.percent !== "" && values?.percent !== undefined && !isNaN(values.percent);
+  const hasAmount =
+    values?.amount !== "" && values?.amount !== undefined && !isNaN(values.amount);
+
+  // ✅ حذف تخفیف
+  if (!hasPercent && !hasAmount) {
+    if (matObj.has_discount) {
+      payload.push({
+        material: matObj.id,
+        type: "fixed",
+        value: 0, // ✅ باعث delete در بک‌اند
+      });
+    }
+    return;
+  }
+
+  payload.push({
+    material: matObj.id,
+    type: hasPercent ? "percent" : "fixed",
+    value: hasPercent ? Number(values.percent) : Number(values.amount),
+    start_at: startISO,
+    end_at: endISO,
+  });
+});
+
+    });
+
+    if (payload.length === 0) return false;
+
+    // Send requests
+    dispatch({ type: "SET_LOADING", payload: true });
+    
+    try {
+      // Using allSettled to handle partial failures
+      const results = await Promise.allSettled(
+        payload.map((item) => createProductDiscount(item))
+      );
+      
+      const failures = results.filter((r) => r.status === "rejected");
+      if (failures.length > 0) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { field: "global", message: `خطا در ذخیره ${failures.length} مورد` },
+        });
+        return false;
+      }
+      
+      return true;
+    } catch {
+      dispatch({
+        type: "SET_ERROR",
+        payload: { field: "global", message: "خطا در ذخیره تخفیف" },
+      });
+      return false;
+    } finally {
+      dispatch({ type: "SET_LOADING", payload: false });
+    }
+  }, [state]);
+
+  return { state, dispatch, validateAndSave };
+}
+
+// ==========================================
+// Sub Components
+// ==========================================
+
+const DiscountTimeInputs = memo(function DiscountTimeInputs({
+  schedule,
+  onChange,
+  error,
 }) {
+  const handleChange = useCallback((field, value) => {
+    onChange({ [field]: value, errors: { schedule: undefined } });
+  }, [onChange]);
+
   return (
     <div className="space-y-3 mb-4">
-      {/* Row 1: Calendar Fields */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 mr-1">تاریخ شروع</label>
           <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
             <input
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              value={schedule.startDate}
+              onChange={(e) => handleChange("startDate", e.target.value)}
               className="w-full bg-transparent outline-none text-sm"
               dir="ltr"
             />
@@ -37,8 +370,8 @@ function DiscountTimeInputs({
           <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
             <input
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              value={schedule.endDate}
+              onChange={(e) => handleChange("endDate", e.target.value)}
               className="w-full bg-transparent outline-none text-sm"
               dir="ltr"
             />
@@ -46,15 +379,14 @@ function DiscountTimeInputs({
         </div>
       </div>
 
-      {/* Row 2: Time Fields */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500 mr-1">ساعت شروع</label>
           <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
             <input
               type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              value={schedule.startTime}
+              onChange={(e) => handleChange("startTime", e.target.value)}
               className="w-full bg-transparent outline-none text-sm"
               dir="ltr"
             />
@@ -66,20 +398,23 @@ function DiscountTimeInputs({
           <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
             <input
               type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
+              value={schedule.endTime}
+              onChange={(e) => handleChange("endTime", e.target.value)}
               className="w-full bg-transparent outline-none text-sm"
               dir="ltr"
             />
           </div>
         </div>
       </div>
+      
+      {error && (
+        <p className="text-xs text-red-500 mt-1">{error}</p>
+      )}
     </div>
   );
-}
+});
 
-// Input Component
-function MaterialDiscountInput({
+const MaterialDiscountInput = memo(function MaterialDiscountInput({
   material,
   percentValue,
   amountValue,
@@ -89,8 +424,6 @@ function MaterialDiscountInput({
   active,
 }) {
   const [activeType, setActiveType] = useState(null);
-
-  // refs برای اتوفوکوس
   const percentRef = useRef(null);
   const amountRef = useRef(null);
 
@@ -99,41 +432,68 @@ function MaterialDiscountInput({
       setActiveType(null);
       return;
     }
-
     if (percentValue) setActiveType("percent");
     else if (amountValue) setActiveType("amount");
+    else setActiveType(null);
   }, [active, percentValue, amountValue]);
 
-  // اتوفوکوس هنگام فعال ‌شدن
   useEffect(() => {
     if (activeType === "percent" && percentRef.current) {
       percentRef.current.focus();
       percentRef.current.select();
-    }
-
-    if (activeType === "amount" && amountRef.current) {
+    } else if (activeType === "amount" && amountRef.current) {
       amountRef.current.focus();
       amountRef.current.select();
     }
   }, [activeType]);
 
-  const wrapperClass = (type) => {
-    if (activeType === null) return "flex-1";
-    if (activeType === type) return "flex-1";
-    return "w-0 opacity-0";
-  };
-
-  const activateType = (e, type) => {
-    e.stopPropagation();
-    if (!activeType) setActiveType(type);
-  };
-
-  const reset = (e) => {
+  const handleReset = useCallback((e) => {
     if (e) e.stopPropagation();
     setActiveType(null);
     onChangePercent("");
     onChangeAmount("");
-  };
+  }, [onChangePercent, onChangeAmount]);
+
+  const activateType = useCallback((e, type) => {
+    e.stopPropagation();
+    if (!activeType) setActiveType(type);
+  }, [activeType]);
+
+  const wrapperClass = useMemo(() => {
+    if (activeType === null) return "flex-1";
+    if (activeType === "percent") return activeType === "percent" ? "flex-[2]" : "flex-0 opacity-0";
+    return activeType === "amount" ? "flex-[2]" : "flex-0 opacity-0";
+  }, [activeType]);
+
+  const handlePercentChange = useCallback((e) => {
+    let v = e.target.value;
+    if (v !== "") {
+      const num = Number(v);
+      if (num < 0) v = "0";
+      if (num > 100) v = "100";
+    }
+    onChangePercent(v);
+  }, [onChangePercent]);
+
+  const handleAmountChange = useCallback((e) => {
+    let v = e.target.value;
+    if (v !== "" && Number(v) < 0) v = "0";
+    onChangeAmount(v);
+  }, [onChangeAmount]);
+
+  if (!active) {
+    return (
+      <div className="flex gap-3 items-center">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="px-3 py-2 rounded-xl bg-gray-100 text-gray-700 min-w-[70px]"
+        >
+          {material}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -141,360 +501,156 @@ function MaterialDiscountInput({
         <button
           type="button"
           onClick={onToggle}
-          className={`px-3 py-2 rounded-xl transition min-w-[70px] ${
-            active ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700"
-          }`}
+          className="px-3 py-2 rounded-xl bg-purple-600 text-white min-w-[70px]"
         >
           {material}
         </button>
 
-        {active && (
-          <div className="flex gap-2 flex-1 h-10 md:h-12 select-none">
-            {/* Percent */}
-            <div
+        <div className="flex gap-2 flex-1 h-10 md:h-12 select-none">
+          <div
+            onClick={(e) => activateType(e, "percent")}
+            className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${wrapperClass}`}
+          >
+            <input
+              ref={percentRef}
+              type="number"
+              value={percentValue ?? ""}
               onClick={(e) => activateType(e, "percent")}
-              className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-500 ease-in-out cursor-pointer ${wrapperClass(
-                "percent",
-              )}`}
-            >
-              <input
-                ref={percentRef}
-                type="number"
-                value={percentValue ?? ""}
-                onClick={(e) => activateType(e, "percent")}
-                onChange={(e) => onChangePercent(e.target.value)}
-                placeholder="درصد"
-                readOnly={activeType !== "percent"}
-                className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-6"
-                min="0"
-                max="100"
-              />
-
-              <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">
-                ٪
-              </span>
-
-              {activeType === "percent" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    reset();
-                  }}
-                  className="absolute left-3 text-gray-400"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-
-            {/* Amount */}
-            <div
-              onClick={(e) => activateType(e, "amount")}
-              className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-500 ease-in-out cursor-pointer ${wrapperClass(
-                "amount",
-              )}`}
-            >
-              <input
-                ref={amountRef}
-                type="number"
-                value={amountValue ?? ""}
-                onClick={(e) => activateType(e, "amount")}
-                onChange={(e) => onChangeAmount(e.target.value)}
-                placeholder="مبلغ"
-                readOnly={activeType !== "amount"}
-                className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
-                min="0"
-              />
-
-              <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">
-                $
-              </span>
-
-              {activeType === "amount" && (
-                <button
-                  onClick={reset}
-                  className="absolute left-3 text-gray-400"
-                >
-                  ×
-                </button>
-              )}
-            </div>
+              onChange={handlePercentChange}
+              placeholder="درصد"
+              readOnly={activeType !== "percent"}
+              className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-6"
+              min="0"
+              max="100"
+            />
+            <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">٪</span>
+            {activeType === "percent" && (
+              <button onClick={handleReset} className="absolute left-3 text-gray-400">×</button>
+            )}
           </div>
-        )}
+
+          <div
+            onClick={(e) => activateType(e, "amount")}
+            className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${activeType === "amount" ? "flex-[2]" : activeType ? "flex-0 opacity-0" : "flex-1"}`}
+          >
+            <input
+              ref={amountRef}
+              type="number"
+              value={amountValue ?? ""}
+              onClick={(e) => activateType(e, "amount")}
+              onChange={handleAmountChange}
+              placeholder="مبلغ"
+              readOnly={activeType !== "amount"}
+              className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
+              min="0"
+            />
+            <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">$</span>
+            {activeType === "amount" && (
+              <button onClick={handleReset} className="absolute left-3 text-gray-400">×</button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
-}
+});
 
-// Price Display Component
-function PriceDisplay({ basePrice, percent, amount }) {
-  const hasPercent = percent !== undefined && percent !== "" && !isNaN(percent);
-  const hasAmount = amount !== undefined && amount !== "" && !isNaN(amount);
+const PriceDisplay = memo(function PriceDisplay({ basePrice, percent, amount }) {
+  const display = useMemo(() => {
+    const hasPercent = percent !== undefined && percent !== "" && !isNaN(percent);
+    const hasAmount = amount !== undefined && amount !== "" && !isNaN(amount);
+    
+    if (!hasPercent && !hasAmount) {
+      return {
+        showDiscount: false,
+        original: basePrice,
+      };
+    }
 
-  if (!hasPercent && !hasAmount) {
-    return (
-      <div className="text-xs text-gray-500">
-        قیمت: {basePrice?.toLocaleString()} تومان
-      </div>
-    );
+    const originalPrice = Number(basePrice) || 0;
+    let discounted = originalPrice;
+
+    if (hasAmount) {
+      discounted -= Number(amount);
+    } else if (hasPercent) {
+      discounted -= (originalPrice * Number(percent)) / 100;
+    }
+
+    if (discounted < 0) discounted = 0;
+
+    return {
+      showDiscount: true,
+      original: originalPrice,
+      discounted,
+      type: hasAmount ? "amount" : "percent",
+      value: hasAmount ? amount : percent,
+    };
+  }, [basePrice, percent, amount]);
+
+  if (!display.showDiscount) {
+    return <div className="text-xs text-gray-500">قیمت: {display.original?.toLocaleString()} تومان</div>;
   }
-
-  const originalPrice = Number(basePrice);
-  let discounted = originalPrice;
-
-  if (hasAmount) discounted -= Number(amount);
-  else if (hasPercent) discounted -= (originalPrice * Number(percent)) / 100;
-
-  if (discounted < 0) discounted = 0;
 
   return (
     <div className="flex items-center space-x-2 text-xs">
       <span className="text-red-600 line-through">
-        {originalPrice.toLocaleString()} تومان
+        {display.original.toLocaleString()} تومان
       </span>
-
       <span className="text-green-600 font-semibold">
-        {discounted.toLocaleString()} تومان
+        {display.discounted.toLocaleString()} تومان
         <span className="text-gray-500 mr-1">
-          (
-          {hasAmount
-            ? `${Number(amount).toLocaleString()}  تومان `
-            : `${percent}%تخفیف`}
+          ({display.type === "amount" 
+            ? `${Number(display.value).toLocaleString()} تومان` 
+            : `${display.value}% تخفیف`}
           )
         </span>
       </span>
     </div>
   );
-}
+});
 
-// Main Discount Modal
+// ==========================================
+// Main Component
+// ==========================================
+
 export default function DiscountModal({ isOpen, onClose, product, category }) {
-  const [loading, setLoading] = useState(false);
-
-  const [tabs, setTabs] = useState([]);
-  const [pricing, setPricing] = useState({});
-  const [activeTab, setActiveTab] = useState(0);
-
-  const [discounts, setDiscounts] = useState({});
-  
-  // New Date/Time States instead of days/hours
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [startTime, setStartTime] = useState("00:00");
-  const [endTime, setEndTime] = useState("23:59");
-
   const target = product || category;
+  const { state, dispatch, validateAndSave } = useDiscountModal(product, isOpen);
 
-  // Initialize default dates when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const now = new Date();
-      const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      
-      const formatDate = (d) => d.toISOString().split('T')[0];
-      const formatTime = (d) => d.toTimeString().slice(0, 5);
-      
-      setStartDate(formatDate(now));
-      setStartTime(formatTime(now));
-      setEndDate(formatDate(nextWeek));
-      setEndTime("23:59");
-    }
-  }, [isOpen]);
+  const handleSave = useCallback(async () => {
+    const success = await validateAndSave();
+    if (success) onClose();
+  }, [validateAndSave, onClose]);
 
-  useEffect(() => {
-    if (!isOpen || !product?.id) return;
+  const currentTabData = useMemo(() => {
+    const tabName = state.tabs[state.activeTab];
+    if (!tabName) return { materialPrices: [] };
+    return state.pricing[tabName] || { materialPrices: [] };
+  }, [state.tabs, state.activeTab, state.pricing]);
 
-    (async () => {
-      try {
-        setLoading(true);
+  const handleToggleMaterial = useCallback((material) => {
+    dispatch({ type: "TOGGLE_MATERIAL", payload: material });
+  }, [dispatch]);
 
-        const data = await fetchProductFullPricing(product.id);
+  const handleChangePercent = useCallback((material, value) => {
+    dispatch({
+      type: "UPDATE_DISCOUNT_VALUE",
+      payload: { material, field: "percent", value },
+    });
+  }, [dispatch]);
 
-        const tabNames = Object.keys(data.pricing);
+  const handleChangeAmount = useCallback((material, value) => {
+    dispatch({
+      type: "UPDATE_DISCOUNT_VALUE",
+      payload: { material, field: "amount", value },
+    });
+  }, [dispatch]);
 
-        setTabs(tabNames);
-        setPricing(data.pricing);
+  const handleScheduleChange = useCallback((updates) => {
+    dispatch({ type: "SET_SCHEDULE", payload: updates });
+  }, [dispatch]);
 
-        const initialDiscounts = {};
-
-        tabNames.forEach((tabName) => {
-          const tab = data.pricing[tabName];
-          initialDiscounts[tabName] = {};
-
-          tab.materialPrices.forEach((mat) => {
-            if (mat.discount_amount && Number(mat.discount_amount) > 0) {
-              initialDiscounts[tabName][mat.material] = {
-                percent: "",
-                amount: mat.discount_amount,
-              };
-            }
-          });
-        });
-
-        setDiscounts(initialDiscounts);
-        setActiveTab(0);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [isOpen, product]);
-
-  const currentTab = tabs[activeTab];
-  const tabPricing = pricing[currentTab] || { materialPrices: [] };
-  const tabForm = discounts[currentTab] || {};
-
-  const toggleMaterial = useCallback(
-    (material) => {
-      setDiscounts((prev) => {
-        const active = prev[currentTab]?.[material];
-
-        const updated = { ...prev[currentTab] };
-
-        if (active) delete updated[material];
-        else updated[material] = { percent: "", amount: "" };
-
-        return {
-          ...prev,
-          [currentTab]: updated,
-        };
-      });
-    },
-    [currentTab],
-  );
-
-  const changePercent = useCallback(
-    (material, value) => {
-      let v = value;
-      if (v !== "") {
-        const num = Number(v);
-        if (num < 0) v = "0";
-        if (num > 100) v = "100";
-      }
-
-      setDiscounts((prev) => ({
-        ...prev,
-        [currentTab]: {
-          ...prev[currentTab],
-          [material]: {
-            ...prev[currentTab][material],
-            percent: v,
-          },
-        },
-      }));
-    },
-    [currentTab],
-  );
-
-  const changeAmount = useCallback(
-    (material, value) => {
-      let v = value;
-      if (v !== "" && Number(v) < 0) v = "0";
-
-      setDiscounts((prev) => ({
-        ...prev,
-        [currentTab]: {
-          ...prev[currentTab],
-          [material]: {
-            ...prev[currentTab][material],
-            amount: v,
-          },
-        },
-      }));
-    },
-    [currentTab],
-  );
-
-  const handleSave = async () => {
-    // Validation
-    if (!startDate || !endDate) {
-      alert("لطفاً تاریخ شروع و پایان را انتخاب کنید");
-      return;
-    }
-
-    // Create ISO strings from date and time inputs
-    const start = new Date(`${startDate}T${startTime}`);
-    const end = new Date(`${endDate}T${endTime}`);
-    
-    if (end <= start) {
-      alert("تاریخ پایان باید بعد از تاریخ شروع باشد");
-      return;
-    }
-
-    const startISO = start.toISOString();
-    const endISO = end.toISOString();
-
-    // ۱) داده‌ها را پاکسازی کن
-    const clean = {};
-
-    for (const [tabName, materials] of Object.entries(discounts)) {
-      const filtered = {};
-
-      for (const [matName, d] of Object.entries(materials)) {
-        if (
-          (d.percent !== "" && !isNaN(d.percent)) ||
-          (d.amount !== "" && !isNaN(d.amount))
-        ) {
-          filtered[matName] = {
-            percent: d.percent !== "" ? Number(d.percent) : null,
-            amount: d.amount !== "" ? Number(d.amount) : null,
-          };
-        }
-      }
-
-      if (Object.keys(filtered).length > 0) {
-        clean[tabName] = filtered;
-      }
-    }
-
-    if (!Object.keys(clean).length) return;
-
-    // ۳) ساخت payload نهایی
-    const payload = [];
-
-    for (const [tabName, materials] of Object.entries(clean)) {
-      const tabData = pricing[tabName];
-      const tabId = tabData.id;
-
-      for (const [matName, d] of Object.entries(materials)) {
-        // پیدا کردن material object با id
-        const matObj = tabData.materialPrices.find(
-          (m) => m.material === matName
-        );
-
-        if (!matObj) continue;
-
-        const isPercent = d.percent !== null;
-        const type = isPercent ? "percent" : "fixed";
-        const value = isPercent ? d.percent : d.amount;
-
-        payload.push({
-          product: product.id,
-          pricing_tab: tabId,
-          material: matObj.id,
-          type,
-          value,
-          start_at: startISO,
-          end_at: endISO,
-        });
-      }
-    }
-
-    try {
-      setLoading(true);
-
-      // ۴) ارسال همه تخفیف‌ها
-      await Promise.all(payload.map((item) => createProductDiscount(item)));
-
-      onClose();
-    } catch (err) {
-      console.error(err);
-      alert("خطا در ذخیره تخفیف");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const currentDiscounts = state.discounts[state.activeTab] || {};
 
   return (
     <BaseModal
@@ -505,40 +661,40 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
     >
       <div dir="rtl" className="py-1 max-h-[80vh] px-3 overflow-y-auto">
         <DiscountTimeInputs
-          startDate={startDate}
-          endDate={endDate}
-          startTime={startTime}
-          endTime={endTime}
-          setStartDate={setStartDate}
-          setEndDate={setEndDate}
-          setStartTime={setStartTime}
-          setEndTime={setEndTime}
+          schedule={state.schedule}
+          onChange={handleScheduleChange}
+          error={state.errors.schedule}
         />
 
-        {loading && (
+        {state.errors.global && (
+          <div className="text-red-500 text-sm mb-3 p-2 bg-red-50 rounded-lg">
+            {state.errors.global}
+          </div>
+        )}
+
+        {state.loading && (
           <div className="text-center py-6">در حال دریافت اطلاعات...</div>
         )}
 
-        {!loading && tabs.length > 0 && (
+        {!state.loading && state.tabs.length > 0 && (
           <>
             <div className="flex gap-1 pt-2">
-              {tabs.map((tab, i) => {
-                const hasData =
-                  discounts[tab] && Object.keys(discounts[tab]).length > 0;
+              {state.tabs.map((tab, i) => {
+                const hasData = Object.keys(state.discounts[i] || {}).length > 0;
+                const isActive = state.activeTab === i;
 
                 return (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(i)}
+                    onClick={() => dispatch({ type: "SET_ACTIVE_TAB", payload: i })}
                     className={`flex-1 py-2 text-sm border rounded-t-xl transition relative ${
-                      activeTab === i
+                      isActive
                         ? "bg-white border-gray-200 border-b-white font-semibold"
                         : "bg-gray-200 border-transparent text-gray-500"
                     }`}
                   >
                     {tab}
-
-                    {hasData && activeTab !== i && (
+                    {hasData && !isActive && (
                       <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
                     )}
                   </button>
@@ -547,9 +703,9 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
             </div>
 
             <div className="bg-white border border-gray-200 border-t-white rounded-b-xl p-3 space-y-4 max-h-[50vh] overflow-y-auto">
-              {tabPricing.materialPrices.map((mat) => {
-                const saved = tabForm[mat.material] || {};
-                const active = !!tabForm[mat.material];
+              {currentTabData.materialPrices?.map((mat) => {
+                const saved = currentDiscounts[mat.material] || {};
+                const active = !!currentDiscounts[mat.material];
 
                 return (
                   <div key={mat.material} className="space-y-2">
@@ -557,9 +713,9 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
                       material={mat.material}
                       percentValue={saved.percent}
                       amountValue={saved.amount}
-                      onToggle={() => toggleMaterial(mat.material)}
-                      onChangePercent={(v) => changePercent(mat.material, v)}
-                      onChangeAmount={(v) => changeAmount(mat.material, v)}
+                      onToggle={() => handleToggleMaterial(mat.material)}
+                      onChangePercent={(v) => handleChangePercent(mat.material, v)}
+                      onChangeAmount={(v) => handleChangeAmount(mat.material, v)}
                       active={active}
                     />
 
@@ -583,7 +739,7 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 transition"
-            disabled={loading}
+            disabled={state.loading}
           >
             انصراف
           </button>
@@ -591,9 +747,9 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
           <button
             onClick={handleSave}
             className="px-6 py-2 rounded-xl bg-purple-600 text-white disabled:opacity-50 hover:bg-purple-700 transition"
-            disabled={loading}
+            disabled={state.loading}
           >
-            {loading ? "در حال ذخیره..." : "ذخیره"}
+            {state.loading ? "در حال ذخیره..." : "ذخیره"}
           </button>
         </div>
       </div>
