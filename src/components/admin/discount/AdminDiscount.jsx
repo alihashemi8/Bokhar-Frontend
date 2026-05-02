@@ -19,7 +19,7 @@ export default function AdminDiscounts() {
       />
 
       <main className="flex-1 p-4 sm:p-6 md:pr-64 overflow-x-hidden ">
-        <h2 className="text-2xl font-bold text-center md:text-right text-gray-800 dark:text-gray-100 mb-8">
+        <h2 className="text-2xl font-bold text-center md:text-right text-gray-800 dark:text-gray-100 mr-4 mb-8">
           مدیریت تخفیف‌ها
         </h2>
 

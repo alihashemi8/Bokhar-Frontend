@@ -12,6 +12,11 @@ import {
   fetchProductFullPricing,
   createProductDiscount,
 } from "../../../../api/discountsApi";
+// Install: npm install react-multi-date-picker
+import DatePicker from "react-multi-date-picker";
+import persian from "react-date-object/calendars/persian";
+import persian_fa from "react-date-object/locales/persian_fa";
+import "react-multi-date-picker/styles/layouts/mobile.css";
 
 // ==========================================
 // Utility Functions
@@ -50,6 +55,19 @@ const parseDateTime = (dateStr, timeStr) => {
   }
 };
 
+// Convert Persian Date object to ISO string
+const persianToISO = (persianDate, timeStr) => {
+  if (!persianDate) return null;
+  try {
+    const date = persianDate.toDate();
+    const [hours, minutes] = (timeStr || "00:00").split(":");
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toISOString();
+  } catch {
+    return null;
+  }
+};
+
 // ==========================================
 // Reducer & State Management
 // ==========================================
@@ -60,9 +78,10 @@ const initialState = {
   pricing: {},
   activeTab: 0,
   discounts: {},
+  isScheduleEnabled: false, // ✅ Toggle state
   schedule: {
-    startDate: "",
-    endDate: "",
+    startDate: null, // Persian date object
+    endDate: null,   // Persian date object
     startTime: "00:00",
     endTime: "23:59",
   },
@@ -81,6 +100,7 @@ function discountReducer(state, action) {
         pricing: action.payload.pricing,
         discounts: action.payload.discounts,
         schedule: action.payload.schedule,
+        isScheduleEnabled: action.payload.isScheduleEnabled, // ✅ Restore toggle state
         activeTab: 0,
         errors: {},
       };
@@ -115,6 +135,13 @@ function discountReducer(state, action) {
             },
           },
         },
+      };
+    
+    case "TOGGLE_SCHEDULE": // ✅ New action
+      return {
+        ...state,
+        isScheduleEnabled: !state.isScheduleEnabled,
+        errors: { ...state.errors, schedule: undefined },
       };
     
     case "SET_SCHEDULE":
@@ -162,6 +189,8 @@ function useDiscountModal(product, isOpen) {
 
         // Initialize discounts from existing data
         const initialDiscounts = {};
+        let hasAnySchedule = false; // ✅ Check if any discount has schedule
+        
         tabs.forEach((tabName, index) => {
           initialDiscounts[index] = {};
           const tabData = data.pricing[tabName];
@@ -172,14 +201,17 @@ function useDiscountModal(product, isOpen) {
                 percent: mat.discount_type === "percent" ? mat.discount_value : "",
                 amount: mat.discount_type === "fixed" ? mat.discount_value : "",
               };
+              if (mat.discount_start_at && mat.discount_end_at) {
+                hasAnySchedule = true;
+              }
             }
           });
         });
 
         // Extract schedule from first available discount
         let schedule = {
-          startDate: "",
-          endDate: "",
+          startDate: null,
+          endDate: null,
           startTime: "00:00",
           endTime: "23:59",
         };
@@ -191,11 +223,15 @@ function useDiscountModal(product, isOpen) {
           );
           
           if (matWithDiscount) {
+            // Convert to Persian Date objects
+            const start = new Date(matWithDiscount.discount_start_at);
+            const end = new Date(matWithDiscount.discount_end_at);
+            
             schedule = {
-              startDate: formatDateForInput(matWithDiscount.discount_start_at),
-              endDate: formatDateForInput(matWithDiscount.discount_end_at),
-              startTime: formatTimeForInput(matWithDiscount.discount_start_at),
-              endTime: formatTimeForInput(matWithDiscount.discount_end_at),
+              startDate: start, // Will be converted by DatePicker
+              endDate: end,
+              startTime: formatTimeForInput(start),
+              endTime: formatTimeForInput(end),
             };
             break;
           }
@@ -208,6 +244,7 @@ function useDiscountModal(product, isOpen) {
             pricing: data.pricing,
             discounts: initialDiscounts,
             schedule,
+            isScheduleEnabled: hasAnySchedule, // ✅ Enable toggle if data exists
           },
         });
       } catch {
@@ -224,90 +261,93 @@ function useDiscountModal(product, isOpen) {
   }, [isOpen, product?.id]);
 
   const validateAndSave = useCallback(async () => {
-    const { schedule, discounts, tabs, pricing } = state;
+    const { schedule, discounts, tabs, pricing, isScheduleEnabled } = state;
     
-    // Clear previous errors
     dispatch({ type: "CLEAR_ERRORS" });
     
-    // Validation
-    if (!schedule.startDate || !schedule.endDate) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: { field: "schedule", message: "تاریخ شروع و پایان الزامی است" },
-      });
-      return false;
-    }
+    let startISO, endISO;
 
-    const start = parseDateTime(schedule.startDate, schedule.startTime);
-    const end = parseDateTime(schedule.endDate, schedule.endTime);
+    // ✅ Only validate schedule if enabled
+    if (isScheduleEnabled) {
+      if (!schedule.startDate || !schedule.endDate) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { field: "schedule", message: "تاریخ شروع و پایان الزامی است" },
+        });
+        return false;
+      }
 
-    if (!start || !end) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: { field: "schedule", message: "فرمت تاریخ نامعتبر است" },
-      });
-      return false;
-    }
+      startISO = persianToISO(schedule.startDate, schedule.startTime);
+      endISO = persianToISO(schedule.endDate, schedule.endTime);
 
-    if (end <= start) {
-      dispatch({
-        type: "SET_ERROR",
-        payload: { field: "schedule", message: "تاریخ پایان باید بعد از شروع باشد" },
-      });
-      return false;
+      if (!startISO || !endISO) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { field: "schedule", message: "فرمت تاریخ نامعتبر است" },
+        });
+        return false;
+      }
+
+      if (new Date(endISO) <= new Date(startISO)) {
+        dispatch({
+          type: "SET_ERROR",
+          payload: { field: "schedule", message: "تاریخ پایان باید بعد از شروع باشد" },
+        });
+        return false;
+      }
     }
 
     // Prepare payload
     const payload = [];
-    const startISO = start.toISOString();
-    const endISO = end.toISOString();
 
     Object.entries(discounts).forEach(([tabIndex, materials]) => {
       const tabName = tabs[tabIndex];
       const tabData = pricing[tabName];
       if (!tabData) return;
 
-Object.entries(materials).forEach(([matName, values]) => {
-  const matObj = tabData.materialPrices?.find(
-    (m) => m.material === matName
-  );
-  if (!matObj) return;
+      Object.entries(materials).forEach(([matName, values]) => {
+        const matObj = tabData.materialPrices?.find(
+          (m) => m.material === matName
+        );
+        if (!matObj) return;
 
-  const hasPercent =
-    values?.percent !== "" && values?.percent !== undefined && !isNaN(values.percent);
-  const hasAmount =
-    values?.amount !== "" && values?.amount !== undefined && !isNaN(values.amount);
+        const hasPercent =
+          values?.percent !== "" && values?.percent !== undefined && !isNaN(values.percent);
+        const hasAmount =
+          values?.amount !== "" && values?.amount !== undefined && !isNaN(values.amount);
 
-  // ✅ حذف تخفیف
-  if (!hasPercent && !hasAmount) {
-    if (matObj.has_discount) {
-      payload.push({
-        material: matObj.id,
-        type: "fixed",
-        value: 0, // ✅ باعث delete در بک‌اند
+        if (!hasPercent && !hasAmount) {
+          if (matObj.has_discount) {
+            payload.push({
+              material: matObj.id,
+              type: "fixed",
+              value: 0,
+            });
+          }
+          return;
+        }
+
+        const discountPayload = {
+          material: matObj.id,
+          type: hasPercent ? "percent" : "fixed",
+          value: hasPercent ? Number(values.percent) : Number(values.amount),
+        };
+
+        // ✅ Only add dates if scheduling is enabled
+        if (isScheduleEnabled) {
+          discountPayload.start_at = startISO;
+          discountPayload.end_at = endISO;
+        }
+
+        payload.push(discountPayload);
       });
-    }
-    return;
-  }
-
-  payload.push({
-    material: matObj.id,
-    type: hasPercent ? "percent" : "fixed",
-    value: hasPercent ? Number(values.percent) : Number(values.amount),
-    start_at: startISO,
-    end_at: endISO,
-  });
-});
-
     });
 
     if (payload.length === 0) return false;
 
-    // Send requests
     dispatch({ type: "SET_LOADING", payload: true });
     
     try {
-      // Using allSettled to handle partial failures
       const results = await Promise.allSettled(
         payload.map((item) => createProductDiscount(item))
       );
@@ -340,75 +380,115 @@ Object.entries(materials).forEach(([matName, values]) => {
 // Sub Components
 // ==========================================
 
+// ✅ Updated Schedule Component with Persian Calendar
 const DiscountTimeInputs = memo(function DiscountTimeInputs({
+  isEnabled,
   schedule,
+  onToggle,
   onChange,
   error,
 }) {
-  const handleChange = useCallback((field, value) => {
+  const handleTimeChange = useCallback((field, value) => {
     onChange({ [field]: value, errors: { schedule: undefined } });
   }, [onChange]);
 
   return (
-    <div className="space-y-3 mb-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500 mr-1">تاریخ شروع</label>
-          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-            <input
-              type="date"
-              value={schedule.startDate}
-              onChange={(e) => handleChange("startDate", e.target.value)}
-              className="w-full bg-transparent outline-none text-sm"
-              dir="ltr"
-            />
-          </div>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500 mr-1">تاریخ پایان</label>
-          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-            <input
-              type="date"
-              value={schedule.endDate}
-              onChange={(e) => handleChange("endDate", e.target.value)}
-              className="w-full bg-transparent outline-none text-sm"
-              dir="ltr"
-            />
-          </div>
-        </div>
+    <div className="space-y-3 mb-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+      {/* Toggle Switch */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-700">
+          میخواهید برای تخفیف زمان انتخاب کنید
+        </span>
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+            isEnabled ? "bg-purple-600" : "bg-gray-300"
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isEnabled ? "-translate-x-6" : "-translate-x-1"
+            }`}
+          />
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500 mr-1">ساعت شروع</label>
-          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-            <input
-              type="time"
-              value={schedule.startTime}
-              onChange={(e) => handleChange("startTime", e.target.value)}
-              className="w-full bg-transparent outline-none text-sm"
-              dir="ltr"
-            />
+      {/* Persian Date & Time Inputs - Only show if enabled */}
+      {isEnabled && (
+        <div className="space-y-3 pt-2">
+          {/* Row 1: Start Date & Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 mr-1">تاریخ شروع</label>
+              <DatePicker
+                calendar={persian}
+                locale={persian_fa}
+                calendarPosition="bottom-right"
+                value={schedule.startDate}
+                onChange={(date) => onChange({ startDate: date })}
+                format="YYYY/MM/DD"
+                className="rmdp-mobile"
+                inputClass="w-full bg-white border border-gray-300 rounded-xl h-10 px-3 text-sm outline-none focus:border-purple-500"
+                containerClassName="w-full"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 mr-1">ساعت شروع</label>
+              <div className="flex items-center bg-white border border-gray-300 rounded-xl h-10 px-3 focus-within:border-purple-500">
+                <input
+                  type="time"
+                  value={schedule.startTime}
+                  onChange={(e) => handleTimeChange("startTime", e.target.value)}
+                  className="w-full bg-transparent outline-none text-sm"
+                  dir="ltr"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500 mr-1">ساعت پایان</label>
-          <div className="flex items-center bg-gray-100 rounded-xl h-10 px-3 sm:h-12">
-            <input
-              type="time"
-              value={schedule.endTime}
-              onChange={(e) => handleChange("endTime", e.target.value)}
-              className="w-full bg-transparent outline-none text-sm"
-              dir="ltr"
-            />
+
+          {/* Row 2: End Date & Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 mr-1">تاریخ پایان</label>
+              <DatePicker
+                calendar={persian}
+                locale={persian_fa}
+                calendarPosition="bottom-right"
+                value={schedule.endDate}
+                onChange={(date) => onChange({ endDate: date })}
+                format="YYYY/MM/DD"
+                className="rmdp-mobile"
+                inputClass="w-full bg-white border border-gray-300 rounded-xl h-10 px-3 text-sm outline-none focus:border-purple-500"
+                containerClassName="w-full"
+              />
+            </div>
+            
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-gray-500 mr-1">ساعت پایان</label>
+              <div className="flex items-center bg-white border border-gray-300 rounded-xl h-10 px-3 focus-within:border-purple-500">
+                <input
+                  type="time"
+                  value={schedule.endTime}
+                  onChange={(e) => handleTimeChange("endTime", e.target.value)}
+                  className="w-full bg-transparent outline-none text-sm"
+                  dir="ltr"
+                />
+              </div>
+            </div>
           </div>
+          
+          {error && (
+            <p className="text-xs text-red-500 mt-1">{error}</p>
+          )}
         </div>
-      </div>
+      )}
       
-      {error && (
-        <p className="text-xs text-red-500 mt-1">{error}</p>
+      {!isEnabled && (
+        <p className="text-xs text-gray-500">
+          تخفیف بدون محدودیت زمانی (همیشگی) اعمال می‌شود
+        </p>
       )}
     </div>
   );
@@ -459,11 +539,13 @@ const MaterialDiscountInput = memo(function MaterialDiscountInput({
     if (!activeType) setActiveType(type);
   }, [activeType]);
 
-  const wrapperClass = useMemo(() => {
-    if (activeType === null) return "flex-1";
-    if (activeType === "percent") return activeType === "percent" ? "flex-[2]" : "flex-0 opacity-0";
-    return activeType === "amount" ? "flex-[2]" : "flex-0 opacity-0";
-  }, [activeType]);
+const wrapperClass = useMemo(() => {
+  if (activeType === null) return "flex-1";
+  if (activeType === "percent") return "flex-[2]";
+  if (activeType === "amount") return "flex-0 opacity-0";
+  return "flex-1";
+}, [activeType]);
+
 
   const handlePercentChange = useCallback((e) => {
     let v = e.target.value;
@@ -650,6 +732,10 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
     dispatch({ type: "SET_SCHEDULE", payload: updates });
   }, [dispatch]);
 
+  const handleToggleSchedule = useCallback(() => {
+    dispatch({ type: "TOGGLE_SCHEDULE" });
+  }, [dispatch]);
+
   const currentDiscounts = state.discounts[state.activeTab] || {};
 
   return (
@@ -660,8 +746,11 @@ export default function DiscountModal({ isOpen, onClose, product, category }) {
       maxWidth="lg"
     >
       <div dir="rtl" className="py-1 max-h-[80vh] px-3 overflow-y-auto">
+        {/* ✅ Updated Schedule Component */}
         <DiscountTimeInputs
+          isEnabled={state.isScheduleEnabled}
           schedule={state.schedule}
+          onToggle={handleToggleSchedule}
           onChange={handleScheduleChange}
           error={state.errors.schedule}
         />
