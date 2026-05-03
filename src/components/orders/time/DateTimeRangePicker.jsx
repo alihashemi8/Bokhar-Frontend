@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
-import TimeSelector from "./TimeSelector";
-import ModalPicker from "./ModalPicker";
+import TimeSelector, { timeSlots } from "./TimeSelector";
 
 export default function DateTimeRangePicker({
   value,
@@ -15,42 +14,138 @@ export default function DateTimeRangePicker({
   const [deliveryTime, setDeliveryTime] = useState(null);
   const [pickupDate, setPickupDate] = useState(null);
   const [pickupTime, setPickupTime] = useState(null);
-  const [activeModal, setActiveModal] = useState(null);
+  
+  const hasNotifiedRef = useRef(false);
+  const prevValueRef = useRef(null);
 
   /* ---------- init ---------- */
   useEffect(() => {
-    if (!value) return;
+    if (!value || value === prevValueRef.current) return;
+    prevValueRef.current = value;
+    
     try {
-      if (value.delivery?.date)
-        setDeliveryDate(
-          new DateObject({
-            date: value.delivery.date,
-            calendar: persian,
-            locale: persian_fa,
-          })
-        );
-      if (value.pickup?.date)
-        setPickupDate(
-          new DateObject({
-            date: value.pickup.date,
-            calendar: persian,
-            locale: persian_fa,
-          })
-        );
-      if (value.delivery?.time) setDeliveryTime(value.delivery.time);
-      if (value.pickup?.time) setPickupTime(value.pickup.time);
+      if (value.delivery?.date) {
+        const newDate = new DateObject({
+          date: value.delivery.date,
+          calendar: persian,
+          locale: persian_fa,
+        });
+        setDeliveryDate(prev => {
+          if (!prev) return newDate;
+          return prev.toJulianDay() !== newDate.toJulianDay() ? newDate : prev;
+        });
+      }
+      if (value.pickup?.date) {
+        const newDate = new DateObject({
+          date: value.pickup.date,
+          calendar: persian,
+          locale: persian_fa,
+        });
+        setPickupDate(prev => {
+          if (!prev) return newDate;
+          return prev.toJulianDay() !== newDate.toJulianDay() ? newDate : prev;
+        });
+      }
+      if (value.delivery?.time) {
+        setDeliveryTime(prev => prev !== value.delivery.time ? value.delivery.time : prev);
+      }
+      if (value.pickup?.time) {
+        setPickupTime(prev => prev !== value.pickup.time ? value.pickup.time : prev);
+      }
     } catch (e) {
       console.warn("❌ خطا در مقداردهی اولیه:", e);
     }
   }, [value]);
 
-  /* ---------- pickup min date ---------- */
-  const pickupMinDate = deliveryDate
-    ? new DateObject(deliveryDate).add(2, "days")
-    : null;
+  /* ---------- محاسبه تعداد ساعت بین تحویل و دریافت ---------- */
+  const calculateHoursDiff = useCallback(() => {
+    if (!deliveryDate || !deliveryTime || !pickupDate || !pickupTime) return 0;
+    
+    const deliveryObj = new DateObject(deliveryDate);
+    const pickupObj = new DateObject(pickupDate);
+    const dayDiff = pickupObj.toJulianDay() - deliveryObj.toJulianDay();
+    
+    const getMidHour = (slot) => {
+      if (slot === "۸صبح  تا ۱۳") return 10.5;
+      if (slot === "۱۶ تا ۲۰") return 18;
+      return 12;
+    };
+    
+    const deliveryHour = getMidHour(deliveryTime);
+    const pickupHour = getMidHour(pickupTime);
+    
+    let totalHours = (dayDiff * 24) + (pickupHour - deliveryHour);
+    
+    return Math.max(0, totalHours);
+  }, [deliveryDate, deliveryTime, pickupDate, pickupTime]);
 
-  /* ---------- sync ---------- */
-  const triggerOnChange = (state = {}) => {
+  /* ---------- pricing logic ---------- */
+  const priceInfo = useMemo(() => {
+    const hours = calculateHoursDiff();
+    
+    if (hours <= 0) return null;
+    
+    if (hours <= 24) {
+      return {
+        amount: 100000,
+        type: 'express',
+        label: '۱۰۰,۰۰۰ تومان',
+        desc: 'سرویس فوری (تا 24 ساعت)',
+        color: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
+        borderColor: 'border-red-200 dark:border-red-800',
+        textColor: 'text-red-700 dark:text-red-300',
+        hours: hours
+      };
+    }
+    
+    if (hours <= 48) {
+      return {
+        amount: 50000,
+        type: 'standard',
+        label: '۵۰,۰۰۰ تومان',
+        desc: 'سرویس استاندارد (تا 48 ساعت)',
+        color: 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20',
+        borderColor: 'border-amber-200 dark:border-amber-800',
+        textColor: 'text-amber-700 dark:text-amber-300',
+        hours: hours
+      };
+    }
+    
+    return {
+      amount: 0,
+      type: 'economy',
+      label: 'رایگان',
+      desc: 'سرویس اقتصادی (72+ ساعت)',
+      color: 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20',
+      borderColor: 'border-emerald-200 dark:border-emerald-800',
+      textColor: 'text-emerald-700 dark:text-emerald-300',
+      hours: hours
+    };
+  }, [calculateHoursDiff]);
+
+  /* ---------- pickup min date ---------- */
+  const pickupMinDate = deliveryDate ? new DateObject(deliveryDate) : null;
+
+  /* ---------- محاسبه اسلات‌های غیرفعال ---------- */
+  const disabledPickupSlots = useMemo(() => {
+    if (!deliveryDate || !pickupDate || !deliveryTime) return [];
+    
+    const deliveryObj = new DateObject(deliveryDate);
+    const pickupObj = new DateObject(pickupDate);
+    
+    if (deliveryObj.toJulianDay() === pickupObj.toJulianDay()) {
+      if (deliveryTime === "۸ صبح تا ۱۳") {
+        return ["۸ صبح تا ۱۳"];
+      }
+      if (deliveryTime === "۱۶ تا ۲۰") {
+        return ["۸ صبح تا ۱۳", "۱۶ تا ۲۰"];
+      }
+    }
+    
+    return [];
+  }, [deliveryDate, pickupDate, deliveryTime]);
+
+  const triggerOnChange = useCallback((state = {}, currentPrice = priceInfo) => {
     if (!onChange) return;
 
     const dDate = state.deliveryDate ?? deliveryDate;
@@ -65,44 +160,99 @@ export default function DateTimeRangePicker({
         date: pDate ? new DateObject(pDate).format("YYYY-MM-DD") : null,
         time: state.pickupTime ?? pickupTime ?? null,
       },
+      pricing: currentPrice ? {
+        amount: currentPrice.amount,
+        type: currentPrice.type,
+        hours: currentPrice.hours
+      } : null
     });
-  };
+  }, [onChange, deliveryDate, pickupDate, deliveryTime, pickupTime, priceInfo]);
+
+  useEffect(() => {
+    const isComplete = deliveryDate && deliveryTime && pickupDate && pickupTime;
+    
+    if (isComplete && !hasNotifiedRef.current) {
+      hasNotifiedRef.current = true;
+      triggerOnChange();
+      onComplete?.();
+    } else if (!isComplete) {
+      hasNotifiedRef.current = false;
+    }
+  }, [deliveryDate, deliveryTime, pickupDate, pickupTime, triggerOnChange, onComplete]);
 
   /* ---------- handlers ---------- */
   const handleDeliveryDateChange = (date) => {
     setDeliveryDate(date);
-    triggerOnChange({ deliveryDate: date });
-
+    
     if (pickupDate) {
-      const min = new DateObject(date).add(2, "days");
-      if (pickupDate.toJulianDay() < min.toJulianDay()) {
+      const pickupObj = new DateObject(pickupDate);
+      const deliveryObj = new DateObject(date);
+      
+      if (pickupObj.toJulianDay() < deliveryObj.toJulianDay()) {
         setPickupDate(null);
         setPickupTime(null);
+        hasNotifiedRef.current = false;
+      } else if (pickupObj.toJulianDay() === deliveryObj.toJulianDay()) {
+        if (deliveryTime === "۱۶ تا ۲۰") {
+          setPickupDate(null);
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        } else if (deliveryTime === "۸ صبح تا ۱۳" && pickupTime === "۸ صبح تا ۱۳") {
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        }
       }
     }
+    
+    triggerOnChange({ deliveryDate: date });
   };
 
   const handleDeliveryTimeChange = (time) => {
     setDeliveryTime(time);
+    
+    if (pickupDate && deliveryDate) {
+      const deliveryObj = new DateObject(deliveryDate);
+      const pickupObj = new DateObject(pickupDate);
+      
+      if (deliveryObj.toJulianDay() === pickupObj.toJulianDay()) {
+        if (time === "۱۶ تا ۲۰") {
+          setPickupDate(null);
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        } else if (time === "۸ صبح تا ۱۳" && pickupTime === "۸ صبح تا ۱۳") {
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        }
+      }
+    }
+    
     triggerOnChange({ deliveryTime: time });
   };
 
   const handlePickupDateChange = (date) => {
     setPickupDate(date);
+    
+    if (deliveryDate && deliveryTime) {
+      const deliveryObj = new DateObject(deliveryDate);
+      const pickupObj = new DateObject(date);
+      
+      if (pickupObj.toJulianDay() === deliveryObj.toJulianDay()) {
+        if (deliveryTime === "۱۶ تا ۲۰") {
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        } else if (deliveryTime === "۸ صبح تا ۱۳" && pickupTime === "۸ صبح تا ۱۳") {
+          setPickupTime(null);
+          hasNotifiedRef.current = false;
+        }
+      }
+    }
+    
     triggerOnChange({ pickupDate: date });
   };
 
   const handlePickupTimeChange = (time) => {
     setPickupTime(time);
     triggerOnChange({ pickupTime: time });
-  };
-
-  const handleConfirm = (type) => {
-    if (type === "delivery") setActiveModal("pickup");
-    else {
-      setActiveModal(null);
-      onComplete?.();
-    }
   };
 
   const formatSafe = (date) => {
@@ -114,128 +264,133 @@ export default function DateTimeRangePicker({
     }
   };
 
-  const isComplete =
-    deliveryDate && deliveryTime && pickupDate && pickupTime;
+  const isComplete = deliveryDate && deliveryTime && pickupDate && pickupTime;
 
   return (
     <div
       dir="rtl"
-      className="
-        w-full max-w-4xl mx-auto rounded-2xl p-6 shadow-md border
-        bg-gradient-to-br
-        from-sky-50 via-sky-100 to-sky-200
-        dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
-        border-sky-300 dark:border-sky-700
-        text-gray-900 dark:text-gray-100
-      "
+      className="w-full max-w-3xl mx-auto rounded-3xl mb-20 md:mb-0 p-4 md:p-8 shadow-xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
     >
-      <h2 className="text-xl font-semibold text-center mb-6">
-        انتخاب بازه زمانی
+      <h2 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-sky-600 to-purple-600 bg-clip-text text-transparent">
+        انتخاب بازه زمانی تحویل و دریافت
       </h2>
-
-      {/* ---------- desktop ---------- */}
-      <div className="hidden md:block space-y-10">
-        <section>
-          <h3 className="mb-2 font-semibold">📦 تحویل دادن</h3>
+      <p className="my-4 text-center text-xs text-gray-500 dark:text-gray-400">
+        * تحویل فوری (۲۴ ساعته): اگر امروز ۸-۱۳ تحویل می‌دهید، همان روز ۱۶-۲۰ تحویل می‌گیرید (۱۰۰ هزار تومان). 
+        برای ۴۸ ساعت (۵۰ هزار تومان) و رایگان ۷۲+ ساعت فاصله بدهید.
+      </p>
+      {/* تغییر اصلی اینجا: از lg:grid-cols-2 به flex flex-col تغییر کرد */}
+      <div className="flex flex-col gap-6 md:gap-8">
+        {/* Delivery Section */}
+        <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">📦</span>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+              تحویل دادن
+            </h3>
+            {deliveryDate && deliveryTime && (
+              <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2">
+                <span className="font-medium">{formatSafe(deliveryDate)}</span>
+                <span className="opacity-60">|</span>
+                <span>{deliveryTime}</span>
+              </span>
+            )}
+          </div>
           <TimeSelector
             selectedDate={deliveryDate}
             setSelectedDate={handleDeliveryDateChange}
             selectedTime={deliveryTime}
             setSelectedTime={handleDeliveryTimeChange}
           />
-        </section>
+        </div>
 
-        <section>
-          <h3 className="mb-2 font-semibold">🕒 تحویل گرفتن</h3>
+        {/* Pickup Section */}
+        <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-2xl">🕒</span>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+              تحویل گرفتن
+            </h3>
+            {pickupDate && pickupTime && (
+              <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2">
+                <span className="font-medium">{formatSafe(pickupDate)}</span>
+                <span className="opacity-60">|</span>
+                <span>{pickupTime}</span>
+              </span>
+            )}
+          </div>
           <TimeSelector
             selectedDate={pickupDate}
             setSelectedDate={handlePickupDateChange}
             selectedTime={pickupTime}
             setSelectedTime={handlePickupTimeChange}
             minDate={pickupMinDate}
+            disabledTimeSlots={disabledPickupSlots}
           />
-        </section>
+        </div>
+      </div>
 
+      {/* Pricing Summary */}
+      {isComplete && priceInfo && (
+        <div className={`mt-8 p-6 rounded-2xl border-2 ${priceInfo.borderColor} bg-gradient-to-r ${priceInfo.color} animate-fadeInUp`}>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="text-center md:text-right">
+              <h4 className={`font-bold text-lg ${priceInfo.textColor} mb-1`}>
+                هزینه سرویس
+              </h4>
+              <p className={`text-sm ${priceInfo.textColor} opacity-90`}>
+                {priceInfo.desc} ({Math.round(priceInfo.hours)} ساعت)
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className={`text-3xl font-black ${priceInfo.textColor}`}>
+                {priceInfo.label}
+              </span>
+{priceInfo.amount === 0 && (
+  <span className="text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded font-bold">
+    تخفیف ویژه
+  </span>
+)}
+
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-gray-400/20 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'express' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
+              <div className="font-bold mb-1 text-red-700 dark:text-red-300">۲۴ ساعته</div>
+              <div className="font-black text-lg">۱۰۰,۰۰۰</div>
+              <div className="text-[10px] opacity-75">سریع‌ترین</div>
+            </div>
+            <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'standard' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
+              <div className="font-bold mb-1 text-amber-700 dark:text-amber-300">۴۸ ساعته</div>
+              <div className="font-black text-lg">۵۰,۰۰۰</div>
+              <div className="text-[10px] opacity-75">سریع</div>
+            </div>
+            <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'economy' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
+              <div className="font-bold mb-1 text-emerald-700 dark:text-emerald-300">۷۲+ ساعت</div>
+              <div className="font-black text-lg">رایگان</div>
+              <div className="text-[10px] opacity-75">عادی</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Button */}
+      <div className="mt-8 flex justify-center">
         <button
           disabled={!isComplete}
           onClick={() => onGoLocation?.()}
           className={`
-            mx-auto block px-6 py-3 rounded-xl mt-6 font-bold transition-all
-            ${
-              isComplete
-                ? `
-                  bg-gradient-to-r
-                  from-sky-100 to-sky-200
-                  dark:from-purple-700 dark:to-purple-800
-                  text-gray-800 dark:text-white/90
-                  shadow-md shadow-indigo-300
-                `
-                : `
-                  bg-gray-300 dark:bg-gray-700
-                  text-gray-500 dark:text-gray-400
-                  cursor-not-allowed
-                `
+            w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform
+            ${isComplete
+              ? "bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl  cursor-pointer"
+              : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }
           `}
         >
-          انتخاب موقعیت مکانی
+          {isComplete ? "ادامه و انتخاب موقعیت مکانی " : "لطفاً تاریخ و زمان را انتخاب کنید"}
         </button>
       </div>
 
-      {/* ---------- mobile ---------- */}
-      <div className="md:hidden">
-        <button
-          onClick={() => setActiveModal("delivery")}
-          className="
-            w-full py-3 rounded-xl font-bold transition-all
-            bg-gradient-to-r
-            from-sky-100 to-sky-200
-            dark:from-purple-700 dark:to-purple-800
-            text-gray-800 dark:text-white/90
-            shadow-md shadow-indigo-300
-          "
-        >
-          انتخاب زمان تحویل و دریافت
-        </button>
-      </div>
-
-      {/* ---------- modals ---------- */}
-      {activeModal === "delivery" && (
-        <ModalPicker
-          type="delivery"
-          onClose={() => setActiveModal(null)}
-          onConfirm={handleConfirm}
-          selectedDate={deliveryDate}
-          setSelectedDate={handleDeliveryDateChange}
-          selectedTime={deliveryTime}
-          setSelectedTime={handleDeliveryTimeChange}
-        />
-      )}
-
-      {activeModal === "pickup" && (
-        <ModalPicker
-          type="pickup"
-          onClose={() => setActiveModal(null)}
-          onConfirm={handleConfirm}
-          selectedDate={pickupDate}
-          setSelectedDate={handlePickupDateChange}
-          selectedTime={pickupTime}
-          setSelectedTime={handlePickupTimeChange}
-          minDate={pickupMinDate}
-        />
-      )}
-
-      {/* ---------- preview ---------- */}
-      {(deliveryDate || pickupDate) && (
-        <div className="mt-6 text-center space-y-2 text-sm">
-          {deliveryDate && deliveryTime && (
-            <p>📦 {formatSafe(deliveryDate)} – {deliveryTime}</p>
-          )}
-          {pickupDate && pickupTime && (
-            <p>🕒 {formatSafe(pickupDate)} – {pickupTime}</p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
