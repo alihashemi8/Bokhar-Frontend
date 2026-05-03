@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState, useCallback, useRef } from "react";
+import { useReducer, useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +20,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 const DISCOUNT_CODES = {
   OFF10: 0.1,
   OFF20: 0.2,
-  // می‌تونی بعدا کد جدید اضافه کنی
 };
 
 const initialState = {
@@ -64,10 +63,7 @@ export default function Order() {
   const [isMobile, setIsMobile] = useState(
     typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
-  const [mounted, setMounted] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("delivery");
-  const historyLock = useRef(false);
 
   // -------------------- helpers --------------------
   const getDateObj = (dateStr) =>
@@ -85,20 +81,13 @@ export default function Order() {
       ? getDateObj(orderData.datetime.delivery.date).add(2, "days")
       : null;
 
-  // dynamic step mapping
-  const stepMap = isMobile
-    ? { 1: "factor", 2: "location", 3: "payment" }
-    : { 1: "factor", 2: "time", 3: "location", 4: "payment" };
-
-  const stepLabels = isMobile
-    ? ["فاکتور", "مکان", "پرداخت"]
-    : ["فاکتور", "زمان", "مکان", "پرداخت"];
+  // ✅ ترتیب یکسان برای موبایل و دسکتاپ
+  const stepMap = { 1: "factor", 2: "location", 3: "time", 4: "payment" };
+  const stepLabels = ["فاکتور", "مکان", "زمان", "پرداخت"];
 
   const stepType = (s) => stepMap[s] || null;
 
   // -------------------- effects --------------------
-  useEffect(() => setMounted(true), []);
-
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
@@ -118,26 +107,7 @@ export default function Order() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
-  // modal & history
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = modalOpen ? "hidden" : prevOverflow;
-
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [modalOpen, isMobile]);
-
   // -------------------- modal handlers --------------------
-  const closeModalSafely = useCallback(() => {
-    setModalOpen(false);
-    setModalType("delivery");
-    historyLock.current = false;
-  }, []);
-
-  // unified date/time setter
   const handleModalChange = useCallback(
     (type, value) => {
       const datetime = { ...orderData.datetime };
@@ -151,49 +121,42 @@ export default function Order() {
     [modalType, orderData.datetime],
   );
 
-const handleModalConfirm = useCallback(() => {
-  const dt = orderData.datetime;
+  const handleModalConfirm = useCallback(() => {
+    const dt = orderData.datetime;
 
-  // مرحله تحویل دادن
-  if (modalType === "delivery") {
-    if (!dt.delivery?.date || !dt.delivery?.time) {
-      toast.error("لطفاً زمان تحویل دادن را کامل انتخاب کنید.");
+    if (modalType === "delivery") {
+      if (!dt.delivery?.date || !dt.delivery?.time) {
+        toast.error("لطفاً زمان تحویل دادن را کامل انتخاب کنید.");
+        return;
+      }
+      setModalType("pickup");
       return;
     }
 
-    // برو به انتخاب pickup
-    setModalType("pickup");
-    return;
-  }
+    if (modalType === "pickup") {
+      if (!dt.pickup?.date || !dt.pickup?.time) {
+        toast.error("لطفاً زمان تحویل گرفتن را کامل انتخاب کنید.");
+        return;
+      }
 
-  // مرحله تحویل گرفتن
-  if (modalType === "pickup") {
-    if (!dt.pickup?.date || !dt.pickup?.time) {
-      toast.error("لطفاً زمان تحویل گرفتن را کامل انتخاب کنید.");
-      return;
-    }
-
-    // ✅ فقط وقتی pickup کامل بود
-    closeModalSafely();
-
-    const nextStep = isMobile ? 2 : 3;
-    if (step !== nextStep) {
+      // ✅ بعد از زمان (مرحله ۳) برو به پرداخت (مرحله ۴)
+      const nextStep = 4;
       dispatch({ type: "SET_STEP", payload: nextStep });
-      dispatch({ type: "SET_MAX_STEP", payload: nextStep });
+      if (nextStep > maxStep) dispatch({ type: "SET_MAX_STEP", payload: nextStep });
     }
-  }
-}, [
-  modalType,
-  orderData.datetime,
-  step,
-  isMobile,
-  closeModalSafely,
-]);
-
+  }, [modalType, orderData.datetime, maxStep]);
 
   // -------------------- step handlers --------------------
   const handleNext = useCallback(() => {
     const currentType = stepType(step);
+
+    if (currentType === "location") {
+      const { location } = orderData;
+      if (!location?.coords || !location?.plaque || !location?.unit) {
+        toast.error("لطفاً موقعیت مکانی را کامل انتخاب کنید.");
+        return;
+      }
+    }
 
     if (currentType === "time") {
       const { delivery, pickup } = orderData.datetime;
@@ -208,14 +171,6 @@ const handleModalConfirm = useCallback(() => {
       }
     }
 
-    if (currentType === "location") {
-      const { location } = orderData;
-      if (!location?.coords || !location?.plaque || !location?.unit) {
-        toast.error("لطفاً موقعیت مکانی را کامل انتخاب کنید.");
-        return;
-      }
-    }
-
     const stepsCount = Object.keys(stepMap).length;
     if (step < stepsCount) {
       const nextStep = step + 1;
@@ -226,7 +181,13 @@ const handleModalConfirm = useCallback(() => {
   }, [step, maxStep, orderData, stepMap]);
 
   const handleBack = useCallback(() => {
-    if (step > 1) dispatch({ type: "SET_STEP", payload: step - 1 });
+    if (step > 1) {
+      // اگر از مرحله زمان (۳) برمی‌گردیم، ریست کردن modalType
+      if (step === 3) {
+        setModalType("delivery");
+      }
+      dispatch({ type: "SET_STEP", payload: step - 1 });
+    }
   }, [step]);
 
   const handleStepClick = useCallback(
@@ -246,8 +207,8 @@ const handleModalConfirm = useCallback(() => {
         total,
       });
       toast.success("سفارش با موفقیت ثبت شد ✅");
-      ["orderData", "orderStep", "orderMaxStep"].forEach(
-        localStorage.removeItem,
+      ["orderData", "orderStep", "orderMaxStep"].forEach((key) =>
+        localStorage.removeItem(key),
       );
       dispatch({ type: "RESET_ORDER" });
     } catch (err) {
@@ -255,12 +216,6 @@ const handleModalConfirm = useCallback(() => {
       toast.error("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
     }
   }, [orderData, factorTotal]);
-
-  const goToLocationStep = useCallback(() => {
-    const stepNum = isMobile ? 2 : 3;
-    dispatch({ type: "SET_STEP", payload: stepNum });
-    if (stepNum > maxStep) dispatch({ type: "SET_MAX_STEP", payload: stepNum });
-  }, [isMobile, maxStep]);
 
   // -------------------- render --------------------
   return (
@@ -276,74 +231,29 @@ const handleModalConfirm = useCallback(() => {
       <div className="min-h-[350px]">
         <AnimatePresence mode="wait">
           <motion.div
-            key={step + (isMobile ? "-m" : "-d")}
+            key={step}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
             transition={{ duration: 0.3 }}
           >
+            {/* مرحله ۱: فاکتور */}
             {stepType(step) === "factor" && (
               <Factor
                 onTotalChange={(value) =>
                   dispatch({ type: "SET_FACTOR_TOTAL", payload: value })
                 }
-                goToTimeStep={() =>
-                  !isMobile && dispatch({ type: "SET_STEP", payload: 2 })
-                }
+                // ✅ از فاکتور به مکان (مرحله ۲)
+                goToTimeStep={() => {
+                  const nextStep = 2;
+                  dispatch({ type: "SET_STEP", payload: nextStep });
+                  if (nextStep > maxStep)
+                    dispatch({ type: "SET_MAX_STEP", payload: nextStep });
+                }}
               />
             )}
 
-            {isMobile && step === 1 && (
-              <div className="mt-6 text-center">
-                <button
-                  className="
-                    w-full px-5 py-2 mb-20 rounded-xl font-semibold transition
-                    bg-sky-300 text-gray-700 border border-sky-300 shadow-lg shadow-sky-200
-                    hover:bg-sky-700 hover:text-white
-                    dark:bg-gradient-to-r dark:from-purple-700 dark:to-purple-800
-                    dark:border-purple-700 dark:text-white
-                    dark:shadow-black/40 dark:hover:from-purple-600 dark:hover:to-purple-700
-                  "
-                  onClick={() => {
-                    setModalType("delivery");
-                    setModalOpen(true);
-                  }}
-                >
-                  انتخاب زمان
-                </button>
-
-                {modalOpen && (
-                  <ModalPicker
-                    type={modalType}
-                    isOpen={modalOpen}
-                    selectedDate={selectedDateObj}
-                    setSelectedDate={(d) =>
-                      handleModalChange("date", d?.format("YYYY-MM-DD") || null)
-                    }
-                    selectedTime={
-                      modalType === "delivery"
-                        ? orderData.datetime.delivery?.time || null
-                        : orderData.datetime.pickup?.time || null
-                    }
-                    setSelectedTime={(t) => handleModalChange("time", t)}
-                    minDate={minPickupDate}
-                    onConfirm={handleModalConfirm}
-                    onClose={closeModalSafely}
-                  />
-                )}
-              </div>
-            )}
-
-            {!isMobile && stepType(step) === "time" && (
-              <DateTimeRangePicker
-                value={orderData.datetime}
-                onChange={(v) =>
-                  dispatch({ type: "SET_ORDER_DATA", payload: { datetime: v } })
-                }
-                onGoLocation={goToLocationStep}
-              />
-            )}
-
+            {/* مرحله ۲: مکان (موبایل و دسکتاپ) */}
             {stepType(step) === "location" && (
               <MapSelector
                 initialPosition={orderData.location?.coords}
@@ -351,10 +261,53 @@ const handleModalConfirm = useCallback(() => {
                 onLocationSelect={(location) =>
                   dispatch({ type: "SET_ORDER_DATA", payload: { location } })
                 }
-                goToNextStep={handleNext}
+                goToNextStep={handleNext} // می‌ره به مرحله ۳ (زمان)
               />
             )}
 
+            {/* مرحله ۳: زمان */}
+            {stepType(step) === "time" && (
+              <>
+                {/* دسکتاپ: نمایش اینلاین */}
+                {!isMobile && (
+                  <DateTimeRangePicker
+                    value={orderData.datetime}
+                    onChange={(v) =>
+                      dispatch({ type: "SET_ORDER_DATA", payload: { datetime: v } })
+                    }
+                    onGoNext={handleNext} // می‌ره به مرحله ۴ (پرداخت)
+                  />
+                )}
+                
+                {/* موبایل: نمایش مودال/کامپوننت انتخابگر زمان */}
+                {isMobile && (
+                  <div className="mt-6">
+                    <div className="text-center mb-4 text-gray-600 dark:text-gray-300">
+                      لطفاً زمان تحویل و تحویل گرفتن را انتخاب کنید
+                    </div>
+                    <ModalPicker
+                      type={modalType}
+                      isOpen={true}
+                      selectedDate={selectedDateObj}
+                      setSelectedDate={(d) =>
+                        handleModalChange("date", d?.format("YYYY-MM-DD") || null)
+                      }
+                      selectedTime={
+                        modalType === "delivery"
+                          ? orderData.datetime.delivery?.time || null
+                          : orderData.datetime.pickup?.time || null
+                      }
+                      setSelectedTime={(t) => handleModalChange("time", t)}
+                      minDate={minPickupDate}
+                      onConfirm={handleModalConfirm}
+                      onClose={() => handleBack()} // بستن = برگشت به مرحله ۲ (مکان)
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* مرحله ۴: پرداخت */}
             {stepType(step) === "payment" && (
               <Payment
                 subtotal={factorTotal}
@@ -363,8 +316,14 @@ const handleModalConfirm = useCallback(() => {
                 discountCode={orderData.discountCode}
                 datetime={orderData.datetime}
                 location={orderData.location}
-                goToTimeStep={() => dispatch({ type: "SET_STEP", payload: 2 })}
-                goToLocationStep={goToLocationStep}
+                // ✅ بازگشت به زمان (مرحله ۳) - یکسان برای موبایل و دسکتاپ
+                goToTimeStep={() => 
+                  dispatch({ type: "SET_STEP", payload: 3 })
+                }
+                // ✅ بازگشت به مکان (مرحله ۲) - یکسان برای موبایل و دسکتاپ
+                goToLocationStep={() => 
+                  dispatch({ type: "SET_STEP", payload: 2 })
+                }
                 setDiscountCode={(code) =>
                   dispatch({
                     type: "SET_ORDER_DATA",
