@@ -8,31 +8,47 @@ import TabModal from "../modals/TabModal";
 -------------------------------------------------- */
 
 function getDiscountStatus(product) {
-  if (!product?.pricing) return null;
+  if (!product?.pricing && !product?.category?.discount) return null;
 
   const now = new Date();
 
-  for (const tab of Object.values(product.pricing)) {
+  // اولویت با تخفیف دسته‌بندی
+  if (product?.category?.discount) {
+    const d = product.category.discount;
+    const start = d.start_at ? new Date(d.start_at) : null;
+    const end = d.end_at ? new Date(d.end_at) : null;
+    
+    if (d.is_active !== false) {
+      if (!start && !end) {
+        return { type: "no_time", source: "category", value: d.value, discountType: d.type };
+      }
+      if (start && now < start) {
+        return { type: "before", start, source: "category" };
+      }
+      if ((!start || now >= start) && (!end || now <= end)) {
+        return { type: "running", end, source: "category", value: d.value, discountType: d.type };
+      }
+    }
+  }
+
+  // چک کردن تخفیف روی مواد
+  for (const tab of Object.values(product.pricing || {})) {
     for (const m of tab.materialPrices || []) {
       if (!m.has_discount) continue;
 
-      const start = m.discount_start_at
-        ? new Date(m.discount_start_at)
-        : null;
-      const end = m.discount_end_at
-        ? new Date(m.discount_end_at)
-        : null;
+      const start = m.discount_start_at ? new Date(m.discount_start_at) : null;
+      const end = m.discount_end_at ? new Date(m.discount_end_at) : null;
 
       if (!start && !end) {
-        return { type: "no_time" };
+        return { type: "no_time", source: "material" };
       }
 
       if (start && now < start) {
-        return { type: "before", start };
+        return { type: "before", start, source: "material" };
       }
 
       if ((!start || now >= start) && (!end || now <= end)) {
-        return { type: "running", end };
+        return { type: "running", end, source: "material" };
       }
     }
   }
@@ -114,6 +130,7 @@ export default function ServiceDiscountTab() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false); // ✅ اضافه شد
 
   const [categoryModal, setCategoryModal] = useState(null);
   const [productModal, setProductModal] = useState(null);
@@ -150,29 +167,60 @@ export default function ServiceDiscountTab() {
   }, [query]);
 
   useEffect(() => {
-  if (!products.length) return;
+    if (!products.length) return;
 
-  products.forEach((p) => {
-    if (p.pricing) return;
+    products.forEach((p) => {
+      if (p.pricing) return;
 
-    api.getProduct(p.id).then((full) => {
-      setProducts((prev) =>
-        prev.map((x) =>
-          x.id === p.id ? { ...x, pricing: full.pricing } : x
-        )
-      );
+      api.getProduct(p.id).then((full) => {
+        setProducts((prev) =>
+          prev.map((x) =>
+            x.id === p.id ? { ...x, pricing: full.pricing } : x
+          )
+        );
+      });
     });
-  });
-}, [products]);
+  }, [products]);
 
   /* ---------------- Detect Discount ---------------- */
 
   const hasDiscount = (product) => {
+    // چک کردن تخفیف دسته‌بندی
+    if (product?.category?.discount) {
+      const d = product.category.discount;
+      const now = new Date();
+      const start = d.start_at ? new Date(d.start_at) : null;
+      const end = d.end_at ? new Date(d.end_at) : null;
+      
+      const isActive = d.is_active !== false;
+      
+      if (!isActive) return false;
+      
+      if (!start && !end) return true;
+      if (start && now < start) return true;
+      if ((!start || now >= start) && (!end || now <= end)) return true;
+    }
+    
+    // چک کردن تخفیف روی مواد
     if (!product?.pricing) return false;
-
     return Object.values(product.pricing).some((tab) =>
       tab.materialPrices?.some((m) => Number(m.discount_amount) > 0)
     );
+  };
+
+  // ✅ این تابع اینجا تعریف شده (داخل کامپوننت)
+  const refreshProducts = async () => {
+    setLoading(true);
+    try {
+      const data = query.trim()
+        ? await api.searchProducts(query)
+        : await api.getProducts();
+      setProducts(data);
+    } catch (err) {
+      console.error("Error refreshing:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ---------------- Glow IDs ---------------- */
@@ -289,6 +337,10 @@ export default function ServiceDiscountTab() {
           "
         />
 
+        {loading && (
+          <div className="text-center py-4 text-gray-500">در حال بارگذاری...</div>
+        )}
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredProducts.map((p) => (
             <div
@@ -344,12 +396,13 @@ export default function ServiceDiscountTab() {
       )}
 
       {categoryModal && (
-  <TabModal
-    category={categoryModal}
-    isOpen={!!categoryModal}
-    onClose={closeCategoryModal}
-  />
-)}
+        <TabModal
+          category={categoryModal}
+          isOpen={!!categoryModal}
+          onClose={closeCategoryModal}
+          onSuccess={refreshProducts}  
+        />
+      )}
 
     </div>
   );

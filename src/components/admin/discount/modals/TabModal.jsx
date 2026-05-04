@@ -4,6 +4,7 @@ import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import "react-multi-date-picker/styles/layouts/mobile.css";
+import { createProductDiscount } from "../../../../api/discountsApi"; // ایمپورت درست
 
 const persianToISO = (persianDate, timeStr) => {
   if (!persianDate) return null;
@@ -17,7 +18,7 @@ const persianToISO = (persianDate, timeStr) => {
   }
 };
 
-// ✅ کامپوننت اینپوت تخفیف با انیمیشن expand (شبیه MaterialDiscountInput)
+// 🔴 حذف تابع save از اینجا - فقط کامپوننت Pure باشه
 function DiscountInputs({ value, onChange }) {
   const { percent, amount, activeType } = value;
   const [localActive, setLocalActive] = useState(activeType);
@@ -57,6 +58,7 @@ function DiscountInputs({ value, onChange }) {
     if (!localActive) setLocalActive("fixed");
   };
 
+  // UI کامپوننت ...
   return (
     <div className="space-y-3">
       <h4 className="text-sm font-semibold text-gray-800">مقدار تخفیف</h4>
@@ -135,7 +137,7 @@ function DiscountInputs({ value, onChange }) {
   );
 }
 
-// ✅ کامپوننت زمان‌بندی شبیه DiscountTimeInputs
+// ScheduleSection بدون تغییر...
 function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   const handleTimeChange = (field, value) => {
     onChange({ ...schedule, [field]: value });
@@ -143,7 +145,6 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
 
   return (
     <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
-      {/* Toggle Switch */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-700">
           میخواهید برای تخفیف زمان انتخاب کنید
@@ -163,7 +164,6 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
         </button>
       </div>
 
-      {/* Date & Time Inputs */}
       {isEnabled && (
         <div className="space-y-3 pt-2">
           <div className="grid grid-cols-2 gap-3">
@@ -241,7 +241,8 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   );
 }
 
-export default function TabModal({ isOpen, onClose, category }) {
+// ✅ اضافه کردن onSuccess به props
+export default function TabModal({ isOpen, onClose, category, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [scheduleOn, setScheduleOn] = useState(false);
@@ -257,7 +258,6 @@ export default function TabModal({ isOpen, onClose, category }) {
     activeType: null 
   });
 
-  // ✅ اصلاح: استفاده از useEffect به جای useMemo برای side-effects
   useEffect(() => {
     if (!isOpen) return;
     
@@ -348,12 +348,13 @@ export default function TabModal({ isOpen, onClose, category }) {
         })
       };
       
-      // فرض بر این است که createCategoryDiscount ایمپورت شده است
-      await createCategoryDiscount(payload);
+      // ✅ استفاده از createProductDiscount (نه createCategoryDiscount)
+      await createProductDiscount(payload);
       onClose();
-      window.location.reload();
-    } catch {
+      onSuccess?.(); // ✅ callback برای رفرش لیست
+    } catch (err) {
       setError("خطا در ذخیره");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -368,7 +369,6 @@ export default function TabModal({ isOpen, onClose, category }) {
     >
       <div dir="rtl" className="py-1 px-3 space-y-4 max-h-[80vh] overflow-y-auto">
         
-        {/* ✅ بخش زمان‌بندی با UI جدید */}
         <ScheduleSection
           isEnabled={scheduleOn}
           schedule={schedule}
@@ -377,17 +377,14 @@ export default function TabModal({ isOpen, onClose, category }) {
           error={error?.includes("تاریخ") || error?.includes("زمان") ? error : null}
         />
 
-        {/* ✅ بخش تخفیف با انیمیشن expand */}
         <DiscountInputs value={discount} onChange={setDiscount} />
 
-        {/* ✅ نمایش خطا با استایل جدید */}
         {error && !error.includes("تاریخ") && !error.includes("زمان") && (
           <div className="text-red-500 text-sm p-2 bg-red-50 rounded-lg">
             {error}
           </div>
         )}
 
-        {/* ✅ دکمه‌ها با استایل one-shot */}
         <div className="flex justify-between pt-4 border-t mt-4">
           <button 
             onClick={onClose} 
