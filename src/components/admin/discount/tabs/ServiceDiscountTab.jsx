@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../../../api/clientApi";
 import DiscountModal from "../modals/DiscountModal";
+import TabModal from "../modals/TabModal";
 
 /* --------------------------------------------------
    Helpers
@@ -117,8 +118,19 @@ export default function ServiceDiscountTab() {
   const [categoryModal, setCategoryModal] = useState(null);
   const [productModal, setProductModal] = useState(null);
 
-  /* ---------------- Load Categories ---------------- */
+  // ---------------------------
+  // Fix: Trigger glow AFTER initial render
+  // ---------------------------
+  const [animateGlow, setAnimateGlow] = useState(false);
 
+  useEffect(() => {
+    const t = setTimeout(() => setAnimateGlow(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  // ---------------------------
+  // Load Categories
+  // ---------------------------
   useEffect(() => {
     (async () => {
       const data = await api.getCategories();
@@ -226,7 +238,36 @@ export default function ServiceDiscountTab() {
   /* ---------------- UI ---------------- */
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto space-y-8 px-3 md:px-4">
+    <div className="w-full max-w-[1400px] mx-auto space-y-8 px-3 md:px-4 overflow-x-hidden">
+
+      {/* دسته‌ها */}
+      <div className="
+        w-full p-4 md:p-5 rounded-2xl
+        bg-white/70 dark:bg-neutral-800/60 backdrop-blur-md
+        border border-sky-200 dark:border-indigo-600 shadow-lg
+      ">
+        <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
+          تخفیف روی دسته‌بندی‌ها
+        </h3>
+
+        <div className="flex flex-wrap gap-2">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => openCategoryModal(c)}
+              className="
+                px-3 py-2 rounded-xl transition text-sm
+                bg-white dark:bg-neutral-700 
+                text-gray-700 dark:text-gray-200
+                border border-sky-200 dark:border-gray-600
+                hover:bg-sky-100 dark:hover:bg-purple-700 hover:text-gray-900
+              "
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* محصولات */}
       <div className="
@@ -303,12 +344,13 @@ export default function ServiceDiscountTab() {
       )}
 
       {categoryModal && (
-        <DiscountModal
-          category={categoryModal}
-          isOpen
-          onClose={closeCategoryModal}
-        />
-      )}
+  <TabModal
+    category={categoryModal}
+    isOpen={!!categoryModal}
+    onClose={closeCategoryModal}
+  />
+)}
+
     </div>
   );
 }

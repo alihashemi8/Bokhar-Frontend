@@ -282,7 +282,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     transition-all
   "
               >
-                انتخاب زمان
+                انتخاب مکان
               </button>
             )}
           </div>
