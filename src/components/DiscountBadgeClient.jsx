@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-function getDiscountStatus(product) {
+// خروجی گرفتن تابع برای استفاده مجدد
+export function getDiscountStatus(product) {
   if (!product?.pricing && !product?.category?.discount) return null;
 
   const now = new Date();
@@ -8,7 +9,6 @@ function getDiscountStatus(product) {
   // تخفیف دسته
   if (product?.category?.discount) {
     const d = product.category.discount;
-
     const start = d.start_at ? new Date(d.start_at) : null;
     const end = d.end_at ? new Date(d.end_at) : null;
 

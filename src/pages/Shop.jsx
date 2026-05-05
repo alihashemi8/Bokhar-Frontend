@@ -1,8 +1,35 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import CategoryTabs from "../components/CategoryTabs";
 import Card from "../components/Card";
 import Search from "../components/Search";
 import api from "../api/clientApi";
+
+// تابع چک کردن تخفیف (کپی از DiscountBadgeClient)
+function checkHasDiscount(product, pricing) {
+  if (!product) return false;
+  
+  const now = new Date();
+
+  // تخفیف دسته
+  if (product.category?.discount) {
+    const d = product.category.discount;
+    const start = d.start_at ? new Date(d.start_at) : null;
+    const end = d.end_at ? new Date(d.end_at) : null;
+
+    if (d.is_active !== false) {
+      if (!start && !end) return true;
+      if (start && now < start) return false;
+      if ((!start || now >= start) && (!end || now <= end)) return true;
+    }
+  }
+
+  // تخفیف روی مواد
+  if (!pricing) return false;
+
+  return Object.values(pricing).some(tab =>
+    tab?.materialPrices?.some(m => m.has_discount)
+  );
+}
 
 export default function Landing() {
   const [categories, setCategories] = useState([]);
@@ -10,6 +37,10 @@ export default function Landing() {
   const [activeCategory, setActiveCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState(null);
+  
+  // ذخیره pricing همه محصولات
+  const [productsPricing, setProductsPricing] = useState({});
+  const [pricingLoaded, setPricingLoaded] = useState(false);
 
   // دریافت دسته‌ها
   useEffect(() => {
@@ -21,14 +52,59 @@ export default function Landing() {
     loadCategories();
   }, []);
 
-  // دریافت محصولات
+  // دریافت محصولات و pricing همه‌شان
   useEffect(() => {
-    async function loadProducts() {
-      const data = await api.getProducts();
-      setAllProducts(data);
+    async function loadAllData() {
+      try {
+        // اول محصولات رو بگیر
+        const products = await api.getProducts();
+        setAllProducts(products);
+
+        // بعد pricing همه رو موازی بگیر
+        const pricingPromises = products.map(async (product) => {
+          try {
+            const res = await api.getProduct(product.id);
+            return { id: product.id, pricing: res.pricing };
+          } catch (err) {
+            console.error(`Error loading pricing for ${product.id}:`, err);
+            return { id: product.id, pricing: null };
+          }
+        });
+
+        const pricingResults = await Promise.all(pricingPromises);
+        
+        const pricingMap = {};
+        pricingResults.forEach(({ id, pricing }) => {
+          pricingMap[id] = pricing;
+        });
+        
+        setProductsPricing(pricingMap);
+        setPricingLoaded(true);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
     }
-    loadProducts();
+
+    loadAllData();
   }, []);
+
+  // محاسبه دسته‌بندی‌های ۱۰۰٪ تخفیف‌دار (با دیتای واقعی pricing)
+  const fullyDiscountedCategories = useMemo(() => {
+    if (!pricingLoaded || allProducts.length === 0) return [];
+
+    return categories
+      .filter((cat) => {
+        const catProducts = allProducts.filter((p) => p.category.id === cat.id);
+        if (catProducts.length === 0) return false;
+
+        // چک کن همه محصولات این دسته تخفیف دارن
+        return catProducts.every((product) => {
+          const pricing = productsPricing[product.id];
+          return checkHasDiscount(product, pricing);
+        });
+      })
+      .map((cat) => cat.id);
+  }, [categories, allProducts, productsPricing, pricingLoaded]);
 
   // محصولات دسته فعال
   const filteredByCategory = useMemo(() => {
@@ -96,7 +172,7 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* تب دسته‌ها */}
+      {/* تب دسته‌ها - الان بدون کلیک هم badge رو نشون میده */}
       <div className="mt-4 px-4 py-3 overflow-x-auto">
         <CategoryTabs
           categories={categories}
@@ -106,17 +182,25 @@ export default function Landing() {
             setSelectedCard(null);
             setSearchQuery("");
           }}
+          fullyDiscountedCategories={fullyDiscountedCategories}
         />
       </div>
 
-      {/* کارت‌ها */}
+      {/* کارت‌ها - با pricing از قبل لود شده */}
       <section className="p-8">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 mb-16">
           {selectedCard ? (
-            <Card {...selectedCard} />
+            <Card 
+              {...selectedCard} 
+              preloadedPricing={productsPricing[selectedCard.id]}
+            />
           ) : (
             filteredByCategory.map((p) => (
-              <Card key={p.id} {...p} />
+              <Card 
+                key={p.id} 
+                {...p} 
+                preloadedPricing={productsPricing[p.id]}
+              />
             ))
           )}
         </div>

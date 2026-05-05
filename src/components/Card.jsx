@@ -1,21 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ServiceModal from "./services_modal/ServiceModal";
 import api from "../api/clientApi";
-import DiscountBadgeClient from "./DiscountBadgeClient";
+import DiscountBadgeClient, { getDiscountStatus } from "./DiscountBadgeClient";
 
-export default function Card({ id, image, title, base_price, category }) {
+export default function Card({ id, image, title, base_price, category, onDiscountCheck }) {
   const [open, setOpen] = useState(false);
   const [pricing, setPricing] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const openModal = async () => {
-    try {
-      const res = await api.getProduct(id);
-      setPricing(res.pricing);
-      setOpen(true);
-    } catch (err) {
-      console.log("Error loading pricing", err);
-    }
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const res = await api.getProduct(id);
+        setPricing(res.pricing);
+        
+        // چک کردن تخفیف و اطلاع به والد
+        if (onDiscountCheck) {
+          const productData = { id, title, image, base_price, pricing: res.pricing, category };
+          const hasDiscount = getDiscountStatus(productData) !== null;
+          onDiscountCheck(id, hasDiscount);
+        }
+      } catch (err) {
+        console.log("Error loading pricing", err);
+        if (onDiscountCheck) onDiscountCheck(id, false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPricing();
+  }, [id]);
+
+  const openModal = () => {
+    setOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div dir="rtl" className="relative p-4 rounded-2xl bg-white/70 dark:bg-neutral-800/80 backdrop-blur-lg border border-sky-200 dark:border-indigo-600 shadow-xl flex flex-col justify-between min-h-[280px] animate-pulse">
+        <div className="w-full aspect-[4/3] bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mt-3"></div>
+      </div>
+    );
+  }
 
   return (
     <div dir="rtl" className="relative p-4 rounded-2xl bg-white/70 dark:bg-neutral-800/80 backdrop-blur-lg border border-sky-200 dark:border-indigo-600 shadow-xl flex flex-col justify-between min-h-[280px] hover:scale-[1.03] transition-all duration-300 group">
@@ -36,7 +63,7 @@ export default function Card({ id, image, title, base_price, category }) {
 
         <button
           onClick={openModal}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-sky-200 dark:border-indigo-600 shadow-lg text-gray-800 dark:text-white font-semibold hover:scale-105 transition-all active:scale-95"
+          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-sky-200 dark:border-indigo-600 shadow-lg text-gray-800 dark:text-white font-semibold hover:from-sky-200 hover:to-sky-300 transition-all active:scale-95"
         >
           خدمات
         </button>
