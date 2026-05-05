@@ -4,6 +4,18 @@ import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import "react-multi-date-picker/styles/layouts/mobile.css";
+import { 
+  Plus, 
+  X, 
+  Pencil, 
+  Clock, 
+  AlertCircle,
+  Percent,
+  Banknote,
+  CalendarDays,
+  Timer,
+  Tag
+} from 'lucide-react';
 
 /* --------------------------------------------------
    Helpers
@@ -32,6 +44,62 @@ function DiscountInputs({ value, onChange }) {
   useEffect(() => {
     setLocalActive(activeType);
   }, [activeType]);
+
+  // Helper function to convert number to Persian words
+  const numberToPersianWords = (num) => {
+    if (!num || isNaN(num) || num === 0) return "";
+    
+    const number = Math.floor(num);
+    
+    const units = ["", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"];
+    const teens = ["ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده", "هفده", "هجده", "نوزده"];
+    const tens = ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"];
+    const hundreds = ["", "یکصد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"];
+    const thousands = ["", "هزار", "میلیون", "میلیارد"];
+    
+    const convertThreeDigits = (n) => {
+      if (n === 0) return "";
+      
+      const result = [];
+      const h = Math.floor(n / 100);
+      const remainder = n % 100;
+      const t = Math.floor(remainder / 10);
+      const u = remainder % 10;
+      
+      if (h > 0) result.push(hundreds[h]);
+      
+      if (remainder > 0) {
+        if (t === 1) {
+          result.push(teens[u]);
+        } else if (t > 1) {
+          result.push(tens[t]);
+          if (u > 0) result.push(units[u]);
+        } else {
+          result.push(units[u]);
+        }
+      }
+      
+      return result.join(" و ");
+    };
+    
+    const parts = [];
+    let i = 0;
+    let tempNumber = number;
+    
+    while (tempNumber > 0) {
+      const part = tempNumber % 1000;
+      if (part > 0) {
+        const converted = convertThreeDigits(part);
+        if (converted) {
+          parts.unshift(converted + (thousands[i] ? " " + thousands[i] : ""));
+        }
+      }
+      tempNumber = Math.floor(tempNumber / 1000);
+      i++;
+    }
+    
+    return parts.join(" و ");
+  };
 
   const handleReset = (e) => {
     e.stopPropagation();
@@ -66,67 +134,103 @@ function DiscountInputs({ value, onChange }) {
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">مقدار تخفیف</h4>
-      
-      <div className="flex gap-2 h-12 select-none">
-        <div
-          onClick={() => activate("percent")}
-          className={`relative overflow-hidden rounded-xl bg-gray-100 dark:bg-neutral-700 flex items-center transition-all duration-300 ease-out cursor-pointer ${
-            localActive === "percent" 
-              ? "flex-[2]" 
-              : localActive 
-                ? "flex-0 opacity-0 w-0" 
-                : "flex-1"
-          }`}
-        >
-          <input
-            type="number"
-            value={percent}
-            onChange={handlePercentChange}
-            placeholder="درصد"
-            readOnly={localActive !== "percent"}
-            className="w-full h-full px-3 bg-transparent outline-none pr-6 text-gray-800 dark:text-gray-100 remove-arrows"
-            min="0"
-            max="100"
-          />
-          <span className="absolute right-3 text-sm text-gray-500 dark:text-gray-400 pointer-events-none">٪</span>
-          {localActive === "percent" && (
-            <button onClick={handleReset} className="absolute left-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-              ×
-            </button>
-          )}
-        </div>
-
-        <div
-          onClick={() => activate("fixed")}
-          className={`relative overflow-hidden rounded-xl bg-gray-100 dark:bg-neutral-700 flex items-center transition-all duration-300 ease-out cursor-pointer ${
-            localActive === "fixed" 
-              ? "flex-[2]" 
-              : localActive 
-                ? "flex-0 opacity-0 w-0" 
-                : "flex-1"
-          }`}
-        >
-          <input
-            type="number"
-            value={amount}
-            onChange={handleAmountChange}
-            placeholder="$ مبلغ"
-            readOnly={localActive !== "fixed"}
-              className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
-            min="0"
-          />
-          <span className="absolute left-8 text-xs text-gray-500 dark:text-gray-400 pointer-events-none">تومان</span>
-          {localActive === "fixed" && (
-            <button onClick={handleReset} className="absolute left-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-              ×
-            </button>
-          )}
-        </div>
+      <div className="flex items-center gap-2">
+        <Tag className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">مقدار تخفیف</h4>
       </div>
       
+<div className="flex gap-2 select-none items-start">
+  {/* Percent container */}
+  <div className={`transition-all duration-300 ease-out ${
+    localActive === "percent" 
+      ? "flex-[2]" 
+      : localActive 
+        ? "flex-0 opacity-0 w-0 overflow-hidden" 
+        : "flex-1"
+  }`}>
+    <div
+      onClick={() => activate("percent")}
+      className="relative overflow-hidden rounded-xl bg-gray-100 dark:bg-neutral-700 flex items-center cursor-pointer h-12 w-full"
+    >
+      <div className="absolute right-3 text-purple-600 dark:text-purple-400 pointer-events-none">
+        <Percent className="w-4 h-4" />
+      </div>
+      <input
+        type="number"
+        value={percent}
+        onChange={handlePercentChange}
+        placeholder="درصد"
+        readOnly={localActive !== "percent"}
+        className="w-full h-full px-3 bg-transparent outline-none pr-9 text-gray-800 dark:text-gray-100 remove-arrows leading-tight"
+        min="0"
+        max="100"
+      />
+      {localActive === "percent" && (
+        <button 
+          onClick={handleReset} 
+          className="absolute left-3 p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-600 transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  </div>
+
+  {/* Fixed amount container */}
+  <div className={`transition-all duration-300 ease-out flex flex-col ${
+    localActive === "fixed" 
+      ? "flex-[2]" 
+      : localActive 
+        ? "flex-0 opacity-0 w-0 overflow-hidden" 
+        : "flex-1"
+  }`}>
+    <div
+      onClick={() => activate("fixed")}
+      className="relative overflow-hidden rounded-xl bg-gray-100 dark:bg-neutral-700 flex items-center cursor-pointer h-12 w-full"
+    >
+      <div className="absolute right-3 text-green-600 dark:text-green-400 pointer-events-none">
+        <Banknote className="w-4 h-4" />
+      </div>
+      <input
+        type="number"
+        value={amount}
+        onChange={handleAmountChange}
+        placeholder="مبلغ"
+        readOnly={localActive !== "fixed"}
+        className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-9 pl-6 text-gray-800 dark:text-gray-100 leading-tight"
+        min="0"
+      />
+      
+      {/* تومان label on the left side */}
+      {localActive === "fixed" && (
+        <div className="absolute left-9 text-xs text-gray-500 dark:text-gray-400 pointer-events-none font-medium">
+          تومان
+        </div>
+      )}
+      
+      {localActive === "fixed" && (
+        <button 
+          onClick={handleReset} 
+          className="absolute left-3 p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-600 transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+    
+    {/* Persian text equivalent in Rials */}
+    {localActive === "fixed" && amount && Number(amount) > 0 && (
+      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1.5 pr-9 font-medium">
+        {numberToPersianWords(Number(amount) * 10)} ریال
+      </div>
+    )}
+  </div>
+</div>
+
+      
       {!localActive && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />
           برای وارد کردن تخفیف، روی یکی از فیلدها کلیک کنید
         </p>
       )}
@@ -142,9 +246,12 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   return (
     <div className="space-y-3 bg-gray-50 dark:bg-neutral-800/50 p-4 rounded-xl border border-gray-200 dark:border-neutral-700">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          محدودیت زمانی
-        </span>
+        <div className="flex items-center gap-2">
+          <Timer className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            محدودیت زمانی
+          </span>
+        </div>
         <button
           type="button"
           onClick={onToggle}
@@ -164,7 +271,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
         <div className="space-y-3 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1">تاریخ شروع</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" />
+                تاریخ شروع
+              </label>
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
@@ -179,7 +289,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
             </div>
             
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1">ساعت شروع</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                ساعت شروع
+              </label>
               <div className="flex items-center bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-xl h-10 px-3 focus-within:border-purple-500">
                 <input
                   type="time"
@@ -194,7 +307,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1">تاریخ پایان</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" />
+                تاریخ پایان
+              </label>
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
@@ -209,7 +325,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
             </div>
             
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1">ساعت پایان</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                ساعت پایان
+              </label>
               <div className="flex items-center bg-white dark:bg-neutral-700 border border-gray-300 dark:border-neutral-600 rounded-xl h-10 px-3 focus-within:border-purple-500">
                 <input
                   type="time"
@@ -223,13 +342,17 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
           </div>
           
           {error && (
-            <p className="text-xs text-red-500 mt-1">{error}</p>
+            <div className="flex items-center gap-1 text-xs text-red-500 mt-1">
+              <AlertCircle className="w-3 h-3" />
+              <span>{error}</span>
+            </div>
           )}
         </div>
       )}
       
       {!isEnabled && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+          <Clock className="w-3 h-3" />
           تخفیف بدون محدودیت زمانی (همیشگی) اعمال می‌شود
         </p>
       )}
@@ -386,16 +509,20 @@ export default function GlobalDiscountTab() {
         
         {/* Header */}
         <div className="flex justify-between items-center mb-5">
-          <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100">
-            تخفیف‌های عمومی
-          </h3>
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100">
+              تخفیف‌های عمومی
+            </h3>
+          </div>
 
           {!isEditing && (
             <button
               onClick={startAdd}
-              className="px-4 py-2 rounded-xl bg-purple-700 text-white shadow hover:scale-105 transition text-sm"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-700 text-white shadow hover:scale-105 transition text-sm"
             >
-              + افزودن تخفیف عمومی
+              <Plus className="w-4 h-4" />
+              افزودن  
             </button>
           )}
         </div>
@@ -404,14 +531,17 @@ export default function GlobalDiscountTab() {
         {isEditing && (
           <div className="mb-6 p-4 bg-white/90 dark:bg-neutral-700/50 rounded-xl border border-sky-200 dark:border-indigo-600/60 shadow-sm space-y-4 animate-fadeIn">
             <div className="flex justify-between items-center border-b border-gray-200 dark:border-neutral-600 pb-2">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">
-                {editingId ? "ویرایش تخفیف" : "تخفیف جدید"}
-              </h4>
+              <div className="flex items-center gap-2">
+                {editingId ? <Pencil className="w-4 h-4 text-purple-600" /> : <Plus className="w-4 h-4 text-purple-600" />}
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                  {editingId ? "ویرایش تخفیف" : "تخفیف جدید"}
+                </h4>
+              </div>
               <button 
                 onClick={cancelEdit}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="p-1 rounded-full text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-600 transition"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -426,25 +556,39 @@ export default function GlobalDiscountTab() {
             <DiscountInputs value={discount} onChange={setDiscount} />
 
             {error && !error.includes("تاریخ") && !error.includes("زمان") && (
-              <div className="text-red-500 text-sm p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                {error}
+              <div className="flex items-center gap-2 text-red-500 text-sm p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
               <button 
                 onClick={cancelEdit}
-                className="px-4 py-2 rounded-xl bg-gray-200 dark:bg-neutral-600 hover:bg-gray-300 dark:hover:bg-neutral-500 transition text-sm text-gray-800 dark:text-gray-200"
+                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gray-200 dark:bg-neutral-600 hover:bg-gray-300 dark:hover:bg-neutral-500 transition text-sm text-gray-800 dark:text-gray-200"
                 disabled={loading}
               >
+                <X className="w-4 h-4" />
                 انصراف
               </button>
               <button 
                 onClick={saveDiscount}
                 disabled={loading || !discount.activeType}
-                className="px-6 py-2 rounded-xl bg-purple-600 text-white text-sm disabled:opacity-50 hover:bg-purple-700 transition"
+                className="flex items-center gap-1 px-6 py-2 rounded-xl bg-purple-600 text-white text-sm disabled:opacity-50 hover:bg-purple-700 transition"
               >
-                {loading ? "..." : (editingId ? "ذخیره تغییرات" : "افزودن")}
+                {loading ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : editingId ? (
+                  <>
+                    <Pencil className="w-4 h-4" />
+                    ذخیره تغییرات
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    افزودن
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -452,9 +596,10 @@ export default function GlobalDiscountTab() {
 
         {/* List */}
         {items.length === 0 && !isEditing ? (
-          <p className="text-gray-500 text-center py-4">
-            هیچ تخفیف عمومی فعالی موجود نیست.
-          </p>
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500 gap-2">
+            <Tag className="w-10 h-10 opacity-30" />
+            <p>هیچ تخفیف عمومی فعالی موجود نیست.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {items.map((item) => (
@@ -464,14 +609,23 @@ export default function GlobalDiscountTab() {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md text-xs font-medium bg-sky-100 dark:bg-purple-700 text-sky-700 dark:text-white">
-                      {item.type === "percent" ? "درصدی" : "مبلغی"}
+                    <span className={`px-2 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 ${
+                      item.type === "percent" 
+                        ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300" 
+                        : "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"
+                    }`}>
+                      {item.type === "percent" ? (
+                        <><Percent className="w-3 h-3" /> درصدی</>
+                      ) : (
+                        <><Banknote className="w-3 h-3" /> مبلغی</>
+                      )}
                     </span>
                     <span className="font-bold text-gray-800 dark:text-gray-100">
-                      {item.type === "percent" ? `${item.value}%` : `${item.value.toLocaleString()} $`}
+                      {item.type === "percent" ? `${item.value}%` : `${item.value.toLocaleString()} تومان`}
                     </span>
                     {item.start_at && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
                         (تا {new Date(item.end_at).toLocaleDateString('fa-IR')})
                       </span>
                     )}
@@ -480,9 +634,10 @@ export default function GlobalDiscountTab() {
 
                 <button
                   onClick={() => startEdit(item)}
-                  className="px-3 py-1.5 rounded-lg text-sm bg-sky-100 hover:bg-sky-200 dark:bg-purple-700 dark:hover:bg-purple-600 text-gray-800 dark:text-white transition"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-sky-100 hover:bg-sky-200 dark:bg-purple-700 dark:hover:bg-purple-600 text-gray-800 dark:text-white transition"
                 >
-                  ویرایش
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>ویرایش</span>
                 </button>
               </div>
             ))}
