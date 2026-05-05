@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL;
 async function request(endpoint, method = "GET", body = null) {
   const options = {
     method,
-    credentials: "include",   // ✅ این خط بسیار مهم است
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
@@ -22,36 +22,28 @@ async function request(endpoint, method = "GET", body = null) {
     throw new Error(`API Error ${res.status}`);
   }
 
+  // برای DELETE معمولاً بدون محتوای response برمیگردد (204 No Content)
+  if (res.status === 204) return null;
+  
   return res.json();
 }
 
-
 // =====================================================
-// PRODUCTS (همان سرویس‌هایی که در بک‌اند داری)
+// PRODUCTS
 // =====================================================
 
-// گرفتن همه محصولات
 export const fetchProducts = () => request("/products/");
-
-// گرفتن یک محصول
 export const fetchProduct = (id) => request(`/products/${id}/`);
-
-// جستجوی محصول
 export const searchProducts = (query = "") =>
   request(`/products/search/?search=${encodeURIComponent(query)}`);
-
-// گرفتن ساختار کامل قیمت محصول
-export const fetchProductFullPricing = (id) =>
-  request(`/products/${id}/`);
+export const fetchProductFullPricing = (id) => request(`/products/${id}/`);
 
 // =====================================================
 // CATEGORIES
 // =====================================================
 
 export const fetchCategories = () => request("/categories/");
-
-export const fetchCategory = (id) =>
-  request(`/categories/${id}/`);
+export const fetchCategory = (id) => request(`/categories/${id}/`);
 
 // =====================================================
 // PRODUCT DISCOUNTS
@@ -73,15 +65,14 @@ export const createGlobalDiscount = (data) =>
 export const updateGlobalDiscount = (id, data) =>
   request(`/discounts/global-discounts/${id}/`, "PUT", data);
 
+export const deleteGlobalDiscount = (id) =>
+  request(`/discounts/global-discounts/${id}/`, "DELETE");
+
 // =====================================================
 // COUPONS
 // =====================================================
 
-export const fetchCoupons = () =>
-  request("/discounts/coupons/");
-
-export const createCoupon = (data) =>
-  request("/discounts/coupons/", "POST", data);
-
-export const updateCoupon = (id, data) =>
-  request(`/discounts/coupons/${id}/`, "PUT", data);
+export const fetchCoupons = () => request("/discounts/coupons/");
+export const createCoupon = (data) => request("/discounts/coupons/", "POST", data);
+export const updateCoupon = (id, data) => request(`/discounts/coupons/${id}/`, "PUT", data);
+export const deleteCoupon = (id) => request(`/discounts/coupons/${id}/`, "DELETE");

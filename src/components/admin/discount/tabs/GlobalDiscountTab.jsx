@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { fetchGlobalDiscounts, createGlobalDiscount, updateGlobalDiscount } from "../../../../api/discountsApi";
+import { fetchGlobalDiscounts, createGlobalDiscount, updateGlobalDiscount, deleteGlobalDiscount } from "../../../../api/discountsApi";
+import { useToast } from "../../../../context/ToastContext"; // مسیر را تنظیم کنید
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
@@ -8,13 +9,15 @@ import {
   Plus, 
   X, 
   Pencil, 
+  Trash2,
   Clock, 
   AlertCircle,
   Percent,
   Banknote,
   CalendarDays,
   Timer,
-  Tag
+  Tag,
+  AlertTriangle
 } from 'lucide-react';
 
 /* --------------------------------------------------
@@ -369,6 +372,13 @@ export default function GlobalDiscountTab() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  
+  // States for Delete Confirmation Modal
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    item: null
+  });
   
   // Form states
   const [discount, setDiscount] = useState({ percent: "", amount: "", activeType: null });
@@ -380,6 +390,8 @@ export default function GlobalDiscountTab() {
     endTime: "23:59"
   });
   const [error, setError] = useState(null);
+
+  const { addToast } = useToast(); // استفاده از Toast
 
   // Load data
   const load = async () => {
@@ -488,8 +500,10 @@ export default function GlobalDiscountTab() {
 
       if (editingId) {
         await updateGlobalDiscount(editingId, payload);
+        addToast("تخفیف با موفقیت بروزرسانی شد", "success");
       } else {
         await createGlobalDiscount(payload);
+        addToast("تخفیف جدید با موفقیت ایجاد شد", "success");
       }
       
       await load();
@@ -497,10 +511,51 @@ export default function GlobalDiscountTab() {
       resetForm();
     } catch (err) {
       setError("خطا در ذخیره تخفیف");
+      addToast("خطا در ذخیره تخفیف", "error");
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Delete Confirmation Handlers
+  const openDeleteConfirm = (item) => {
+    setDeleteConfirm({
+      isOpen: true,
+      item: item
+    });
+  };
+
+  const closeDeleteConfirm = () => {
+    setDeleteConfirm({ isOpen: false, item: null });
+    setDeletingId(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.item) return;
+    
+    const id = deleteConfirm.item.id;
+    setDeletingId(id);
+    
+    try {
+      await deleteGlobalDiscount(id);
+      addToast("تخفیف با موفقیت حذف شد", "success");
+      await load();
+      closeDeleteConfirm();
+    } catch (err) {
+      console.error("Error deleting discount:", err);
+      addToast("خطا در حذف تخفیف", "error");
+      setError("خطا در حذف تخفیف");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const getItemDisplayName = (item) => {
+    if (!item) return "";
+    return item.type === "percent" 
+      ? `${item.value}%` 
+      : `${item.value.toLocaleString()} تومان`;
   };
 
   return (
@@ -562,19 +617,11 @@ export default function GlobalDiscountTab() {
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button 
-                onClick={cancelEdit}
-                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gray-200 dark:bg-neutral-600 hover:bg-gray-300 dark:hover:bg-neutral-500 transition text-sm text-gray-800 dark:text-gray-200"
-                disabled={loading}
-              >
-                <X className="w-4 h-4" />
-                انصراف
-              </button>
+            <div className="flex justify-center gap-2 pt-2">
               <button 
                 onClick={saveDiscount}
                 disabled={loading || !discount.activeType}
-                className="flex items-center gap-1 px-6 py-2 rounded-xl bg-purple-600 text-white text-sm disabled:opacity-50 hover:bg-purple-700 transition"
+                className="flex items-center  gap-1 px-6 py-2 rounded-xl bg-purple-600 text-white text-sm disabled:opacity-50 hover:bg-purple-700 transition"
               >
                 {loading ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -608,7 +655,7 @@ export default function GlobalDiscountTab() {
                 className="p-4 bg-white/90 dark:bg-neutral-700/80 border border-sky-200/60 dark:border-indigo-600/60 rounded-xl shadow-sm transition hover:shadow-md flex justify-between items-center"
               >
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2 py-0.5 rounded-md text-xs font-medium flex items-center gap-1 ${
                       item.type === "percent" 
                         ? "bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300" 
@@ -632,26 +679,99 @@ export default function GlobalDiscountTab() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => startEdit(item)}
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-sky-100 hover:bg-sky-200 dark:bg-purple-700 dark:hover:bg-purple-600 text-gray-800 dark:text-white transition"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>ویرایش</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => startEdit(item)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-sky-100 hover:bg-sky-200 dark:bg-purple-700 dark:hover:bg-purple-600 text-gray-800 dark:text-white transition"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    <span>ویرایش</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => openDeleteConfirm(item)}
+                    disabled={deletingId === item.id}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900/70 text-red-700 dark:text-red-200 transition disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>حذف</span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 h-full backdrop-blur-sm animate-fadeIn">
+          <div 
+            className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-gray-200 dark:border-neutral-700 transform scale-100 animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">تأیید حذف</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">این عملیات قابل بازگشت نیست</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed bg-gray-50 dark:bg-neutral-700/50 p-3 rounded-lg">
+              آیا از حذف تخفیف 
+              <span className="font-bold mx-1 text-gray-800 dark:text-gray-200 bg-red-100 dark:bg-red-900/40 px-2 py-0.5 rounded">
+                {getItemDisplayName(deleteConfirm.item)}
+              </span>
+              اطمینان دارید؟
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={closeDeleteConfirm}
+                disabled={deletingId === deleteConfirm.item?.id}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-neutral-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-neutral-600 transition text-sm font-medium"
+              >
+                انصراف
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deletingId === deleteConfirm.item?.id}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white transition text-sm font-medium disabled:opacity-70 flex items-center justify-center gap-2"
+              >
+                {deletingId === deleteConfirm.item?.id ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    در حال حذف...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    بله، حذف شود
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
+          animation: fadeIn 0.2s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.2s ease-out;
         }
         .remove-arrows::-webkit-outer-spin-button,
         .remove-arrows::-webkit-inner-spin-button {
