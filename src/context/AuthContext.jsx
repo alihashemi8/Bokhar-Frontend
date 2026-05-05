@@ -192,3 +192,16 @@ export const useAuth = () => {
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
   return ctx;
 };
+
+export async function fetchCustomers() {
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/customers/`,
+    {
+      credentials: "include",
+    }
+  );
+
+  if (!res.ok) throw new Error("Failed to fetch customers");
+  return res.json();
+}
+
