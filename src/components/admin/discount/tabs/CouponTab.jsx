@@ -2,21 +2,19 @@ import { useState, useEffect } from "react";
 import {
   TicketPercent,
   Users,
-  Plus,
-  Search,
+  Search as SearchIcon,
   Edit2,
   Percent,
   Banknote,
   User,
   CheckCircle2,
   XCircle,
-  Calendar,
   Tag,
-  ArrowRight
 } from "lucide-react";
 import CouponModal from "../modals/CouponModal";
 import { fetchCoupons } from "../../../../api/discountsApi";
 import { fetchCustomers } from "../../../../context/AuthContext";
+import Search from "../../../Search";
 
 export default function CouponTab() {
   const [coupons, setCoupons] = useState([]);
@@ -25,8 +23,8 @@ export default function CouponTab() {
   const [editItem, setEditItem] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
 
-  // ================= load data =================
   useEffect(() => {
     loadCoupons();
     loadCustomers();
@@ -50,7 +48,6 @@ export default function CouponTab() {
     }
   };
 
-  // ================= handlers =================
   const openCreateModal = (customer = null) => {
     setEditItem(null);
     setSelectedCustomer(customer);
@@ -63,283 +60,186 @@ export default function CouponTab() {
     setModalOpen(true);
   };
 
-  // ================= stats =================
-  const activeCoupons = coupons.filter(c => c.is_active).length;
-  const generalCoupons = coupons.filter(c => !c.user).length;
-  const exclusiveCoupons = coupons.filter(c => c.user).length;
+  const activeCoupons = coupons.filter((c) => c.is_active).length;
+  const exclusiveCoupons = coupons.filter((c) => c.user).length;
 
-  // ================= render helpers =================
   const StatusBadge = ({ active }) => (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-      active 
-        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300" 
-        : "bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400"
-    }`}>
+    <span
+      className={`inline-flex items-center justify-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${
+        active
+          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+          : "bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400"
+      }`}
+    >
       {active ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-      {active ? "فعال" : "غیرفعال"}
+      <span className="hidden sm:inline">{active ? "فعال" : "غیرفعال"}</span>
     </span>
   );
 
   const TypeBadge = ({ type, value }) => (
     <div className="flex items-center gap-2">
-      <div className={`p-1.5 rounded-lg ${
-        type === "percent" 
-          ? "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300"
-          : "bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300"
-      }`}>
+      <div
+        className={`p-1.5 rounded-lg ${
+          type === "percent"
+            ? "bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300"
+            : "bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300"
+        }`}
+      >
         {type === "percent" ? <Percent size={16} /> : <Banknote size={16} />}
       </div>
-      <span className="font-medium text-gray-700 dark:text-gray-200">
-        {type === "percent" ? `${value}%` : `${value.toLocaleString()} تومان`}
+      <span className="font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
+        {type === "percent" ? `${value}%` : `${value.toLocaleString()} ت`}
       </span>
     </div>
   );
 
   return (
-    <div className="p-6 md:p-8 md:mr-3 rounded-[2rem] bg-white/40 dark:bg-white/10 backdrop-blur-2xl border border-white/50 dark:border-white/10 shadow-2xl overflow-x-hidden space-y-8">
+    <div className="p-4 md:p-6 lg:p-8 lg:mr-3 rounded-2xl lg:rounded-[2rem] bg-white/40 dark:bg-white/10 backdrop-blur-2xl border border-white/50 dark:border-white/10 shadow-2xl overflow-x-hidden space-y-6 lg:space-y-8">
       
-      {/* ================= Header & Stats ================= */}
+      {/* Header & Stats */}
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-sky-500 rounded-2xl shadow-lg shadow-purple-500/25">
-              <TicketPercent className="text-white" size={28} />
+            <div className="p-2.5 lg:p-3 bg-gradient-to-br from-purple-500 to-sky-500 rounded-xl lg:rounded-2xl shadow-lg shadow-purple-500/25">
+              <TicketPercent className="text-white" size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
                 مدیریت کدهای تخفیف
               </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mt-1">
                 مدیریت کوپن‌های عمومی و اختصاصی مشتریان
               </p>
             </div>
           </div>
-      
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-xl lg:rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">کل کدهای تخفیف</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white mt-1">{coupons.length}</p>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">کل کدها</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-white mt-1">{coupons.length}</p>
               </div>
-              <div className="p-3 bg-purple-100 dark:bg-purple-500/20 rounded-xl text-purple-600 dark:text-purple-300">
-                <Tag size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-purple-100 dark:bg-purple-500/20 rounded-lg lg:rounded-xl text-purple-600 dark:text-purple-300">
+                <Tag size={16} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               </div>
             </div>
           </div>
           
-          <div className="p-5 rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-xl lg:rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">کدهای فعال</p>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{activeCoupons}</p>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">کدهای فعال</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{activeCoupons}</p>
               </div>
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-500/20 rounded-xl text-emerald-600 dark:text-emerald-300">
-                <CheckCircle2 size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg lg:rounded-xl text-emerald-600 dark:text-emerald-300">
+                <CheckCircle2 size={16} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
+          <div className="p-3 sm:p-4 lg:p-5 rounded-xl lg:rounded-2xl bg-white/60 dark:bg-white/5 border border-white/60 dark:border-white/10 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">تخفیف اختصاصی</p>
-                <p className="text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1">{exclusiveCoupons}</p>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">اختصاصی</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-sky-600 dark:text-sky-400 mt-1">{exclusiveCoupons}</p>
               </div>
-              <div className="p-3 bg-sky-100 dark:bg-sky-500/20 rounded-xl text-sky-600 dark:text-sky-300">
-                <User size={24} />
+              <div className="p-1.5 sm:p-2 lg:p-3 bg-sky-100 dark:bg-sky-500/20 rounded-lg lg:rounded-xl text-sky-600 dark:text-sky-300">
+                <User size={16} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= Customers Section ================= */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700/50">
-          <Users className="text-purple-600 dark:text-purple-400" size={20} />
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-            مشتریان
-          </h3>
-          <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
-            {customers.length}
-          </span>
-        </div>
-
-        <div className="overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/30 bg-white/50 dark:bg-black/20 shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50/80 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700/50">
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">مشتری</th>
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">شماره تماس</th>
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">وضعیت</th>
-                  <th className="py-4 px-6 text-center font-semibold text-gray-700 dark:text-gray-300">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-                {customers.map((c) => (
-                  <tr 
-                    key={c.id} 
-                    className="group hover:bg-purple-50/50 dark:hover:bg-purple-500/5 transition-colors duration-200"
-                  >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-sky-400 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                          {c.fullname?.charAt(0) || "?"}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-100">{c.fullname}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">ID: {c.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 dark:text-gray-300 font-mono text-right dir-ltr">
-                      {c.phone}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300">
-                        <CheckCircle2 size={12} />
-                        فعال
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <button
-                        onClick={() => openCreateModal(c)}
-                        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-xl transition-all duration-200 group-hover:shadow-md"
-                      >
-                        <TicketPercent size={16} />
-                        اعمال کد تخفیف
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                
-                {!customers.length && (
-                  <tr>
-                    <td colSpan="4" className="py-12 text-center">
-                      <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-600">
-                        <Users size={48} className="opacity-50" />
-                        <p>مشتری‌ای یافت نشد</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= Coupons Section ================= */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-gray-200 dark:border-gray-700/50">
+      {/* Customers Section */}
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-gray-200 dark:border-gray-700/50">
           <div className="flex items-center gap-2">
-            <TicketPercent className="text-sky-600 dark:text-sky-400" size={20} />
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
-              لیست کدهای تخفیف
+            <Users className="text-purple-600 dark:text-purple-400" size={18} />
+            <h3 className="text-base lg:text-lg font-bold text-gray-800 dark:text-gray-100">
+              مشتریان
             </h3>
-            <span className="px-2 py-0.5 bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 rounded-full text-xs font-medium">
-              {coupons.length}
+            <span className="px-1.5 sm:px-2 py-0.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-[10px] sm:text-xs font-medium">
+              {customers.length}
             </span>
           </div>
           
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="جستجو در کدها..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-10 pl-4 py-2 bg-white/60 dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all"
+          <div className="w-full sm:w-48 lg:w-64">
+            <Search
+              value={customerSearchTerm}
+              onChange={setCustomerSearchTerm}
+              placeholder="جستجو در مشتریان..."
             />
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200/60 dark:border-gray-700/30 bg-white/50 dark:bg-black/20 shadow-sm">
+        <div className="overflow-hidden rounded-xl lg:rounded-2xl border border-gray-200/60 dark:border-gray-700/30 bg-white/50 dark:bg-black/20 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="bg-gray-50/80 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700/50">
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">کد تخفیف</th>
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">نوع و مقدار</th>
-                  <th className="py-4 px-6 text-right font-semibold text-gray-700 dark:text-gray-300">مشتری</th>
-                  <th className="py-4 px-6 text-center font-semibold text-gray-700 dark:text-gray-300">محدودیت</th>
-                  <th className="py-4 px-6 text-center font-semibold text-gray-700 dark:text-gray-300">وضعیت</th>
-                  <th className="py-4 px-6 text-center font-semibold text-gray-700 dark:text-gray-300">عملیات</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">مشتری</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">تماس</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">وضعیت</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
-                {coupons
-                  .filter(c => c.code.toLowerCase().includes(searchTerm.toLowerCase()))
+                {customers
+                  .filter((c) => 
+                    c.fullname?.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                    c.phone?.includes(customerSearchTerm)
+                  )
                   .map((c) => (
-                  <tr 
-                    key={c.id} 
-                    className="group hover:bg-sky-50/50 dark:hover:bg-sky-500/5 transition-colors duration-200"
-                  >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg">
-                          <Tag size={18} className="text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <code className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wider font-mono">
-                          {c.code}
-                        </code>
-                      </div>
-                    </td>
-                    
-                    <td className="py-4 px-6">
-                      <TypeBadge type={c.type} value={c.value} />
-                    </td>
-
-                    <td className="py-4 px-6">
-                      {c.user ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-300 text-xs font-bold">
-                            {c.user.fullname?.charAt(0)}
+                    <tr 
+                      key={c.id} 
+                      className="group hover:bg-purple-50/50 dark:hover:bg-purple-500/5 transition-colors duration-200"
+                    >
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-purple-400 to-sky-400 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md shrink-0">
+                            {c.fullname?.charAt(0) || "?"}
                           </div>
-                          <span className="text-gray-700 dark:text-gray-300 text-sm">{c.user.fullname}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[100px] sm:max-w-[150px] lg:max-w-none">{c.fullname}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">ID: {c.id}</p>
+                          </div>
                         </div>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                          <Users size={12} />
-                          عمومی
+                      </td>
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-gray-600 dark:text-gray-300 font-mono text-right dir-ltr whitespace-nowrap text-[10px] sm:text-xs lg:text-sm">
+                        {c.phone}
+                      </td>
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
+                        <span className="inline-flex items-center justify-center gap-1 px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300">
+                          <CheckCircle2 size={10} className="sm:w-3 sm:h-3" />
+                          <span className="hidden sm:inline">فعال</span>
                         </span>
-                      )}
-                    </td>
-
-                    <td className="py-4 px-6 text-center">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">
-                        {c.usage_limit || "∞"}
-                      </span>
-                      <span className="text-xs text-gray-400 mr-1">بار</span>
-                    </td>
-
-                    <td className="py-4 px-6 text-center">
-                      <StatusBadge active={c.is_active} />
-                    </td>
-
-                    <td className="py-4 px-6 text-center">
-                      <button
-                        onClick={() => openEditModal(c)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 rounded-xl transition-all duration-200 hover:shadow-md"
-                      >
-                        <Edit2 size={16} />
-                        ویرایش
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-
-                {!coupons.length && (
+                      </td>
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
+                        <button
+                          onClick={() => openCreateModal(c)}
+                          className="inline-flex items-center justify-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg lg:rounded-xl transition-all duration-200"
+                          title="اعمال کد تخفیف"
+                        >
+                          <TicketPercent size={14} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">اعمال کد تخفیف</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                
+                {!customers.filter((c) => 
+                  c.fullname?.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                  c.phone?.includes(customerSearchTerm)
+                ).length && (
                   <tr>
-                    <td colSpan="6" className="py-12 text-center">
-                      <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-600">
-                        <TicketPercent size={48} className="opacity-50" />
-                        <p>کد تخفیفی وجود ندارد</p>
+                    <td colSpan="4" className="py-8 sm:py-12 text-center">
+                      <div className="flex flex-col items-center gap-2 sm:gap-3 text-gray-400 dark:text-gray-600">
+                        <Users size={32} className="sm:w-12 sm:h-12 opacity-50" />
+                        <p className="text-xs sm:text-sm">مشتری‌ای یافت نشد</p>
                       </div>
                     </td>
                   </tr>
@@ -350,7 +250,121 @@ export default function CouponTab() {
         </div>
       </div>
 
-      {/* ================= Modal ================= */}
+      {/* Coupons Section */}
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-gray-200 dark:border-gray-700/50">
+          <div className="flex items-center gap-2">
+            <TicketPercent className="text-sky-600 dark:text-sky-400" size={18} />
+            <h3 className="text-base lg:text-lg font-bold text-gray-800 dark:text-gray-100">
+              لیست کدهای تخفیف
+            </h3>
+            <span className="px-1.5 sm:px-2 py-0.5 bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 rounded-full text-[10px] sm:text-xs font-medium">
+              {coupons.length}
+            </span>
+          </div>
+          
+          <div className="w-full sm:w-48 lg:w-64">
+            <Search
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder="جستجو..."
+            />
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-xl lg:rounded-2xl border border-gray-200/60 dark:border-gray-700/30 bg-white/50 dark:bg-black/20 shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs sm:text-sm">
+              <thead>
+                <tr className="bg-gray-50/80 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700/50">
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">کد</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">نوع</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap hidden sm:table-cell">مشتری</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">محدودیت</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">وضعیت</th>
+                  <th className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">عملیات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
+                {coupons
+                  .filter((c) => c.code.toLowerCase().includes(searchTerm.toLowerCase()))
+                  .map((c) => (
+                    <tr 
+                      key={c.id} 
+                      className="group hover:bg-sky-50/50 dark:hover:bg-sky-500/5 transition-colors duration-200"
+                    >
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
+                          <div className="p-1 sm:p-1.5 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-md lg:rounded-lg shrink-0">
+                            <Tag size={14} className="text-gray-600 dark:text-gray-400" />
+                          </div>
+                          <code className="px-1.5 sm:px-2 lg:px-3 py-0.5 sm:py-1 bg-gray-100 dark:bg-gray-800 rounded-md lg:rounded-lg text-[10px] sm:text-xs lg:text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wider font-mono whitespace-nowrap">
+                            {c.code}
+                          </code>
+                        </div>
+                      </td>
+                      
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6">
+                        <TypeBadge type={c.type} value={c.value} />
+                      </td>
+
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 hidden sm:table-cell">
+                        {c.user ? (
+                          <div className="flex items-center gap-1.5 sm:gap-2">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-300 text-xs font-bold shrink-0">
+                              {c.user.fullname?.charAt(0)}
+                            </div>
+                            <span className="text-gray-700 dark:text-gray-300 text-xs sm:text-sm truncate max-w-[80px] lg:max-w-none">{c.user.fullname}</span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center justify-center gap-1 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                            <Users size={10} className="sm:w-3 sm:h-3" />
+                            <span className="hidden sm:inline">عمومی</span>
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
+                        <span className="text-gray-600 dark:text-gray-400 font-medium text-xs sm:text-sm">
+                          {c.usage_limit || "∞"}
+                        </span>
+                        <span className="text-[10px] sm:text-xs text-gray-400 mr-0.5">بار</span>
+                      </td>
+
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
+                        <StatusBadge active={c.is_active} />
+                      </td>
+
+                      <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
+                        <button
+                          onClick={() => openEditModal(c)}
+                          className="inline-flex items-center justify-center gap-1 p-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 text-xs sm:text-sm font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 rounded-lg lg:rounded-xl transition-all duration-200"
+                          title="ویرایش"
+                        >
+                          <Edit2 size={14} className="sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">ویرایش</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                {!coupons.length && (
+                  <tr>
+                    <td colSpan="6" className="py-8 sm:py-12 text-center">
+                      <div className="flex flex-col items-center gap-2 sm:gap-3 text-gray-400 dark:text-gray-600">
+                        <TicketPercent size={32} className="sm:w-12 sm:h-12 opacity-50" />
+                        <p className="text-xs sm:text-sm">کد تخفیفی وجود ندارد</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal */}
       {modalOpen && (
         <CouponModal
           isOpen={modalOpen}
