@@ -18,6 +18,38 @@ const persianToISO = (persianDate, timeStr) => {
   }
 };
 
+// Helper function to convert number to Persian words
+const numberToPersianWords = (num) => {
+  if (num === 0) return "صفر";
+  
+  const ones = ["", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"];
+  const teens = ["ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده", "هفده", "هجده", "نوزده"];
+  const tens = ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"];
+  const hundreds = ["", "یکصد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"];
+  const thousands = ["", "هزار", "میلیون", "میلیارد"];
+  
+  const toWords = (n) => {
+    if (n === 0) return "";
+    if (n < 10) return ones[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " و " + ones[n % 10] : "");
+    if (n < 1000) return hundreds[Math.floor(n / 100)] + (n % 100 !== 0 ? " و " + toWords(n % 100) : "");
+    
+    let result = "";
+    let i = 0;
+    while (n > 0) {
+      if (n % 1000 !== 0) {
+        result = toWords(n % 1000) + " " + thousands[i] + (result ? " و " + result : "");
+      }
+      n = Math.floor(n / 1000);
+      i++;
+    }
+    return result;
+  };
+  
+  return toWords(num) || "صفر";
+};
+
 // 🔴 حذف تابع save از اینجا - فقط کامپوننت Pure باشه
 function DiscountInputs({ value, onChange }) {
   const { percent, amount, activeType } = value;
@@ -58,72 +90,90 @@ function DiscountInputs({ value, onChange }) {
     if (!localActive) setLocalActive("fixed");
   };
 
-  // UI کامپوننت ...
   return (
     <div className="space-y-3">
       <h4 className="text-sm font-semibold text-gray-800">مقدار تخفیف</h4>
       
-      <div className="flex gap-2 h-12 select-none">
+      <div className="flex gap-2 select-none items-start">
         {/* Percent Input */}
-        <div
-          onClick={() => activate("percent")}
-          className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${
-            localActive === "percent" 
-              ? "flex-[2]" 
-              : localActive 
-                ? "flex-0 opacity-0 w-0" 
-                : "flex-1"
-          }`}
-        >
-          <input
-            type="number"
-            value={percent}
-            onChange={handlePercentChange}
-            placeholder="درصد"
-            readOnly={localActive !== "percent"}
-            className="w-full h-full px-3 bg-transparent outline-none pr-6 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            min="0"
-            max="100"
-          />
-          <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">٪</span>
-          {localActive === "percent" && (
-            <button 
-              onClick={handleReset} 
-              className="absolute left-3 text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-          )}
+        <div className={`transition-all duration-300 ease-out ${
+          localActive === "percent" 
+            ? "flex-[2]" 
+            : localActive 
+              ? "flex-0 opacity-0 w-0 overflow-hidden" 
+              : "flex-1"
+        }`}>
+          <div
+            onClick={() => activate("percent")}
+            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-12 w-full"
+          >
+            <input
+              type="number"
+              value={percent}
+              onChange={handlePercentChange}
+              placeholder="درصد"
+              readOnly={localActive !== "percent"}
+              className="w-full h-full px-3 bg-transparent outline-none pr-6 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="0"
+              max="100"
+            />
+            <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">٪</span>
+            {localActive === "percent" && (
+              <button 
+                onClick={handleReset} 
+                className="absolute left-3 text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Amount Input */}
-        <div
-          onClick={() => activate("fixed")}
-          className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${
-            localActive === "fixed" 
-              ? "flex-[2]" 
-              : localActive 
-                ? "flex-0 opacity-0 w-0" 
-                : "flex-1"
-          }`}
-        >
-          <input
-            type="number"
-            value={amount}
-            onChange={handleAmountChange}
-            placeholder="مبلغ"
-            readOnly={localActive !== "fixed"}
-            className="w-full h-full px-3 bg-transparent outline-none pr-6 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            min="0"
-          />
-          <span className="absolute right-3 text-xs text-gray-500 pointer-events-none">$</span>
-          {localActive === "fixed" && (
-            <button 
-              onClick={handleReset} 
-              className="absolute left-3 text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
+        <div className={`transition-all duration-300 ease-out flex flex-col ${
+          localActive === "fixed" 
+            ? "flex-[2]" 
+            : localActive 
+              ? "flex-0 opacity-0 w-0 overflow-hidden" 
+              : "flex-1"
+        }`}>
+          <div
+            onClick={() => activate("fixed")}
+            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-12 w-full"
+          >
+            <input
+              type="number"
+              value={amount}
+              onChange={handleAmountChange}
+              placeholder="مبلغ"
+              readOnly={localActive !== "fixed"}
+              className="w-full h-full px-3 bg-transparent outline-none pr-6 pl-16 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              min="0"
+            />
+            <span className="absolute right-3 text-xs text-gray-500 pointer-events-none">
+              {localActive === "fixed" ? "" : "$"}
+            </span>
+            
+            {localActive === "fixed" && (
+              <>
+                <div className="absolute left-9 text-xs text-gray-500 pointer-events-none font-medium">
+                  تومان
+                </div>
+                <button 
+                  onClick={handleReset} 
+                  className="absolute left-3 text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </>
+            )}
+          </div>
+          
+          {/* Persian text equivalent in Rials */}
+          {localActive === "fixed" && amount && Number(amount) > 0 && (
+            <div className="text-xs text-gray-600 mt-1.5 pr-6 font-medium">
+              {numberToPersianWords(Number(amount) * 10)} ریال
+            </div>
           )}
         </div>
       </div>
