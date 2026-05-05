@@ -172,19 +172,22 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
             {loading ? "در حال ورود..." : "ورود"}
           </button>
 
-          <div className="flex justify-between mt-6 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex justify-between items-center mt-6 text-sm text-gray-500 dark:text-gray-400">
             <button
               onClick={() => setMode("otp-phone")}
               className="text-blue-600 hover:underline dark:text-purple-400"
             >
-              ورود با OTP
+             ورود با رمز یک بار مصرف
             </button>
-            <button
-              onClick={onSwitchRegister}
-              className="text-blue-600 hover:underline dark:text-purple-400"
-            >
-              ثبت‌نام
-            </button>
+            <span className="text-gray-600 dark:text-gray-200">
+              حساب ندارید؟{" "}
+              <button
+                onClick={onSwitchRegister}
+                className="text-blue-600 hover:underline dark:text-purple-400"
+              >
+               ثبت نام
+              </button>
+            </span>
           </div>
         </>
       )}

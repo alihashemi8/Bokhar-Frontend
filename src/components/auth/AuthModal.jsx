@@ -26,7 +26,7 @@ export default function AuthModal({ isOpen, onClose }) {
             aria-label="Close auth modal"
             className="
               hidden md:flex
-              absolute top-1 -left-4
+              absolute top-2 -left-4
               items-center justify-center
               w-9 h-9 rounded-full
               hover:bg-white text-black

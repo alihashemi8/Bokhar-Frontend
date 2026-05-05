@@ -70,7 +70,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
       />
 
       <p className="text-gray-400 dark:text-gray-500 text-xs mt-2 text-center">
-        شماره باید با 09 شروع شود و 11 رقم باشد
+    شماره همراه خود را وارد بفرمایید
       </p>
 
       <button
