@@ -4,7 +4,8 @@ import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import "react-multi-date-picker/styles/layouts/mobile.css";
-import { createProductDiscount } from "../../../../api/discountsApi"; // ایمپورت درست
+import { createProductDiscount } from "../../../../api/discountsApi";
+import { Tag, Timer, Clock, CalendarDays, AlertCircle, Percent, Banknote, X } from 'lucide-react';
 
 const persianToISO = (persianDate, timeStr) => {
   if (!persianDate) return null;
@@ -18,7 +19,6 @@ const persianToISO = (persianDate, timeStr) => {
   }
 };
 
-// Helper function to convert number to Persian words
 const numberToPersianWords = (num) => {
   if (num === 0) return "صفر";
   
@@ -50,7 +50,6 @@ const numberToPersianWords = (num) => {
   return toWords(num) || "صفر";
 };
 
-// 🔴 حذف تابع save از اینجا - فقط کامپوننت Pure باشه
 function DiscountInputs({ value, onChange }) {
   const { percent, amount, activeType } = value;
   const [localActive, setLocalActive] = useState(activeType);
@@ -92,7 +91,10 @@ function DiscountInputs({ value, onChange }) {
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-gray-800">مقدار تخفیف</h4>
+      <div className="flex items-center gap-2">
+        <Tag className="w-4 h-4 text-purple-600" />
+        <h4 className="text-sm font-semibold text-gray-800">مقدار تخفیف</h4>
+      </div>
       
       <div className="flex gap-2 select-none items-start">
         {/* Percent Input */}
@@ -105,25 +107,27 @@ function DiscountInputs({ value, onChange }) {
         }`}>
           <div
             onClick={() => activate("percent")}
-            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-12 w-full"
+            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center cursor-pointer h-12 w-full"
           >
+            <div className="absolute right-3 text-purple-600 pointer-events-none">
+              <Percent className="w-4 h-4" />
+            </div>
             <input
               type="number"
               value={percent}
               onChange={handlePercentChange}
               placeholder="درصد"
               readOnly={localActive !== "percent"}
-              className="w-full h-full px-3 bg-transparent outline-none pr-6 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full h-full px-3 bg-transparent outline-none pr-9 text-gray-800 remove-arrows leading-tight"
               min="0"
               max="100"
             />
-            <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">٪</span>
             {localActive === "percent" && (
               <button 
                 onClick={handleReset} 
-                className="absolute left-3 text-gray-400 hover:text-gray-600"
+                className="absolute left-3 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition"
               >
-                ×
+                <X className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -139,39 +143,39 @@ function DiscountInputs({ value, onChange }) {
         }`}>
           <div
             onClick={() => activate("fixed")}
-            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-12 w-full"
+            className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center cursor-pointer h-12 w-full"
           >
+            <div className="absolute right-3 text-green-600 pointer-events-none">
+              <Banknote className="w-4 h-4" />
+            </div>
             <input
               type="number"
               value={amount}
               onChange={handleAmountChange}
               placeholder="مبلغ"
               readOnly={localActive !== "fixed"}
-              className="w-full h-full px-3 bg-transparent outline-none pr-6 pl-16 remove-arrows [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-9 pl-16 text-gray-800 leading-tight"
               min="0"
             />
-            <span className="absolute right-3 text-xs text-gray-500 pointer-events-none">
-              {localActive === "fixed" ? "" : "$"}
-            </span>
             
             {localActive === "fixed" && (
-              <>
-                <div className="absolute left-9 text-xs text-gray-500 pointer-events-none font-medium">
-                  تومان
-                </div>
-                <button 
-                  onClick={handleReset} 
-                  className="absolute left-3 text-gray-400 hover:text-gray-600"
-                >
-                  ×
-                </button>
-              </>
+              <div className="absolute left-9 text-xs text-gray-500 pointer-events-none font-medium">
+                تومان
+              </div>
+            )}
+            
+            {localActive === "fixed" && (
+              <button 
+                onClick={handleReset} 
+                className="absolute left-3 p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
           </div>
           
-          {/* Persian text equivalent in Rials */}
           {localActive === "fixed" && amount && Number(amount) > 0 && (
-            <div className="text-xs text-gray-600 mt-1.5 pr-6 font-medium">
+            <div className="text-xs text-gray-600 mt-1.5 pr-9 font-medium">
               {numberToPersianWords(Number(amount) * 10)} ریال
             </div>
           )}
@@ -179,7 +183,8 @@ function DiscountInputs({ value, onChange }) {
       </div>
       
       {!localActive && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3" />
           برای وارد کردن تخفیف، روی یکی از فیلدها کلیک کنید
         </p>
       )}
@@ -187,7 +192,6 @@ function DiscountInputs({ value, onChange }) {
   );
 }
 
-// ScheduleSection بدون تغییر...
 function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   const handleTimeChange = (field, value) => {
     onChange({ ...schedule, [field]: value });
@@ -196,9 +200,12 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   return (
     <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">
-          میخواهید برای تخفیف زمان انتخاب کنید
-        </span>
+        <div className="flex items-center gap-2">
+          <Timer className="w-4 h-4 text-purple-600" />
+          <span className="text-sm font-medium text-gray-700">
+            میخواهید برای تخفیف زمان انتخاب کنید
+          </span>
+        </div>
         <button
           type="button"
           onClick={onToggle}
@@ -218,7 +225,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
         <div className="space-y-3 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 mr-1">تاریخ شروع</label>
+              <label className="text-xs text-gray-500 mr-1 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" />
+                تاریخ شروع
+              </label>
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
@@ -233,7 +243,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
             </div>
             
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 mr-1">ساعت شروع</label>
+              <label className="text-xs text-gray-500 mr-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                ساعت شروع
+              </label>
               <div className="flex items-center bg-white border border-gray-300 rounded-xl h-10 px-3 focus-within:border-purple-500">
                 <input
                   type="time"
@@ -248,7 +261,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 mr-1">تاریخ پایان</label>
+              <label className="text-xs text-gray-500 mr-1 flex items-center gap-1">
+                <CalendarDays className="w-3 h-3" />
+                تاریخ پایان
+              </label>
               <DatePicker
                 calendar={persian}
                 locale={persian_fa}
@@ -263,7 +279,10 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
             </div>
             
             <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 mr-1">ساعت پایان</label>
+              <label className="text-xs text-gray-500 mr-1 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                ساعت پایان
+              </label>
               <div className="flex items-center bg-white border border-gray-300 rounded-xl h-10 px-3 focus-within:border-purple-500">
                 <input
                   type="time"
@@ -277,13 +296,17 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
           </div>
           
           {error && (
-            <p className="text-xs text-red-500 mt-1">{error}</p>
+            <div className="flex items-center gap-1 text-xs text-red-500 mt-1">
+              <AlertCircle className="w-3 h-3" />
+              <span>{error}</span>
+            </div>
           )}
         </div>
       )}
       
       {!isEnabled && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Clock className="w-3 h-3" />
           تخفیف بدون محدودیت زمانی (همیشگی) اعمال می‌شود
         </p>
       )}
@@ -291,7 +314,6 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   );
 }
 
-// ✅ اضافه کردن onSuccess به props
 export default function TabModal({ isOpen, onClose, category, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -398,10 +420,9 @@ export default function TabModal({ isOpen, onClose, category, onSuccess }) {
         })
       };
       
-      // ✅ استفاده از createProductDiscount (نه createCategoryDiscount)
       await createProductDiscount(payload);
       onClose();
-      onSuccess?.(); // ✅ callback برای رفرش لیست
+      onSuccess?.();
     } catch (err) {
       setError("خطا در ذخیره");
       console.error(err);
@@ -430,8 +451,9 @@ export default function TabModal({ isOpen, onClose, category, onSuccess }) {
         <DiscountInputs value={discount} onChange={setDiscount} />
 
         {error && !error.includes("تاریخ") && !error.includes("زمان") && (
-          <div className="text-red-500 text-sm p-2 bg-red-50 rounded-lg">
-            {error}
+          <div className="flex items-center gap-2 text-red-500 text-sm p-2 bg-red-50 rounded-lg">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -453,6 +475,17 @@ export default function TabModal({ isOpen, onClose, category, onSuccess }) {
           </button>
         </div>
       </div>
+
+      <style>{`
+        .remove-arrows::-webkit-outer-spin-button,
+        .remove-arrows::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .remove-arrows[type=number] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
     </BaseModal>
   );
 }
