@@ -68,6 +68,37 @@ const persianToISO = (persianDate, timeStr) => {
   }
 };
 
+const numberToPersianWords = (num) => {
+  if (num === 0) return "صفر";
+  
+  const ones = ["", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"];
+  const teens = ["ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده", "شانزده", "هفده", "هجده", "نوزده"];
+  const tens = ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"];
+  const hundreds = ["", "یکصد", "دویست", "سیصد", "چهارصد", "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"];
+  const thousands = ["", "هزار", "میلیون", "میلیارد"];
+  
+  const toWords = (n) => {
+    if (n === 0) return "";
+    if (n < 10) return ones[n];
+    if (n < 20) return teens[n - 10];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " و " + ones[n % 10] : "");
+    if (n < 1000) return hundreds[Math.floor(n / 100)] + (n % 100 !== 0 ? " و " + toWords(n % 100) : "");
+    
+    let result = "";
+    let i = 0;
+    while (n > 0) {
+      if (n % 1000 !== 0) {
+        result = toWords(n % 1000) + " " + thousands[i] + (result ? " و " + result : "");
+      }
+      n = Math.floor(n / 1000);
+      i++;
+    }
+    return result;
+  };
+  
+  return toWords(num) || "صفر";
+};
+
 // ==========================================
 // Reducer & State Management
 // ==========================================
@@ -588,10 +619,12 @@ const wrapperClass = useMemo(() => {
           {material}
         </button>
 
-        <div className="flex gap-2 flex-1 h-10 md:h-12 select-none">
+        {/* ✅ Fixed: Changed h-10 md:h-12 to min-h-10 md:min-h-12 and added items-start */}
+        <div className="flex gap-2 flex-1 min-h-10 md:min-h-12 select-none items-start">
+          {/* ✅ Added h-10 md:h-12 to maintain fixed height */}
           <div
             onClick={(e) => activateType(e, "percent")}
-            className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${wrapperClass}`}
+            className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-10 md:h-12 ${wrapperClass}`}
           >
             <input
               ref={percentRef}
@@ -611,24 +644,37 @@ const wrapperClass = useMemo(() => {
             )}
           </div>
 
-          <div
-            onClick={(e) => activateType(e, "amount")}
-            className={`relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer ${activeType === "amount" ? "flex-[2]" : activeType ? "flex-0 opacity-0" : "flex-1"}`}
-          >
-            <input
-              ref={amountRef}
-              type="number"
-              value={amountValue ?? ""}
+          <div className={`flex flex-col transition-all duration-300 ease-out ${
+            activeType === "amount" 
+              ? "flex-[2]" 
+              : activeType 
+                ? "flex-0 opacity-0 w-0 overflow-hidden" 
+                : "flex-1"
+          }`}>
+            <div
               onClick={(e) => activateType(e, "amount")}
-              onChange={handleAmountChange}
-              placeholder="مبلغ"
-              readOnly={activeType !== "amount"}
-              className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
-              min="0"
-            />
-            <span className="absolute right-3 text-sm text-gray-500 pointer-events-none">$</span>
-            {activeType === "amount" && (
-              <button onClick={handleReset} className="absolute left-3 text-gray-400">×</button>
+              className="relative overflow-hidden rounded-xl bg-gray-100 flex items-center transition-all duration-300 ease-out cursor-pointer h-10 md:h-12 w-full"
+            >
+              <input
+                ref={amountRef}
+                type="number"
+                value={amountValue ?? ""}
+                onClick={(e) => activateType(e, "amount")}
+                onChange={handleAmountChange}
+                placeholder="مبلغ"
+                readOnly={activeType !== "amount"}
+                className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
+                min="0"
+              />
+              <span className="absolute right-3 h-full text-sm text-gray-500 pointer-events-none">$</span>
+              {activeType === "amount" && (
+                <button onClick={handleReset} className="absolute left-3 text-gray-400">×</button>
+              )}
+            </div>
+            {activeType === "amount" && amountValue && Number(amountValue) > 0 && (
+              <div className="text-xs text-gray-600 mt-1 font-medium text-right">
+                {numberToPersianWords(Number(amountValue) * 10)} ریال
+              </div>
             )}
           </div>
         </div>
