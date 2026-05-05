@@ -200,9 +200,7 @@ export default function CouponTab() {
                     >
                       <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6">
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full bg-gradient-to-br from-purple-400 to-sky-400 flex items-center justify-center text-white font-bold text-xs sm:text-sm shadow-md shrink-0">
-                            {c.fullname?.charAt(0) || "?"}
-                          </div>
+
                           <div className="min-w-0">
                             <p className="font-medium text-gray-900 dark:text-gray-100 truncate max-w-[100px] sm:max-w-[150px] lg:max-w-none">{c.fullname}</p>
                             <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 hidden sm:block">ID: {c.id}</p>
