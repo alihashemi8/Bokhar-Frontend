@@ -111,7 +111,7 @@ function DiscountInputs({ value, onChange }) {
             type="number"
             value={amount}
             onChange={handleAmountChange}
-            placeholder="$"
+            placeholder="$ مبلغ"
             readOnly={localActive !== "fixed"}
               className="w-full h-full px-3 bg-transparent outline-none remove-arrows pr-8"
             min="0"
