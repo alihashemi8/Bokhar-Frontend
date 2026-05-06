@@ -82,6 +82,24 @@ export default function Order() {
   // مموریزه کردن location برای جلوگیری از ساخت آبجکت جدید در هر رندر
   const locationValue = useMemo(() => orderData.location, [orderData.location]);
 
+  // محاسبه هزینه سرویس از دیتای ذخیره شده
+  const servicePrice = useMemo(() => {
+    return orderData.datetime?.pricing?.amount || 0;
+  }, [orderData.datetime?.pricing?.amount]);
+
+  const serviceType = useMemo(() => {
+    return orderData.datetime?.pricing?.type || null;
+  }, [orderData.datetime?.pricing?.type]);
+
+  const serviceHours = useMemo(() => {
+    return orderData.datetime?.pricing?.hours || 0;
+  }, [orderData.datetime?.pricing?.hours]);
+
+  // محاسبه مبلغ نهایی: جمع خرید + هزینه سرویس - تخفیف
+  const finalTotal = useMemo(() => {
+    return factorTotal + servicePrice - (orderData.discountAmount || 0);
+  }, [factorTotal, servicePrice, orderData.discountAmount]);
+
   // -------------------- navigation handlers (همه با useCallback) --------------------
   const goToStep = useCallback((targetStep) => {
     if (targetStep <= maxStep && targetStep >= 1) {
@@ -172,10 +190,12 @@ export default function Order() {
 
   const submitOrder = useCallback(async () => {
     try {
-      const total = factorTotal - (orderData.discountAmount || 0);
+      // ارسال کل دیتا شامل pricing به سرور
+      const total = finalTotal;
       await axios.post(`${API_URL}/orders/`, {
         ...orderData,
         subtotal: factorTotal,
+        servicePrice: servicePrice,
         total,
       });
       toast.success("سفارش با موفقیت ثبت شد ✅");
@@ -187,7 +207,7 @@ export default function Order() {
       console.error(err);
       toast.error("خطا در ثبت سفارش. لطفاً دوباره تلاش کنید.");
     }
-  }, [orderData, factorTotal]);
+  }, [orderData, factorTotal, servicePrice, finalTotal]);
 
   // -------------------- render --------------------
   return (
@@ -232,8 +252,8 @@ export default function Order() {
             {/* مرحله ۳: انتخاب زمان */}
             {stepType(step) === "time" && (
               <DateTimeRangePicker
-                value={dateTimeValue}  // ← استفاده از مقدار مموریزه شده
-                onChange={handleDateTimeChange}  // ← استفاده از callback مموریزه شده
+                value={dateTimeValue}
+                onChange={handleDateTimeChange}
                 onGoLocation={handleNext}
                 onComplete={() => {
                   console.log("Time selection complete");
@@ -245,7 +265,10 @@ export default function Order() {
             {stepType(step) === "payment" && (
               <Payment
                 subtotal={factorTotal}
-                total={factorTotal - (orderData.discountAmount || 0)}
+                total={finalTotal}
+                servicePrice={servicePrice}
+                serviceType={serviceType}
+                serviceHours={serviceHours}
                 discountAmount={orderData.discountAmount}
                 discountCode={orderData.discountCode}
                 datetime={dateTimeValue}

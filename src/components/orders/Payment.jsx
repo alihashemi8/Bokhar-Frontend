@@ -12,6 +12,9 @@ import {
 export default function Payment({
   subtotal,
   total,
+  servicePrice,
+  serviceType,
+  serviceHours,
   discountAmount,
   discountCode,
   setDiscountCode,
@@ -35,6 +38,22 @@ export default function Payment({
     setLoading(true);
     await handlePayment();
     setLoading(false);
+  };
+
+  // تابع کمکی برای نام سرویس
+  const getServiceLabel = () => {
+    if (serviceType === 'express') return 'سرویس فوری (تا ۲۴ ساعت)';
+    if (serviceType === 'standard') return 'سرویس استاندارد (تا ۴۸ ساعت)';
+    if (serviceType === 'economy') return 'سرویس اقتصادی (۷۲+ ساعت)';
+    return 'هزینه سرویس';
+  };
+
+  // تعیین رنگ بر اساس نوع سرویس
+  const getServiceColor = () => {
+    if (serviceType === 'express') return 'text-red-600 dark:text-red-400';
+    if (serviceType === 'standard') return 'text-amber-600 dark:text-amber-400';
+    if (serviceType === 'economy') return 'text-emerald-600 dark:text-emerald-400';
+    return 'text-gray-600 dark:text-gray-400';
   };
 
   return (
@@ -80,6 +99,15 @@ export default function Payment({
             valueClass="text-gray-500 dark:text-gray-300"
           />
 
+          {/* ردیف جدید: هزینه سرویس زمانی */}
+          {servicePrice !== undefined && (
+            <Row
+              label={getServiceLabel()}
+              value={servicePrice === 0 ? "رایگان" : `${servicePrice.toLocaleString()} تومان`}
+              valueClass={getServiceColor()}
+            />
+          )}
+
           {discountAmount > 0 && (
             <Row
               label="تخفیف"
@@ -121,13 +149,13 @@ export default function Payment({
               <span className="text-gray-600 dark:text-gray-200">
                 {datetime?.pickup?.date} — {datetime?.pickup?.time}
               </span>
-
+              {/* نمایش تعداد ساعت */}
             </div>
           </div>
 
           {/* آدرس */}
           <div className="flex justify-between items-start">
-            <div>
+            <div className="flex-1">
               <span className="font-semibold text-gray-700 dark:text-gray-100">
                 آدرس:
               </span>
@@ -137,7 +165,7 @@ export default function Payment({
               </span>
             </div>
             <Edit2
-              className="size-4 cursor-pointer text-sky-600 dark:text-sky-300 mt-1"
+              className="size-4 cursor-pointer text-sky-600 dark:text-sky-300 mt-1 mr-2 flex-shrink-0"
               onClick={() => goToLocationStep()}
             />
           </div>
@@ -217,7 +245,7 @@ export default function Payment({
           {loading ? (
             <Loader2 className="size-5 animate-spin" />
           ) : (
-            "پرداخت و ثبت سفارش"
+            `پرداخت ${total.toLocaleString()} تومان`
           )}
         </button>
       </div>
