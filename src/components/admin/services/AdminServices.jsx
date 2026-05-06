@@ -262,7 +262,7 @@ export default function AdminServices() {
             <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
               <button
                 onClick={() => setSelectedCategory("all")}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap  cursor-pointer ${
                   selectedCategory === "all"
                     ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white"
                     : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 "
@@ -275,7 +275,7 @@ export default function AdminServices() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`px-4 py-2 rounded-xl whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer ${
                     selectedCategory === cat.name
                       ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white"
                       : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 "
@@ -326,15 +326,15 @@ export default function AdminServices() {
                     </p>
                   </div>
 
-                  <div className="flex justify-between mt-3">
+                  <div className="flex justify-between mt-3 ">
                     <button
-                      className="text-blue-600 dark:text-indigo-400"
+                      className="text-blue-600 dark:text-indigo-400 cursor-pointer"
                       onClick={() => openEdit(srv.id)}
                     >
                       <FiEdit />
                     </button>
                     <button
-                      className="text-red-600"
+                      className="text-red-600 cursor-pointer"
                       onClick={() => deleteService(srv.id)}
                     >
                       <FiTrash2 />
