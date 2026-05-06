@@ -63,7 +63,7 @@ export default function Sidebar({
           bg-white/70 dark:bg-purple-800/60 dark:text-white/80
           backdrop-blur-lg border border-sky-200 dark:border-indigo-500
           hover:bg-white dark:hover:bg-gray-800
-          p-2 rounded-xl shadow-lg"
+          p-2 rounded-xl shadow-lg cursor-pointer"
         onClick={() => setIsSidebarOpen(true)}
       >
         <FiMenu size={24} />
@@ -72,7 +72,7 @@ export default function Sidebar({
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden cursor-pointer"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -99,7 +99,7 @@ export default function Sidebar({
             </h1>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden p-1 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800"
+              className="md:hidden p-1 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800 cursor-pointer"
             >
               <FiChevronRight size={24} />
             </button>
@@ -117,7 +117,7 @@ export default function Sidebar({
                 }}
                 className={`
                   flex items-center gap-2 w-full px-3 py-3 my-2 rounded-xl text-right
-                  transition-all duration-200
+                  transition-all duration-200 cursor-pointer
                   ${
                     activeMenu === item.key
                       ? "bg-gradient-to-r from-sky-400 to-sky-500 text-white shadow-md dark:from-purple-700 dark:to-purple-800"
@@ -140,7 +140,7 @@ export default function Sidebar({
               </span>
               <button
                 onClick={toggleTheme}
-                className={`relative w-14 h-8 rounded-full p-1 transition-all
+                className={`relative w-14 h-8 rounded-full p-1 transition-all cursor-pointer
                   ${theme === "dark" ? "bg-purple-700" : "bg-sky-300"}`}
               >
                 <span
@@ -154,7 +154,7 @@ export default function Sidebar({
             </div>
 
             {/* Logout */}
-            <button className="flex items-center gap-2 text-red-600 hover:bg-white/70 dark:hover:bg-gray-800 p-2 rounded-xl transition">
+            <button className="flex items-center gap-2 mb-3 text-red-600 hover:bg-white/70 dark:hover:bg-gray-800 p-2 rounded-xl transition cursor-pointer">
               <FiLogOut />
               خروج
             </button>
