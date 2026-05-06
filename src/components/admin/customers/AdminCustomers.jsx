@@ -1,22 +1,65 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Sidebar";
 import { FiUser, FiUsers, FiStar } from "react-icons/fi";
 import Search from "../../Search";
 
+import { fetchCustomers } from "../../../context/AuthContext"; 
+
 /* ================= HOOK ================= */
 
 function useCustomers() {
-  const [customers] = useState([
-    { id: 1, name: "علی رضایی", phone: "09121234567", type: "vip", orders: 12 },
-    { id: 2, name: "سارا محمدی", phone: "09351239811", type: "active", orders: 3 },
-    { id: 3, name: "محمد کریمی", phone: "09132223344", type: "inactive", orders: 0 },
-    { id: 4, name: "مهسا سلطانی", phone: "09012225566", type: "active", orders: 5 },
-  ]);
-  return customers;
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCustomers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await fetchCustomers();
+        
+        // اطمینان از اینکه کامپوننت هنوز mount هست before setting state
+        if (isMounted) {
+          // اگر ساختار داده بکند با UI متفاوت است، اینجا تبدیل کن
+          // مثال: اگر بکند به جای 'type' از 'status' استفاده می‌کند
+          const formattedData = data.map(customer => ({
+            id: customer.id,
+            name: customer.name || customer.fullname || "نامشخص",
+            phone: customer.phone,
+            type: customer.type || customer.status || "inactive", // تطابق با ساختار بکند
+            orders: customer.orders || customer.order_count || 0
+          }));
+          
+          setCustomers(formattedData);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message);
+          console.error("خطا در دریافت مشتریان:", err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadCustomers();
+
+    // cleanup function برای جلوگیری از memory leak
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return { customers, loading, error };
 }
 
-/* ================= CARD ================= */
+/* ================= CARD (بدون تغییر) ================= */
 
 function CustomerCard({ customer, onClick }) {
   const { name, phone, type, orders } = customer;
@@ -66,7 +109,7 @@ export default function AdminCustomers() {
   const [activeTab, setActiveTab] = useState("all");
 
   const navigate = useNavigate();
-  const customers = useCustomers();
+  const { customers, loading, error } = useCustomers();
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase();
@@ -133,26 +176,50 @@ export default function AdminCustomers() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-12 flex justify-center items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+            <span className="mr-3 text-slate-600">در حال بارگذاری...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {!loading && error && (
+          <div className="mt-8 p-4 bg-red-100 border border-red-300 rounded-xl text-red-800 text-center">
+            <p className="font-bold">خطا در دریافت اطلاعات</p>
+            <p className="text-sm mt-1">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              تلاش مجدد
+            </button>
+          </div>
+        )}
+
         {/* Cards */}
-        <div className="mt-8">
-          {filtered.length === 0 ? (
-            <div className="text-center text-slate-400 text-lg">
-              مشتری‌ای یافت نشد
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filtered.map((c) => (
-                <CustomerCard
-                  key={c.id}
-                  customer={c}
-                  onClick={() =>
-                    navigate(`/admin-dashboard/customers/${c.id}/transactions`)
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {!loading && !error && (
+          <div className="mt-8">
+            {filtered.length === 0 ? (
+              <div className="text-center text-slate-400 text-lg py-12">
+                مشتری‌ای یافت نشد
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filtered.map((c) => (
+                  <CustomerCard
+                    key={c.id}
+                    customer={c}
+                    onClick={() =>
+                      navigate(`/admin-dashboard/customers/${c.id}/transactions`)
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
