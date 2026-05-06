@@ -9,7 +9,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
   return (
     <div className="w-full">
       {/* موبایل */}
-      <div className="flex gap-2 px-2 py-2 overflow-x-auto lg:hidden">
+      <div className="flex gap-2 px-2 py-2 overflow-x-auto scrollbar-hide lg:hidden">
         {categories.map((cat) => {
           const isDiscounted = isCategoryFullyDiscounted(cat.id);
           const isActive = active?.id === cat.id;
@@ -18,7 +18,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
             <button
               key={cat.id}
               onClick={() => onCategoryChange(cat)}
-              className={`relative min-w-[115px] px-1 py-2 my-2 rounded-3xl text-sm font-bold transition-all
+              className={`relative flex-shrink-0 whitespace-nowrap px-4 py-2 my-2 rounded-3xl text-sm font-bold transition-all
                 ${isActive 
                   ? "bg-sky-200 scale-105" 
                   : isDiscounted 
@@ -33,7 +33,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
       </div>
 
       {/* دسکتاپ */}
-      <div className="hidden lg:flex gap-2 px-1 py-3">
+      <div className="hidden lg:flex gap-3 px-1 py-3 overflow-x-auto scrollbar-hide">
         {categories.map((cat) => {
           const isDiscounted = isCategoryFullyDiscounted(cat.id);
           const isActive = active?.id === cat.id;
@@ -42,7 +42,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
             <button
               key={cat.id}
               onClick={() => onCategoryChange(cat)}
-              className={`relative flex-auto px-1 py-2 rounded-3xl text-sm font-bold transition-all
+              className={`relative flex-shrink-0 whitespace-nowrap px-6 py-2 rounded-3xl text-sm font-bold transition-all
                 ${isActive 
                   ? "bg-sky-200 scale-105" 
                   : isDiscounted 
