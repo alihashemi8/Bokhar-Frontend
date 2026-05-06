@@ -387,7 +387,7 @@ export default function DateTimeRangePicker({
             }
           `}
         >
-          {isComplete ? "ادامه و انتخاب موقعیت مکانی " : "لطفاً تاریخ و زمان را انتخاب کنید"}
+          {isComplete ? "تایید زمان تحویل " : "لطفاً تاریخ و زمان را انتخاب کنید"}
         </button>
       </div>
 

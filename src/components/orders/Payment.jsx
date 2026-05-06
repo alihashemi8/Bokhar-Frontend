@@ -11,6 +11,7 @@ import {
 
 export default function Payment({
   subtotal,
+  originalSubtotal,  // قیمت اصلی قبل از تخفیف آیتم‌ها
   total,
   servicePrice,
   serviceType,
@@ -27,6 +28,17 @@ export default function Payment({
 }) {
   const [loading, setLoading] = useState(false);
   const [discountStatus, setDiscountStatus] = useState(null);
+
+  // محاسبه سود مشتری از تخفیف آیتم‌ها (تفاوت قیمت اصلی و نهایی سبد)
+  const effectiveOriginalSubtotal = originalSubtotal || subtotal;
+  const itemDiscountSavings = effectiveOriginalSubtotal - subtotal;
+  
+  // محاسبه کل سود (تخفیف آیتم‌ها + کد تخفیف)
+  const totalSavings = itemDiscountSavings + (discountAmount || 0);
+  const hasAnyDiscount = totalSavings > 0;
+  
+  // قیمت کل بدون هیچ تخفیفی (برای خط‌خوردن)
+  const originalGrandTotal = effectiveOriginalSubtotal + (servicePrice || 0);
 
   const onApplyDiscount = async () => {
     const ok = await applyDiscount();
@@ -90,7 +102,22 @@ export default function Payment({
 
         {/* Summary */}
         <div className="space-y-3 text-sm">
-          <Row label="جمع خرید" value={`${subtotal.toLocaleString()} تومان`} />
+          {/* جمع خرید - با نمایش خط‌خورده اگر تخفیف آیتم داریم */}
+          {itemDiscountSavings > 0 ? (
+            <div className="flex justify-between items-start">
+              <span className="text-gray-600 dark:text-gray-300 pt-1">جمع خرید</span>
+              <div className="flex flex-col items-end">
+                <span className="text-xs line-through text-gray-400 dark:text-gray-500">
+                  {effectiveOriginalSubtotal.toLocaleString()} تومان
+                </span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  {subtotal.toLocaleString()} تومان
+                </span>
+              </div>
+            </div>
+          ) : (
+            <Row label="جمع خرید" value={`${subtotal.toLocaleString()} تومان`} />
+          )}
 
           {/* هزینه پیک */}
           <Row
@@ -110,7 +137,7 @@ export default function Payment({
 
           {discountAmount > 0 && (
             <Row
-              label="تخفیف"
+              label="تخفیف (کد)"
               value={`-${discountAmount.toLocaleString()} تومان`}
               valueClass="text-emerald-600 dark:text-emerald-400"
             />
@@ -118,11 +145,30 @@ export default function Payment({
 
           <div className="h-px bg-sky-200 dark:bg-sky-700 my-2" />
 
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600 dark:text-gray-300">مبلغ نهایی</span>
-            <span className="text-2xl font-bold text-sky-700 dark:text-gray-100">
-              {total.toLocaleString()} تومان
-            </span>
+          {/* بخش مبلغ نهایی - مشابه فاکتور */}
+          <div className="flex justify-between items-start pt-2">
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-700 dark:text-gray-200 font-bold text-lg">
+                مبلغ نهایی
+              </span>
+              {hasAnyDiscount && (
+                <span className="text-xs md:text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                  سود شما از این خرید: {totalSavings.toLocaleString()} تومان
+                </span>
+              )}
+            </div>
+            
+            <div className="flex flex-col items-end gap-1">
+              {hasAnyDiscount && (
+                <span className="text-base md:text-lg line-through text-gray-400 dark:text-gray-500">
+                  {originalGrandTotal.toLocaleString()} تومان
+                </span>
+              )}
+              <span className="text-2xl font-bold text-sky-700 dark:text-white">
+                {total.toLocaleString()} 
+                <span className="text-sm font-normal text-sky-600 dark:text-gray-300 mr-1">تومان</span>
+              </span>
+            </div>
           </div>
         </div>
 

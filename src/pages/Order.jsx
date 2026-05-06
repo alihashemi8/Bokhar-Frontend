@@ -33,6 +33,7 @@ const initialState = {
         discountAmount: 0,
       },
   factorTotal: 0,
+  originalFactorTotal: 0,  // اضافه شده برای نگهداری قیمت اصلی قبل از تخفیف آیتم‌ها
 };
 
 // -------------------- reducer --------------------
@@ -46,6 +47,8 @@ function reducer(state, action) {
       return { ...state, orderData: { ...state.orderData, ...action.payload } };
     case "SET_FACTOR_TOTAL":
       return { ...state, factorTotal: action.payload };
+    case "SET_ORIGINAL_FACTOR_TOTAL":  // اضافه شده
+      return { ...state, originalFactorTotal: action.payload };
     case "RESET_ORDER":
       return { ...initialState, step: 1, maxStep: 1 };
     default:
@@ -56,7 +59,7 @@ function reducer(state, action) {
 // -------------------- main component --------------------
 export default function Order() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { step, maxStep, orderData, factorTotal } = state;
+  const { step, maxStep, orderData, factorTotal, originalFactorTotal } = state;
 
   const stepType = useCallback((s) => STEP_MAP[s] || null, []);
 
@@ -159,8 +162,15 @@ export default function Order() {
     dispatch({ type: "SET_ORDER_DATA", payload: { location } });
   }, []);
 
-  const handleFactorTotalChange = useCallback((value) => {
-    dispatch({ type: "SET_FACTOR_TOTAL", payload: value });
+  const handleFactorTotalChange = useCallback((data) => {
+    // اگر object باشد (فرمت جدید) هر دو مقدار را ذخیره می‌کنیم
+    if (data && typeof data === 'object') {
+      dispatch({ type: "SET_FACTOR_TOTAL", payload: data.total });
+      dispatch({ type: "SET_ORIGINAL_FACTOR_TOTAL", payload: data.originalTotal });
+    } else {
+      // پشتیبانی از فرمت قدیمی (فقط عدد)
+      dispatch({ type: "SET_FACTOR_TOTAL", payload: data });
+    }
   }, []);
 
   const goToTimeStep = useCallback(() => {
@@ -265,6 +275,7 @@ export default function Order() {
             {stepType(step) === "payment" && (
               <Payment
                 subtotal={factorTotal}
+                originalSubtotal={originalFactorTotal}  // اضافه شده
                 total={finalTotal}
                 servicePrice={servicePrice}
                 serviceType={serviceType}

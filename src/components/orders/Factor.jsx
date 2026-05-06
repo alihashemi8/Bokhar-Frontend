@@ -31,8 +31,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   const savingsAmount = originalTotalPrice - totalPrice;
 
   useEffect(() => {
-    if (onTotalChange) onTotalChange(totalPrice);
-  }, [totalPrice]);
+    if (onTotalChange) onTotalChange({ 
+      total: totalPrice, 
+      originalTotal: originalTotalPrice 
+    });
+  }, [totalPrice, originalTotalPrice, onTotalChange]);
 
   // حذف با Modal
   const handleRemove = (item) => {
