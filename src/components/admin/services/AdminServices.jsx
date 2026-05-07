@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { FiPlus, FiTrash2, FiEdit } from "react-icons/fi";
+import { useState, useContext, useRef, useEffect } from "react";
+import { FiPlus, FiTrash2, FiEdit, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
@@ -32,6 +32,52 @@ function ConfirmToast({ message, onConfirm, onCancel }) {
     </div>
   );
 }
+
+// کامپوننت اسکرول افقی ساده با چرخ موس
+function HorizontalScroller({ children, className = "" }) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      // فقط اگر حرکت عمودی قوی‌تر از افقی باشد
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // در RTL:
+        // چرخ به پایین (deltaY > 0) = راست (scrollLeft مثبت‌تر)
+        // چرخ به بالا (deltaY < 0) = چپ (scrollLeft منفی‌تر)
+        const delta = e.deltaY > 0 ? 100 : -100;
+        
+        el.scrollBy({
+          left: delta,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={scrollRef} 
+      className={`overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-sky-300 dark:scrollbar-thumb-indigo-600 scrollbar-track-transparent hover:scrollbar-thumb-sky-400 dark:hover:scrollbar-thumb-indigo-500 select-none ${className}`}
+    >
+      <div className="flex gap-3">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 
 export default function AdminServices() {
   const { categories, services, refreshData } = useContext(ServicesContext);
@@ -225,24 +271,24 @@ export default function AdminServices() {
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <div className="flex gap-3 pb-3 min-w-max">
-                {sortedCategories.map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center gap-3 px-4 py-2 rounded-xl border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white shrink-0"
+            {/* اسکرول افقی با UX بهتر */}
+            <HorizontalScroller className="mb-2">
+              {sortedCategories.map((c) => (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 px-4 py-2 rounded-xl border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white shrink-0 select-none"
+                >
+                  <span className="truncate whitespace-nowrap">{c.name}</span>
+                  <button
+                    onClick={() => deleteCategory(c)}
+                    disabled={isLoading}
+                    className="hover:scale-110 transition-transform"
                   >
-                    <span className="truncate">{c.name}</span>
-                    <button
-                      onClick={() => deleteCategory(c)}
-                      disabled={isLoading}
-                    >
-                      <FiTrash2 className="text-red-600" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+                    <FiTrash2 className="text-red-600" />
+                  </button>
+                </div>
+              ))}
+            </HorizontalScroller>
           </div>
 
           {/* ----------------------- */}
@@ -259,13 +305,14 @@ export default function AdminServices() {
               />
             </div>
 
-            <div className="flex gap-3 overflow-x-auto pb-3 mb-6">
+            {/* فیلتر دسته‌بندی‌ها با اسکرول نرم */}
+            <HorizontalScroller className="mb-6">
               <button
                 onClick={() => setSelectedCategory("all")}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap  cursor-pointer ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
                   selectedCategory === "all"
-                    ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white"
-                    : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 "
+                    ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
+                    : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
                 }`}
               >
                 همه
@@ -275,16 +322,16 @@ export default function AdminServices() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
                     selectedCategory === cat.name
-                      ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white"
-                      : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 "
+                      ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
+                      : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
                   }`}
                 >
                   {cat.name}
                 </button>
               ))}
-            </div>
+            </HorizontalScroller>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
@@ -328,13 +375,13 @@ export default function AdminServices() {
 
                   <div className="flex justify-between mt-3 ">
                     <button
-                      className="text-blue-600 dark:text-indigo-400 cursor-pointer"
+                      className="text-blue-600 dark:text-indigo-400 cursor-pointer hover:scale-110 transition"
                       onClick={() => openEdit(srv.id)}
                     >
                       <FiEdit />
                     </button>
                     <button
-                      className="text-red-600 cursor-pointer"
+                      className="text-red-600 cursor-pointer hover:scale-110 transition"
                       onClick={() => deleteService(srv.id)}
                     >
                       <FiTrash2 />
