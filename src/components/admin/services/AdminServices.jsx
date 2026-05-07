@@ -5,6 +5,7 @@ import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
 import Search from "../../Search";
 import api from "./servicesApi";
+import HorizontalScroller from "../../HorizontalScroller"; 
 
 function ConfirmToast({ message, onConfirm, onCancel }) {
   if (!message) return null;
@@ -32,52 +33,6 @@ function ConfirmToast({ message, onConfirm, onCancel }) {
     </div>
   );
 }
-
-// کامپوننت اسکرول افقی ساده با چرخ موس
-function HorizontalScroller({ children, className = "" }) {
-  const scrollRef = useRef(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const handleWheel = (e) => {
-      // فقط اگر حرکت عمودی قوی‌تر از افقی باشد
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // در RTL:
-        // چرخ به پایین (deltaY > 0) = راست (scrollLeft مثبت‌تر)
-        // چرخ به بالا (deltaY < 0) = چپ (scrollLeft منفی‌تر)
-        const delta = e.deltaY > 0 ? 100 : -100;
-        
-        el.scrollBy({
-          left: delta,
-          behavior: 'smooth'
-        });
-      }
-    };
-
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    
-    return () => {
-      el.removeEventListener('wheel', handleWheel);
-    };
-  }, []);
-
-  return (
-    <div 
-      ref={scrollRef} 
-      className={`overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-sky-300 dark:scrollbar-thumb-indigo-600 scrollbar-track-transparent hover:scrollbar-thumb-sky-400 dark:hover:scrollbar-thumb-indigo-500 select-none ${className}`}
-    >
-      <div className="flex gap-3">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 
 export default function AdminServices() {
   const { categories, services, refreshData } = useContext(ServicesContext);
@@ -271,12 +226,11 @@ export default function AdminServices() {
               </button>
             </div>
 
-            {/* اسکرول افقی با UX بهتر */}
-            <HorizontalScroller className="mb-2">
+            <HorizontalScroller className="mb-2" innerClassName="gap-3">
               {sortedCategories.map((c) => (
                 <div
                   key={c.id}
-                  className="flex items-center gap-3 px-4 py-2 rounded-xl border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white shrink-0 select-none"
+                  className="flex items-center gap-3 mx-1 mb-4 px-4 py-2 rounded-xl border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white shrink-0 select-none"
                 >
                   <span className="truncate whitespace-nowrap">{c.name}</span>
                   <button
@@ -306,10 +260,10 @@ export default function AdminServices() {
             </div>
 
             {/* فیلتر دسته‌بندی‌ها با اسکرول نرم */}
-            <HorizontalScroller className="mb-6">
+            <HorizontalScroller className="mb-6" innerClassName="gap-3">
               <button
                 onClick={() => setSelectedCategory("all")}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
+                className={`px-4 py-2 mx-0.5 mb-4 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
                   selectedCategory === "all"
                     ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
                     : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
@@ -322,7 +276,7 @@ export default function AdminServices() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
+                  className={`px-4 py-2 mx-0.5 mb-4 rounded-xl whitespace-nowrap cursor-pointer shrink-0 transition-all ${
                     selectedCategory === cat.name
                       ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
                       : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
