@@ -16,7 +16,7 @@ export default function ManageOrders({
   setCityFilter,
   toggleCheck,
   onRowClick,
-  onStatusChange, // 👈 اضافه شده برای تغییر وضعیت
+  onStatusChange,
 }) {
   const [activeStatusTab, setActiveStatusTab] = useState("new");
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,13 +25,18 @@ export default function ManageOrders({
     direction: "asc",
   });
   
-  // 👇 استیت برای تشخیص اورفلو
   const [isOverflowing, setIsOverflowing] = useState(false);
-
-  // 👇 Ref برای اسکرول تب‌ها
   const tabsScrollRef = useRef(null);
 
-  // 👇 چک کردن اورفلو تب‌ها
+  const tabDescriptions = {
+    new: "سفارش‌های تازه ثبت‌شده که هنوز بررسی اولیه نشده و در انتظار پذیرش شما هستند.",
+    inProgress: "سفارش‌های فعال و در دست اقدام که فرآیند آماده‌سازی یا شستشو هستند",
+    done: "سفارش‌های تکمیل‌شده و آماده تحویل که فقط منتظر ارسال یا تحویل به مشتری هستند.",
+    delivered: "سفارش‌هایی که با موفقیت به مشتری تحویل داده شده و فرآیند آنها به پایان رسیده است.",
+    cancelled: "سفارش‌هایی که به هر دلیلی توسط مشتری لغو و از چرخه خارج شده‌اند.",
+    returned: "سفارش‌هایی که پس از تحویل، توسط مشتری مرجوع یا استرداد شده‌اند.",
+  };
+
   useEffect(() => {
     const checkOverflow = () => {
       if (tabsScrollRef.current) {
@@ -57,7 +62,6 @@ export default function ManageOrders({
     };
   }, []);
 
-  // 👇 اسکرول افقی با چرخ ماوس
   useEffect(() => {
     const el = tabsScrollRef.current;
     if (!el) return;
@@ -80,8 +84,6 @@ export default function ManageOrders({
     };
   }, []);
 
-  // تنظیمات ۶ تب وضعیت با رنگ‌های متمایز
-  // 👇 delivered و cancelled جابجا شدند
   const tabs = [
     {
       id: "new",
@@ -111,7 +113,7 @@ export default function ManageOrders({
       },
     },
     {
-      id: "delivered", // 👇 الان جایگاه چهارم (بعد از done)
+      id: "delivered",
       label: "تحویل داده شده",
       icon: Truck,
       colors: {
@@ -120,7 +122,7 @@ export default function ManageOrders({
       },
     },
     {
-      id: "cancelled", // 👇 الان جایگاه پنجم
+      id: "cancelled",
       label: "لغو شده",
       icon: XCircle,
       colors: {
@@ -139,7 +141,6 @@ export default function ManageOrders({
     },
   ];
 
-  // فیلتر و مرتب‌سازی
   const processedOrders = useMemo(() => {
     let result = orders.filter((order) => order.status === activeStatusTab);
 
@@ -186,7 +187,7 @@ export default function ManageOrders({
 
   return (
     <div className="w-full">
-      {/* 🔘 ۶ تب وضعیت */}
+      {/* ۶ تب وضعیت با توضیحات زیر آن */}
       <div className="relative mb-6">
         <div className="absolute left-0 top-0 bottom-4 w-12 bg-gradient-to-r from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none sm:hidden" />
         <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none sm:hidden" />
@@ -235,9 +236,14 @@ export default function ManageOrders({
             );
           })}
         </div>
+
+        {/* 👇 توضیحات تب فعال - بدون باکس و فونت ریزتر در موبایل */}
+        <p className="mt-1 mx-3 sm:mx-2 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+          {tabDescriptions[activeStatusTab]}
+        </p>
       </div>
 
-      {/* 🔍 جستجو */}
+      {/* جستجو */}
       <div className="mb-6 px-2">
         <div className="relative max-w-md mx-auto">
           <input
@@ -272,26 +278,23 @@ export default function ManageOrders({
       </div>
 
       {/* جدول سفارشات */}
-      <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-        <OrdersTable
-          orders={processedOrders}
-          cities={cities}
-          cityFilter={cityFilter}
-          setCityFilter={setCityFilter}
-          toggleSort={toggleSort}
-          toggleCheck={toggleCheck}
-          activeTab={activeStatusTab}
-          onRowClick={onRowClick}
-          showCheckbox={activeStatusTab !== "done"}
-          onStatusChange={onStatusChange} // 👈 پاس دادن به جدول
-        />
-      </div>
+      <OrdersTable
+        orders={processedOrders}
+        cities={cities}
+        cityFilter={cityFilter}
+        setCityFilter={setCityFilter}
+        toggleSort={toggleSort}
+        toggleCheck={toggleCheck}
+        activeTab={activeStatusTab}
+        onRowClick={onRowClick}
+        showCheckbox={activeStatusTab !== "done"}
+        onStatusChange={onStatusChange} 
+      />
     </div>
   );
 }
 
-
- function OrdersTable({
+function OrdersTable({
   orders,
   cities,
   cityFilter,
@@ -300,7 +303,7 @@ export default function ManageOrders({
   toggleCheck,
   activeTab,
   onRowClick,
-  onStatusChange, // 👈 دریافت از props
+  onStatusChange,
 }) {
   const remainingDays = (date) => {
     const today = new Date();
@@ -347,7 +350,6 @@ export default function ManageOrders({
               >
                 مبلغ
               </th>
-              {/* 👇 ستون عملیات برای نمایش دکمه تحویل */}
               <th className="p-3">عملیات</th>
             </tr>
           </thead>
@@ -384,7 +386,6 @@ export default function ManageOrders({
                   {order.price.toLocaleString()} تومان
                 </td>
                 <td className="p-3">
-                  {/* 👇 دکمه انتقال از انجام شده به تحویل داده شده */}
                   {activeTab === "done" && onStatusChange && (
                     <button
                       onClick={(e) => {

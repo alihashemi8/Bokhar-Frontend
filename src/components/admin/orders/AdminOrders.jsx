@@ -99,7 +99,7 @@ export default function AdminOrders() {
 
   const {
     orders,
-    setOrders, // ← اضافه شده
+    setOrders,
     filteredTimeOrders,
     cities,
     searchQuery,
@@ -123,16 +123,17 @@ export default function AdminOrders() {
     setIsModalOpen(false);
   };
 
-  // ← تابع جدید برای تغییر وضعیت سفارش
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders((prevOrders) =>
-      prevOrders.map((order) =>
+      (prevOrders || []).map((order) =>
         order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
   };
 
   const calculateOrderPrice = (order) => {
+    if (!order) return { finalPrice: 0, deliveryBadge: null };
+    
     const delivery = new Date(order.deliveryDate);
     const now = new Date();
     const diffHours = (delivery - now) / (1000 * 60 * 60);
@@ -158,7 +159,7 @@ export default function AdminOrders() {
   };
 
   const processedTimeOrders = useMemo(() => {
-    return filteredTimeOrders.map(calculateOrderPrice);
+    return (filteredTimeOrders || []).map(calculateOrderPrice);
   }, [filteredTimeOrders, timeSettings]);
 
   return (
@@ -208,12 +209,12 @@ export default function AdminOrders() {
 
         {activeTab === "orders" ? (
           <ManageOrders 
-            orders={orders}
-            cities={cities}
+            orders={orders || []}
+            cities={cities || []}
             cityFilter={cityFilter}
             setCityFilter={setCityFilter}
             toggleCheck={toggleCheck}
-            onRowClick={openModal}  // ← اصلاح شده از onRowClick به openModal
+            onRowClick={openModal}
             onStatusChange={(orderId, newStatus) => {
               updateOrderStatus(orderId, newStatus);
             }}
@@ -221,7 +222,7 @@ export default function AdminOrders() {
         ) : (
           <div className="space-y-6">
             <TimeOrders 
-              orders={orders}
+              orders={orders || []}
               onSettingsChange={setTimeSettings}
               timeView={timeView}
               setTimeView={setTimeView}
@@ -290,7 +291,7 @@ export default function AdminOrders() {
                   <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
                     <OrdersTable
                       orders={processedTimeOrders}
-                      cities={cities}
+                      cities={cities || []}
                       cityFilter={cityFilter}
                       setCityFilter={setCityFilter}
                       toggleCheck={toggleCheck}
@@ -342,7 +343,7 @@ export default function AdminOrders() {
 }
 
 function useOrders(initialData, activeTab, timeView) {
-  const [orders, setOrders] = useState(initialData);
+  const [orders, setOrders] = useState(initialData || []);
   const [cityFilter, setCityFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -351,12 +352,14 @@ function useOrders(initialData, activeTab, timeView) {
   const today = new Date().toISOString().slice(0, 10);
   const currentMonth = today.slice(0, 7);
   
-  const cities = Array.from(new Set(orders.map((o) => o.city)));
+  const cities = useMemo(() => {
+    return Array.from(new Set((orders || []).map((o) => o.city)));
+  }, [orders]);
 
   const filteredTimeOrders = useMemo(() => {
     if (activeTab !== "time") return [];
     
-    let result = orders;
+    let result = orders || [];
     if (timeView === "today") {
       result = result.filter((o) => o.date === today);
     } else {
@@ -377,12 +380,12 @@ function useOrders(initialData, activeTab, timeView) {
   }, [orders, activeTab, timeView, cityFilter, searchQuery, today, currentMonth]);
 
   const changedCount = useMemo(() => {
-    return orders.filter((o) => o.isChecked).length;
+    return (orders || []).filter((o) => o.isChecked).length;
   }, [orders]);
 
   const toggleCheck = (id) => {
     setOrders((prev) =>
-      prev.map((o) =>
+      (prev || []).map((o) =>
         o.id === id ? { ...o, isChecked: !o.isChecked } : o
       )
     );
@@ -392,7 +395,7 @@ function useOrders(initialData, activeTab, timeView) {
     setIsSaving(true);
     setTimeout(() => {
       setOrders((prev) =>
-        prev.map((o) => {
+        (prev || []).map((o) => {
           if (o.isChecked) {
             if (o.status === "new") return { ...o, status: "inProgress", isChecked: false };
             if (o.status === "inProgress") return { ...o, status: "done", isChecked: false };
@@ -409,7 +412,7 @@ function useOrders(initialData, activeTab, timeView) {
 
   return {
     orders,
-    setOrders, // ← اضافه شده
+    setOrders,
     filteredTimeOrders,
     cities,
     cityFilter,

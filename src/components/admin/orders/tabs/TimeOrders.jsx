@@ -234,7 +234,7 @@ export default function TimeOrders({
     type="checkbox"
     checked={isEnabled}
     onChange={(e) => updateSettings(type, 'enabled', e.target.checked)}
-    className="sr-only peer"
+    className="sr-only peer remove-arrows "
   />
   <div className={`
     w-[51px] h-[31px] 
