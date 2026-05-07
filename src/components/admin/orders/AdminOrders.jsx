@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { Check, ClipboardList, Clock, Calendar } from "lucide-react";
+import { Check, ClipboardList, Clock, Calendar, AlertCircle } from "lucide-react";
 import Sidebar from "../Sidebar";
 import OrderModal from "./OrderModal";
 import Search from "../../Search";
 import OrdersTable from "./OrdersTable";
-import ManageOrders from "./tabs/ManageOrders"; 
+import ManageOrders from "./tabs/ManageOrders";
+import TimeOrders from "./tabs/TimeOrders"
 
 export default function AdminOrders() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -12,11 +13,17 @@ export default function AdminOrders() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   
-  // دو تب اصلی: orders (مدیریت سفارش‌ها), time (مدیریت زمان)
   const [activeTab, setActiveTab] = useState("orders");
   const [timeView, setTimeView] = useState("today");
+  
+  const [timeSettings, setTimeSettings] = useState({
+    disabledDates: [],
+    deliverySettings: {
+      urgent24h: { enabled: true, priceType: "percentage", priceValue: 20, limit: 10 },
+      urgent48h: { enabled: true, priceType: "percentage", priceValue: 10, limit: 20 }
+    }
+  });
 
-  // داده‌های اولیه با ۶ وضعیت مختلف
   const initialOrdersData = [
     {
       id: 1,
@@ -92,6 +99,7 @@ export default function AdminOrders() {
 
   const {
     orders,
+    setOrders, // ← اضافه شده
     filteredTimeOrders,
     cities,
     searchQuery,
@@ -115,8 +123,46 @@ export default function AdminOrders() {
     setIsModalOpen(false);
   };
 
+  // ← تابع جدید برای تغییر وضعیت سفارش
+  const updateOrderStatus = (orderId, newStatus) => {
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
+
+  const calculateOrderPrice = (order) => {
+    const delivery = new Date(order.deliveryDate);
+    const now = new Date();
+    const diffHours = (delivery - now) / (1000 * 60 * 60);
+    
+    let finalPrice = order.price;
+    let deliveryBadge = null;
+    
+    if (diffHours <= 24 && diffHours > 0 && timeSettings.deliverySettings.urgent24h.enabled) {
+      const s = timeSettings.deliverySettings.urgent24h;
+      finalPrice = s.priceType === 'percentage' 
+        ? Math.round(order.price * (1 + s.priceValue/100))
+        : order.price + s.priceValue;
+      deliveryBadge = { type: '24h', color: 'orange', text: '۲۴ ساعته' };
+    } else if (diffHours <= 48 && diffHours > 24 && timeSettings.deliverySettings.urgent48h.enabled) {
+      const s = timeSettings.deliverySettings.urgent48h;
+      finalPrice = s.priceType === 'percentage'
+        ? Math.round(order.price * (1 + s.priceValue/100))
+        : order.price + s.priceValue;
+      deliveryBadge = { type: '48h', color: 'yellow', text: '۴۸ ساعته' };
+    }
+    
+    return { ...order, finalPrice, deliveryBadge };
+  };
+
+  const processedTimeOrders = useMemo(() => {
+    return filteredTimeOrders.map(calculateOrderPrice);
+  }, [filteredTimeOrders, timeSettings]);
+
   return (
-    <div dir="rtl" className="flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900">
+    <div dir="rtl" className="flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900 pr-4 sm:pr-6">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -129,14 +175,13 @@ export default function AdminOrders() {
           مدیریت سفارش‌ها
         </h2>
 
-        {/* 🔘 تب‌های اصلی */}
         <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
           <button
             onClick={() => setActiveTab("orders")}
             className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
               ${activeTab === "orders"
-                ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
-                : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
+                ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md scale-105 text-gray-800 dark:text-white"
+                : "bg-white dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border-gray-200 shadow-lg text-gray-800"
               }`}
           >
             <ClipboardList size={18} />
@@ -152,8 +197,8 @@ export default function AdminOrders() {
             onClick={() => setActiveTab("time")}
             className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
               ${activeTab === "time"
-                ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
-                : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
+                ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md scale-105 text-gray-800 dark:text-white"
+                : "bg-white dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border-gray-200 shadow-lg text-gray-800"
               }`}
           >
             <Clock size={18} />
@@ -161,94 +206,106 @@ export default function AdminOrders() {
           </button>
         </div>
 
-        {/* محتوای تب‌ها */}
         {activeTab === "orders" ? (
-          // 🎯 نمایش ManageOrders با ۶ تب داخلی
-          <ManageOrders
+          <ManageOrders 
             orders={orders}
             cities={cities}
             cityFilter={cityFilter}
             setCityFilter={setCityFilter}
             toggleCheck={toggleCheck}
-            onRowClick={openModal}
+            onRowClick={openModal}  // ← اصلاح شده از onRowClick به openModal
+            onStatusChange={(orderId, newStatus) => {
+              updateOrderStatus(orderId, newStatus);
+            }}
           />
         ) : (
-          // 🎯 نمایش مدیریت زمان (همانند قبل)
-          <div>
-            {/* زیرتب‌های امروز/ماه */}
-            <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
-              <button
-                onClick={() => setTimeView("today")}
-                className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
-                  ${timeView === "today"
-                    ? "bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-700 dark:to-emerald-800 border-gray-300 dark:border-emerald-600 shadow-md shadow-emerald-300 dark:shadow-emerald-500 scale-105 text-gray-800 dark:text-white/90"
-                    : "bg-white dark:bg-white/80 hover:bg-emerald-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
-                  }`}
-              >
-                <Clock size={16} />
-                امروز
-              </button>
-              <button
-                onClick={() => setTimeView("monthly")}
-                className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
-                  ${timeView === "monthly"
-                    ? "bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-700 dark:to-blue-800 border-gray-300 dark:border-blue-600 shadow-md shadow-blue-300 dark:shadow-blue-500 scale-105 text-gray-800 dark:text-white/90"
-                    : "bg-white dark:bg-white/80 hover:bg-blue-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
-                  }`}
-              >
-                <Calendar size={16} />
-                ماه جاری
-              </button>
-            </div>
+          <div className="space-y-6">
+            <TimeOrders 
+              orders={orders}
+              onSettingsChange={setTimeSettings}
+              timeView={timeView}
+              setTimeView={setTimeView}
+              renderList={() => (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
+                    <button
+                      onClick={() => setTimeView("today")}
+                      className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
+                        ${timeView === "today"
+                          ? "bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-700 dark:to-emerald-800 border-gray-300 dark:border-emerald-600 shadow-md"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+                        }`}
+                    >
+                      <Clock size={16} />
+                      امروز
+                    </button>
+                    <button
+                      onClick={() => setTimeView("monthly")}
+                      className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
+                        ${timeView === "monthly"
+                          ? "bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-700 dark:to-blue-800 border-gray-300 dark:border-blue-600 shadow-md"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
+                        }`}
+                    >
+                      <Calendar size={16} />
+                      ماه جاری
+                    </button>
+                  </div>
 
-            {/* عنوان */}
-            <div className="flex items-center justify-between mb-4 px-4">
-              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
-                {timeView === "today" ? "سفارش‌های امروز" : "سفارش‌های ماه جاری"}
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 mr-2">
-                  ({filteredTimeOrders.length} مورد)
-                </span>
-              </h3>
-            </div>
-
-            {/* 🔍 جستجو */}
-            <div className="mb-6 flex justify-center px-4">
-              <div className="w-full max-w-md">
-                <Search
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  items={searchQuery ? filteredTimeOrders : []}
-                  placeholder="نام، آدرس یا شماره همراه"
-                  onSelect={openModal}
-                  renderItem={(order) => (
-                    <div className="flex flex-col text-sm">
-                      <span className="font-medium">{order.name}</span>
-                      <span className="text-xs text-gray-500">
-                        {order.phone} — {order.address}
+                  <div className="flex items-center justify-between mb-4 px-4">
+                    <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                      {timeView === "today" ? "سفارش‌های امروز" : "سفارش‌های ماه جاری"}
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                        ({processedTimeOrders.length} مورد)
                       </span>
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
+                      {timeSettings.disabledDates.includes(new Date().toISOString().split('T')[0]) && (
+                        <span className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                          <AlertCircle size={12} />
+                          امروز غیرفعال است
+                        </span>
+                      )}
+                    </h3>
+                  </div>
 
-            {/* جدول */}
-            <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
-              <OrdersTable
-                orders={filteredTimeOrders}
-                cities={cities}
-                cityFilter={cityFilter}
-                setCityFilter={setCityFilter}
-                toggleCheck={toggleCheck}
-                activeSection={timeView}
-                onRowClick={openModal}
-                showCheckbox={false}
-              />
-            </div>
+                  <div className="mb-6 flex justify-center px-4">
+                    <div className="w-full max-w-md">
+                      <Search
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        items={searchQuery ? processedTimeOrders : []}
+                        placeholder="نام، آدرس یا شماره همراه"
+                        onSelect={openModal}
+                        renderItem={(order) => (
+                          <div className="flex flex-col text-sm">
+                            <span className="font-medium">{order.name}</span>
+                            <span className="text-xs text-gray-500">
+                              {order.phone} — {order.address}
+                            </span>
+                          </div>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mx-4">
+                    <OrdersTable
+                      orders={processedTimeOrders}
+                      cities={cities}
+                      cityFilter={cityFilter}
+                      setCityFilter={setCityFilter}
+                      toggleCheck={toggleCheck}
+                      activeSection={timeView}
+                      onRowClick={openModal}
+                      showCheckbox={false}
+                      showDeliveryBadge={true}
+                    />
+                  </div>
+                </div>
+              )}
+            />
           </div>
         )}
 
-        {/* دکمه ثبت تغییرات فقط در تب مدیریت سفارش‌ها وقتی سفارش انتخاب شده */}
         {activeTab === "orders" && changedCount > 0 && !showSuccess && (
           <button
             onClick={confirmChanges}
@@ -257,7 +314,7 @@ export default function AdminOrders() {
           >
             <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full animate-ping bg-white/70" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white/70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
               {isSaving ? "در حال ثبت..." : "ثبت تغییرات"}
@@ -284,8 +341,6 @@ export default function AdminOrders() {
   );
 }
 
-/* ================= HOOK ================= */
-
 function useOrders(initialData, activeTab, timeView) {
   const [orders, setOrders] = useState(initialData);
   const [cityFilter, setCityFilter] = useState("");
@@ -298,7 +353,6 @@ function useOrders(initialData, activeTab, timeView) {
   
   const cities = Array.from(new Set(orders.map((o) => o.city)));
 
-  // فیلتر برای تب زمان (امروز/ماه)
   const filteredTimeOrders = useMemo(() => {
     if (activeTab !== "time") return [];
     
@@ -306,7 +360,7 @@ function useOrders(initialData, activeTab, timeView) {
     if (timeView === "today") {
       result = result.filter((o) => o.date === today);
     } else {
-      result = result.filter((o) => o.date.startsWith(currentMonth));
+      result = result.filter((o) => o.date && o.date.startsWith(currentMonth));
     }
     
     if (cityFilter) {
@@ -322,7 +376,6 @@ function useOrders(initialData, activeTab, timeView) {
     return result;
   }, [orders, activeTab, timeView, cityFilter, searchQuery, today, currentMonth]);
 
-  // شمارش تغییرات (فقط برای تب مدیریت سفارش‌ها)
   const changedCount = useMemo(() => {
     return orders.filter((o) => o.isChecked).length;
   }, [orders]);
@@ -338,11 +391,9 @@ function useOrders(initialData, activeTab, timeView) {
   const confirmChanges = () => {
     setIsSaving(true);
     setTimeout(() => {
-      // تغییر وضعیت سفارشات انتخاب شده
       setOrders((prev) =>
         prev.map((o) => {
           if (o.isChecked) {
-            // منطق تغییر وضعیت: new -> inProgress -> done
             if (o.status === "new") return { ...o, status: "inProgress", isChecked: false };
             if (o.status === "inProgress") return { ...o, status: "done", isChecked: false };
             if (o.status === "done") return { ...o, status: "delivered", isChecked: false };
@@ -358,6 +409,7 @@ function useOrders(initialData, activeTab, timeView) {
 
   return {
     orders,
+    setOrders, // ← اضافه شده
     filteredTimeOrders,
     cities,
     cityFilter,
