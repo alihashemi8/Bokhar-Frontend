@@ -7,7 +7,7 @@ import CouponTab from "./tabs/CouponTab";
 export default function AdminDiscounts() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("discounts");
-  const [activeTab, setActiveTab] = useState("services");
+  const [activeTab, setActiveTab] = useState("coupon"); // تغییر به coupon
 
   return (
     <div dir="rtl" className="flex min-h-screen">
@@ -24,31 +24,10 @@ export default function AdminDiscounts() {
         </h2>
 
         <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
-          <button
-            onClick={() => setActiveTab("services")}
-            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition
-      ${
-        activeTab === "services"
-          ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
-          : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
-      }`}
-          >
-             سرویس‌ها
-          </button>
-          <button
-            onClick={() => setActiveTab("global")}
-            className={`px-5 py-3 text-sm  sm:text-base rounded-full font-semibold border transition
-      ${
-        activeTab === "global"
-          ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
-          : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
-      }`}
-          >
-             عمومی
-          </button>
+          {/* ۱. کدهای تخفیف - اول و پیش‌فرض */}
           <button
             onClick={() => setActiveTab("coupon")}
-            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition
+            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer
       ${
         activeTab === "coupon"
           ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
@@ -57,11 +36,37 @@ export default function AdminDiscounts() {
           >
             کدهای تخفیف
           </button>
+
+          {/* ۲. سرویس‌ها - وسط */}
+          <button
+            onClick={() => setActiveTab("services")}
+            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer
+      ${
+        activeTab === "services"
+          ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
+          : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
+      }`}
+          >
+             سرویس‌ها
+          </button>
+
+          {/* ۳. عمومی - سوم و چپ */}
+          <button
+            onClick={() => setActiveTab("global")}
+            className={`px-5 py-3 text-sm sm:text-base rounded-full font-semibold border transition cursor-pointer
+      ${
+        activeTab === "global"
+          ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"
+          : "bg-white dark:bg-white/80 hover:bg-sky-100 dark:hover:bg-white/95 border-gray-200 shadow-lg text-gray-800"
+      }`}
+          >
+             عمومی
+          </button>
         </div>
 
+        {activeTab === "coupon" && <CouponTab />}
         {activeTab === "services" && <ServiceDiscountTab />}
         {activeTab === "global" && <GlobalDiscountTab />}
-        {activeTab === "coupon" && <CouponTab />}
       </main>
     </div>
   );

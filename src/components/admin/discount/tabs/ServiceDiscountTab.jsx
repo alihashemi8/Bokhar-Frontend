@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../../../../api/clientApi";
 import DiscountModal from "../modals/DiscountModal";
 import TabModal from "../modals/TabModal";
+import HorizontalScroller from "../../../../components/HorizontalScroller";
+import Search from "../../../../components/Search"; // ✅ اضافه شده
 
 /* --------------------------------------------------
    Helpers
@@ -130,7 +132,7 @@ export default function ServiceDiscountTab() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [query, setQuery] = useState("");
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false); // ✅ اضافه شد
+  const [loading, setLoading] = useState(false);
 
   const [categoryModal, setCategoryModal] = useState(null);
   const [productModal, setProductModal] = useState(null);
@@ -208,7 +210,6 @@ export default function ServiceDiscountTab() {
     );
   };
 
-  // ✅ این تابع اینجا تعریف شده (داخل کامپوننت)
   const refreshProducts = async () => {
     setLoading(true);
     try {
@@ -304,7 +305,7 @@ export default function ServiceDiscountTab() {
               key={c.id}
               onClick={() => openCategoryModal(c)}
               className="
-                px-3 py-2 rounded-xl transition text-sm
+                px-3 py-2 rounded-xl transition text-sm cursor-pointer
                 bg-white dark:bg-neutral-700 
                 text-gray-700 dark:text-gray-200
                 border border-sky-200 dark:border-gray-600
@@ -323,22 +324,60 @@ export default function ServiceDiscountTab() {
         bg-white/70 dark:bg-neutral-800/60 backdrop-blur
         border border-sky-200 dark:border-indigo-600 shadow-lg
       ">
-        <h3 className="font-bold text-lg mb-4">
+        <h3 className="font-bold text-lg mb-4 text-gray-800 dark:text-gray-100">
           تخفیف روی محصولات
         </h3>
 
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="جستجو..."
-          className="
-            w-full mb-6 p-2.5 rounded-xl border
-            border-sky-200 dark:border-indigo-600
-          "
-        />
+        {/* ✅ تب‌های دسته‌بندی با اسکرول افقی */}
+        <div className="mb-6">
+          <HorizontalScroller className="pb-2 -mx-1 px-1 scrollbar-hide">
+            <div className="flex gap-2 px-1">
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className={`
+                  px-4 py-2 mb-1 rounded-xl text-sm font-medium whitespace-nowrap transition-all
+                  border flex-shrink-0 cursor-pointer
+                  ${selectedCategory === "all"
+                    ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
+                      : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
+                  }
+                `}
+              >
+                همه 
+              </button>
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedCategory(c.id)}
+                  className={`
+                    px-4 py-2 mb-1 rounded-xl text-sm font-medium whitespace-nowrap transition-all
+                    border flex-shrink-0 cursor-pointer
+                    ${selectedCategory === c.id
+                      ? "border border-sky-200 dark:border-indigo-600 bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white font-bold"
+                      : "bg-white/70 dark:bg-neutral-700 text-gray-700 dark:text-gray-200 border border-sky-200 dark:border-gray-600 hover:bg-white"
+                    }
+                  `}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </HorizontalScroller>
+        </div>
+
+        {/* ✅ استفاده از کامپوننت Search به جای input */}
+        <div className="mb-6">
+          <Search
+            value={query}
+            onChange={setQuery}
+            placeholder="جستجو در محصولات..."
+            loading={loading}
+            items={[]} // لیست خالی چون نتایج در گرید زیر نمایش داده می‌شود
+          />
+        </div>
 
         {loading && (
-          <div className="text-center py-4 text-gray-500">در حال بارگذاری...</div>
+          <div className="text-center py-4 text-gray-500 dark:text-gray-400">در حال بارگذاری...</div>
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -350,34 +389,39 @@ export default function ServiceDiscountTab() {
               className={`
                 relative p-3 rounded-xl bg-white/90 dark:bg-neutral-800/80
                 backdrop-blur border border-sky-200 dark:border-indigo-600
-                shadow-md flex flex-col transition
+                shadow-md flex flex-col transition-all duration-300
                 hover:scale-[1.02]
-                ${
-                  visibleCards[p.id] && glowIds.includes(p.id)
-                    ? "discount-glow"
-                    : ""
-                }
+                ${visibleCards[p.id] && glowIds.includes(p.id) ? "discount-glow" : ""}
               `}
+              style={{
+                opacity: visibleCards[p.id] ? 1 : 0,
+                transform: visibleCards[p.id] ? 'translateY(0)' : 'translateY(20px)',
+                transition: 'opacity 0.3s ease, transform 0.3s ease'
+              }}
             >
               <DiscountBadge product={p} />
 
               <img
                 src={p.image || "/images/placeholder.png"}
                 alt={p.title}
-                className="aspect-square object-cover rounded-lg mb-2"
+                className="aspect-square object-cover rounded-lg mb-2 bg-gray-100 dark:bg-neutral-700"
               />
 
-              <h3 className="text-sm font-bold text-center truncate">
+              <h3 className="text-sm font-bold text-center truncate text-gray-800 dark:text-gray-100 px-1">
                 {p.title}
               </h3>
 
               <button
                 onClick={() => openProductModal(p)}
                 className="
-                  mt-3 w-full py-1.5 rounded-xl text-sm
+                  mt-3 w-full py-1.5 rounded-xl text-sm font-medium
                   bg-gradient-to-r from-sky-100 to-sky-200
                   dark:from-purple-700 dark:to-purple-800
                   border border-sky-200 dark:border-indigo-600
+                  text-sky-800 dark:text-gray-100
+                  hover:from-sky-200 hover:to-sky-300
+                  dark:hover:from-purple-600 dark:hover:to-purple-700
+                  transition-all active:scale-[0.98]
                 "
               >
                 تنظیم تخفیف
@@ -385,6 +429,14 @@ export default function ServiceDiscountTab() {
             </div>
           ))}
         </div>
+        
+        {/* پیام خالی بودن */}
+        {filteredProducts.length === 0 && !loading && (
+          <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+            <div className="text-4xl mb-2">🔍</div>
+            <div>محصولی یافت نشد</div>
+          </div>
+        )}
       </div>
 
       {productModal && (
