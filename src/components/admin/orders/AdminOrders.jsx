@@ -164,7 +164,7 @@ export default function AdminOrders() {
       />
 
       <main className="flex-1 p-4 sm:p-6 md:pr-64 overflow-x-hidden">
-<h2 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mr-4 mb-8">
+<h2 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mr-2 mb-8">
   <FiShoppingCart className="text-2xl" />
   مدیریت سفارش‌ها
 </h2>

@@ -5,7 +5,6 @@ import TopServices from "./TopServices";
 import Sidebar from "../Sidebar";
 import { FiBarChart } from "react-icons/fi";
 
-
 function SegmentedToggle({ options, value, onChange }) {
   const idx = options.findIndex((o) => o.value === value);
   const segmentWidth = 100 / options.length;
@@ -29,18 +28,23 @@ function SegmentedToggle({ options, value, onChange }) {
       setDragging(false);
       return;
     }
-    const segment = Math.floor(dragX / segmentWidth);
+    // محاسبه معکوس برای RTL: سمت راست صفحه = گزینه اول
+    const rawSegment = Math.floor(dragX / segmentWidth);
+    const segment = (options.length - 1) - rawSegment;
     onChange(options[segment].value);
     setDragging(false);
     setDragX(null);
   };
 
-  const left = dragX != null ? dragX - segmentWidth / 2 : idx * segmentWidth;
+  // محاسبه left معکوس برای RTL
+  const left = dragX != null 
+    ? dragX - segmentWidth / 2 
+    : (options.length - 1 - idx) * segmentWidth;
 
   return (
     <div
       ref={wrapperRef}
-      className="relative inline-flex bg-white dark:bg-white/40 border border-sky-200 backdrop-blur-lg rounded-full p-0.5 select-none overflow-hidden shadow-md"
+      className="relative inline-flex bg-white dark:bg-white/40 border border-sky-200 backdrop-blur-lg rounded-full p-0.5 select-none overflow-hidden shadow-md cursor-pointer"
       onMouseDown={startDrag}
       onMouseMove={(e) => moveDrag(e.clientX)}
       onMouseUp={endDrag}
@@ -50,7 +54,7 @@ function SegmentedToggle({ options, value, onChange }) {
       onTouchEnd={endDrag}
     >
       <div
-        className="absolute top-0.5 bottom-0.5 border rounded-full shadow bg-white border-sky-200 dark:bg-purple-800 dark:border-indigo-300"
+        className="absolute top-0.5 bottom-0.5 border rounded-full shadow bg-white border-sky-200 dark:bg-purple-800 dark:border-indigo-300 pointer-events-none"
         style={{
           width: `${segmentWidth}%`,
           left: `calc(${left}% )`,
@@ -62,7 +66,7 @@ function SegmentedToggle({ options, value, onChange }) {
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
-          className={`relative z-10 px-2 py-0.5 text-2xs font-medium transition ${
+          className={`relative z-10 px-2 py-0.5 text-2xs font-medium transition cursor-pointer ${
             value === opt.value
               ? "text-sky-600 dark:text-gray-800"
               : "text-gray-700 dark:text-gray-300"
@@ -177,11 +181,10 @@ export default function AdminReports() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
-<h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
-  <FiBarChart className="text-2xl" />
-  گزارش‌های مدیریتی
-</h1>
-
+        <h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+          <FiBarChart className="text-2xl" />
+          گزارش‌های مدیریتی
+        </h1>
 
         {/* انتخاب ماه */}
         <div className="flex gap-2 overflow-x-auto mb-6">
@@ -189,7 +192,7 @@ export default function AdminReports() {
             <button
               key={m}
               onClick={() => setActiveMonth(m)}
-              className={`px-4 py-2 my-3 mx-1 rounded-full font-medium shrink-0 transition ${
+              className={`px-4 py-2 my-3 mx-1 rounded-full font-medium shrink-0 transition cursor-pointer ${
                 activeMonth === m
                   ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-gray-300 dark:border-indigo-600 dark:text-white/90 shadow-md shadow-indigo-300 text-gray-800 scale-105"
                   : "bg-white/70 dark:bg-white/80 hover:bg-white dark:hover:bg-white/95 border border-gray-200 dark:border-sky-200 shadow-md text-gray-800 "
@@ -222,23 +225,7 @@ export default function AdminReports() {
                   <button
                     onClick={() => setActiveWeek((w) => Math.max(0, w - 1))}
                     disabled={viewType === "week" || activeWeek === 0}
-                    className="
-h-10
-px-4
-text-xs
-whitespace-nowrap
-rounded-2xl
-font-medium
-bg-gradient-to-r from-sky-100 to-sky-200 
-dark:from-purple-700 dark:to-purple-800
-shadow
-text-gray-800 dark:text-white
-transition
-disabled:opacity-40 disabled:cursor-not-allowed
-
-sm:h-9 sm:px-3.5 sm:text-sm
-lg:h-10 lg:px-4
-"
+                    className="h-10 px-4 text-xs whitespace-nowrap rounded-2xl font-medium bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer sm:h-9 sm:px-3.5 sm:text-sm lg:h-10 lg:px-4"
                   >
                     هفته قبل
                   </button>
@@ -250,23 +237,7 @@ lg:h-10 lg:px-4
                     disabled={
                       viewType === "week" || activeWeek === series.length - 1
                     }
-                    className="
-h-10
-px-4
-text-xs
-whitespace-nowrap
-rounded-2xl
-font-medium
-bg-gradient-to-r from-sky-100 to-sky-200 
-dark:from-purple-700 dark:to-purple-800
-shadow
-text-gray-800 dark:text-white
-transition
-disabled:opacity-40 disabled:cursor-not-allowed
-
-sm:h-9 sm:px-3.5 sm:text-sm
-lg:h-10 lg:px-4
-"
+                    className="h-10 px-4 text-xs whitespace-nowrap rounded-2xl font-medium bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow text-gray-800 dark:text-white transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer sm:h-9 sm:px-3.5 sm:text-sm lg:h-10 lg:px-4"
                   >
                     هفته بعد
                   </button>

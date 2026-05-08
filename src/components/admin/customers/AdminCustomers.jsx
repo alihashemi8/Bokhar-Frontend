@@ -151,7 +151,7 @@ export default function AdminCustomers() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`
-                  flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition border shadow-md
+                  flex items-center gap-2 px-4 py-2 rounded-2xl font-medium transition border shadow-md cursor-pointer
                   ${
                     activeTab === tab.key
                       ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-lg shadow-indigo-300 dark:shadow-indigo-500 scale-105 text-gray-800 dark:text-white/90"

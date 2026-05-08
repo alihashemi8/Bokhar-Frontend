@@ -1,11 +1,18 @@
 import { useState, useContext, useRef, useEffect } from "react";
-import { FiPlus, FiTrash2, FiEdit, FiChevronLeft, FiChevronRight, FiPackage } from "react-icons/fi";
+import {
+  FiPlus,
+  FiTrash2,
+  FiEdit,
+  FiChevronLeft,
+  FiChevronRight,
+  FiPackage,
+} from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
 import Search from "../../Search";
 import api from "./servicesApi";
-import HorizontalScroller from "../../HorizontalScroller"; 
+import HorizontalScroller from "../../HorizontalScroller";
 
 function ConfirmToast({ message, onConfirm, onCancel }) {
   if (!message) return null;
@@ -50,7 +57,7 @@ export default function AdminServices() {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const sortedCategories = [...categories].sort((a, b) =>
-    a.name.localeCompare(b.name, "fa")
+    a.name.localeCompare(b.name, "fa"),
   );
 
   const showToast = (message, type = "success") => {
@@ -153,7 +160,7 @@ export default function AdminServices() {
     .filter((s) => s.title?.toLowerCase().includes(search.toLowerCase()))
     .filter(
       (s) =>
-        selectedCategory === "all" || s.category?.name === selectedCategory
+        selectedCategory === "all" || s.category?.name === selectedCategory,
     );
 
   const activeServices = filteredServices.filter((s) => s.status === "active");
@@ -187,11 +194,10 @@ export default function AdminServices() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
-<h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
-  <FiPackage className="text-2xl" />
-  خدمات
-</h1>
-
+        <h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+          <FiPackage className="text-2xl" />
+          خدمات
+        </h1>
 
         {isLoading && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -202,7 +208,6 @@ export default function AdminServices() {
         )}
 
         <div className="space-y-10 max-w-full">
-
           {/* ----------------------- */}
           {/* دسته‌بندی‌ها */}
           {/* ----------------------- */}
@@ -222,7 +227,7 @@ export default function AdminServices() {
               <button
                 onClick={addCategory}
                 disabled={isLoading}
-                className="px-4 h-12 rounded-xl bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-sky-200 dark:border-indigo-600 shadow-lg text-gray-800 dark:text-white flex items-center gap-2 shrink-0 hover:scale-105 transition disabled:opacity-50"
+                className="px-4 h-12 rounded-xl bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border border-sky-200 dark:border-indigo-600 shadow-lg text-gray-800 dark:text-white flex items-center gap-2 shrink-0 cursor-pointer hover:scale-105 transition disabled:opacity-50"
               >
                 <FiPlus /> افزودن
               </button>
@@ -251,7 +256,6 @@ export default function AdminServices() {
           {/* خدمات */}
           {/* ----------------------- */}
           <div className="p-6 rounded-3xl bg-white/30 dark:bg-white/40 backdrop-blur-lg border border-sky-200 dark:border-indigo-600 shadow-xl">
-
             <div className="mb-6">
               <Search
                 value={search}
@@ -290,7 +294,6 @@ export default function AdminServices() {
             </HorizontalScroller>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
               {/* کارت افزودن سرویس */}
               <div
                 onClick={() => {
@@ -345,7 +348,6 @@ export default function AdminServices() {
                   </div>
                 </div>
               ))}
-
             </div>
           </div>
 

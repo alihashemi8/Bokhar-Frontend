@@ -6,7 +6,7 @@ export default function KPICard({ title, value, icon, color, onClick }) {
       onClick={onClick}
       className="p-5 rounded-2xl bg-white/30 dark:bg-white/50 backdrop-blur-lg
       border border-sky-200/50 hover:bg-white/80 dark:hover:text-gray-800
-      transition-all cursor-pointer shadow-xl
+      transition-all shadow-xl
       hover:scale-[1.03] active:scale-[0.98]
       flex flex-col"
     >

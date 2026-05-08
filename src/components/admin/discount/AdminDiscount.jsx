@@ -26,8 +26,7 @@ export default function AdminDiscounts() {
 </h2>
 
 
-        <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
-          {/* ۱. کدهای تخفیف - اول و پیش‌فرض */}
+        <div className="flex gap-3 mb-6 pt-2 overflow-x-auto pb-4 justify-center no-scrollbar">
           <button
             onClick={() => setActiveTab("coupon")}
             className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer
@@ -40,7 +39,6 @@ export default function AdminDiscounts() {
             کدهای تخفیف
           </button>
 
-          {/* ۲. سرویس‌ها - وسط */}
           <button
             onClick={() => setActiveTab("services")}
             className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer
@@ -52,8 +50,6 @@ export default function AdminDiscounts() {
           >
              سرویس‌ها
           </button>
-
-          {/* ۳. عمومی - سوم و چپ */}
           <button
             onClick={() => setActiveTab("global")}
             className={`px-5 py-3 text-sm sm:text-base rounded-full font-semibold border transition cursor-pointer

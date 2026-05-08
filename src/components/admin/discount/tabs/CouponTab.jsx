@@ -219,7 +219,7 @@ export default function CouponTab() {
                       <td className="py-2 sm:py-3 lg:py-4 px-2 sm:px-3 lg:px-6 text-center">
                         <button
                           onClick={() => openCreateModal(c)}
-                          className="inline-flex items-center justify-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg lg:rounded-xl transition-all duration-200"
+                          className="inline-flex items-center justify-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 rounded-lg lg:rounded-xl cursor-pointer transition-all duration-200"
                           title="اعمال کد تخفیف"
                         >
                           <TicketPercent size={14} className="sm:w-4 sm:h-4" />
