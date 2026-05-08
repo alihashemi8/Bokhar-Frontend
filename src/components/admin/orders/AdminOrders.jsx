@@ -179,7 +179,7 @@ export default function AdminOrders() {
         <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
           <button
             onClick={() => setActiveTab("orders")}
-            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
+            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2 mr-1 mt-3
               ${activeTab === "orders"
                 ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md scale-105 text-gray-800 dark:text-white"
                 : "bg-white dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border-gray-200 shadow-lg text-gray-800"
@@ -196,7 +196,7 @@ export default function AdminOrders() {
 
           <button
             onClick={() => setActiveTab("time")}
-            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2
+            className={`px-3 py-1.5 text-sm sm:px-5 sm:py-2 sm:text-base rounded-full font-semibold border transition cursor-pointer flex items-center gap-2 mt-3
               ${activeTab === "time"
                 ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 border-gray-300 dark:border-indigo-600 shadow-md scale-105 text-gray-800 dark:text-white"
                 : "bg-white dark:bg-gray-800 hover:bg-sky-100 dark:hover:bg-gray-700 border-gray-200 shadow-lg text-gray-800"

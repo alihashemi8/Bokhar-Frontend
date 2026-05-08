@@ -187,23 +187,11 @@ export default function ManageOrders({
 
   const getCount = (status) => orders.filter((o) => o.status === status).length;
 
-  // تابع ثبت تغییرات برای تب "انجام شده"
-  const handleBatchDeliver = () => {
-    const selectedOrders = processedOrders.filter((o) => o.isChecked);
-    if (selectedOrders.length === 0) return;
-    
-    // انتقال همه موارد تأیید شده به delivered
-    selectedOrders.forEach((order) => {
-      onStatusChange(order.id, "delivered");
-    });
-  };
-
-  // بررسی آیا دکمه ثبت تغییرات باید نمایش داده شود (فقط برای done)
   const showBatchDeliverButton = activeStatusTab === "done" && processedOrders.some((o) => o.isChecked);
 
   return (
     <div className="w-full">
-      {/* ۶ تب وضعیت با توضیحات زیر آن */}
+      {/* تب‌ها */}
       <div className="relative mb-6">
         <div className="absolute left-0 top-0 bottom-4 w-12 bg-gradient-to-r from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none sm:hidden" />
         <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-gray-50 dark:from-gray-900 to-transparent z-10 pointer-events-none sm:hidden" />
@@ -232,7 +220,7 @@ export default function ManageOrders({
                            whitespace-nowrap flex-shrink-0
                            ${isActive
                              ? `${tab.colors.active} scale-105 text-gray-800 dark:text-white/90 shadow-sm`
-                             : `bg-white dark:bg-gray-800/80 ${tab.colors.hover} border-gray-200 dark:border-gray-600 shadow-sm text-gray-700 dark:text-gray-200`
+                             : `bg-white dark:bg-gray-800/80 ${tab.colors.hover} border-gray-200 dark:border-gray-600 shadow-sm text-gray-800`
                            }`}
               >
                 <Icon size={16} className={isActive ? "opacity-100" : "opacity-70"} />
@@ -253,7 +241,6 @@ export default function ManageOrders({
           })}
         </div>
 
-        {/* توضیحات تب فعال */}
         <p className="mt-1 mx-3 sm:mx-2 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
           {tabDescriptions[activeStatusTab]}
         </p>
@@ -284,22 +271,18 @@ export default function ManageOrders({
         </div>
       </div>
 
-      {/* عنوان بخش و دکمه ثبت تغییرات */}
+      {/* عنوان بخش */}
       <div className="flex items-center justify-between mb-4 px-4">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
             ({processedOrders.length} مورد)
           </span>
         </h3>
-        
       </div>
 
       {/* جدول سفارشات */}
       <OrdersTable
         orders={processedOrders}
-        cities={cities}
-        cityFilter={cityFilter}
-        setCityFilter={setCityFilter}
         toggleSort={toggleSort}
         toggleCheck={toggleCheck}
         activeTab={activeStatusTab}
@@ -312,9 +295,6 @@ export default function ManageOrders({
 
 function OrdersTable({
   orders,
-  cities,
-  cityFilter,
-  setCityFilter,
   toggleSort,
   toggleCheck,
   activeTab,
@@ -328,18 +308,15 @@ function OrdersTable({
     return diff >= 0 ? diff : 0;
   };
 
-  // تابع کمکی برای تعیین دکمه‌های مجاز در هر تب
   const getActionButtons = (order) => {
-    // تحویل داده شده و لغو شده: هیچ عملیاتی مجاز نیست
     if (activeTab === "delivered" || activeTab === "cancelled") {
       return (
-        <span className="text-xs text-gray-400 dark:text-gray-500">
+        <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500">
           اتمام یافته
         </span>
       );
     }
 
-    // انجام شده: دکمه چک‌باکس بنفش (مشابه جدید) برای انتخاب جهت ثبت تغییرات
     if (activeTab === "done" && toggleCheck) {
       return (
         <button
@@ -347,7 +324,7 @@ function OrdersTable({
             e.stopPropagation();
             toggleCheck(order.id);
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+          className={`flex items-center gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-bold transition-colors
             ${order.isChecked 
               ? "bg-violet-100 text-violet-700 border-violet-500 hover:bg-violet-200" 
               : "bg-gray-100 text-gray-600 border-gray-400 hover:bg-gray-200"
@@ -355,20 +332,21 @@ function OrdersTable({
         >
           {order.isChecked ? (
             <>
-               <Truck size={16} />
-              <span>تحویل داده شد</span>
+               <Truck size={14} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">تحویل داده شد</span>
+              <span className="sm:hidden">تحویل</span>
             </>
           ) : (
             <>
-              <Truck size={14} />
-              <span>آماده تحویل</span>
+              <Truck size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">آماده تحویل</span>
+              <span className="sm:hidden">آماده</span>
             </>
           )}
         </button>
       );
     }
 
-    // برگشت زده: دکمه بازگشت به در حال انجام
     if (activeTab === "returned" && onStatusChange) {
       return (
         <button
@@ -376,15 +354,15 @@ function OrdersTable({
             e.stopPropagation();
             onStatusChange(order.id, "inProgress");
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-500 hover:bg-slate-200 transition-colors text-xs font-bold"
+          className="flex items-center gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-500 hover:bg-slate-200 transition-colors text-[10px] sm:text-xs font-bold"
         >
-          <RotateCcw size={14} />
-          <span>بازگشت به در حال انجام</span>
+          <RotateCcw size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+          <span className="hidden sm:inline">بازگشت به در حال انجام</span>
+          <span className="sm:hidden">بازگشت</span>
         </button>
       );
     }
 
-    // جدید: دکمه تأیید/رد (پذیرش اولیه سفارش)
     if (activeTab === "new" && toggleCheck) {
       return (
         <button
@@ -392,7 +370,7 @@ function OrdersTable({
             e.stopPropagation();
             toggleCheck(order.id);
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+          className={`flex items-center gap-1 px-1.5 sm:px-1 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-bold transition-colors
             ${order.isChecked 
               ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" 
               : "bg-red-100 text-red-700 border-red-500 hover:bg-red-200"
@@ -400,20 +378,21 @@ function OrdersTable({
         >
           {order.isChecked ? (
             <>
-              <Check size={14} />
-              <span>پذیرش شد</span>
+              <Check size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">پذیرش شد</span>
+              <span className="sm:hidden">پذیرش</span>
             </>
           ) : (
             <>
-              <X size={14} />
-              <span>در انتظار تأیید</span>
+              <X size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">در انتظار تأیید</span>
+              <span className="sm:hidden">انتظار</span>
             </>
           )}
         </button>
       );
     }
 
-    // در حال انجام: دکمه تکمیل خدمات
     if (activeTab === "inProgress" && toggleCheck) {
       return (
         <button
@@ -421,7 +400,7 @@ function OrdersTable({
             e.stopPropagation();
             toggleCheck(order.id);
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+          className={`flex items-center gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-bold transition-colors
             ${order.isChecked 
               ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" 
               : "bg-amber-100 text-amber-700 border-amber-500 hover:bg-amber-200"
@@ -429,13 +408,15 @@ function OrdersTable({
         >
           {order.isChecked ? (
             <>
-              <Check size={14} />
-              <span>خدمات انجام شد</span>
+              <Check size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">خدمات انجام شد</span>
+              <span className="sm:hidden">انجام شد</span>
             </>
           ) : (
             <>
-              <Clock size={14} />
-              <span>در انتظار خدمات</span>
+              <Clock size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">در انتظار خدمات</span>
+              <span className="sm:hidden">در انتظار</span>
             </>
           )}
         </button>
@@ -446,44 +427,32 @@ function OrdersTable({
   };
 
   return (
-    <div className="bg-white/50 dark:bg-white/50 backdrop-blur-lg border border-sky-200/50 rounded-2xl mt-6 p-6 shadow-xl">
-      <h2 className="text-xl font-semibold text-gray-800 dark:text-black mb-4 border-b border-white/10 pb-2">
+    <div className="bg-white/50 dark:bg-white/50 backdrop-blur-lg border border-sky-200/50 rounded-2xl mt-6 p-3 sm:p-6 shadow-xl">
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-800 dark:text-black mb-4 border-b border-white/10 pb-2">
         سفارش‌ها
       </h2>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-right">
+        <table className="w-full text-xs sm:text-sm text-right">
           <thead className="text-black border-b border-white/10">
             <tr>
-              <th className="p-3">شماره سفارش</th>
-              <th className="p-3">نام مشتری</th>
-              <th className="p-3">
-                <select
-                  value={cityFilter}
-                  onChange={(e) => setCityFilter(e.target.value)}
-                  className="p-1 rounded border border-sky-200/50 bg-white/70 backdrop-blur text-black focus:outline-none"
-                >
-                  <option value="">محله</option>
-                  {cities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </th>
+              <th className="p-2 sm:p-3 whitespace-nowrap">شماره</th>
+              <th className="p-2 sm:p-3 whitespace-nowrap">وضعیت</th>
+              <th className="p-2 sm:p-3 whitespace-nowrap">نام مشتری</th>
               <th
-                className="p-3 cursor-pointer select-none"
+                className="p-2 sm:p-3 cursor-pointer select-none whitespace-nowrap"
                 onClick={() => toggleSort("deliveryDate")}
               >
                 مهلت
               </th>
+              {/* ستون فاصله به دقیقه - بین مهلت و مبلغ */}
+              <th className="p-2 sm:p-3 whitespace-nowrap">فاصله</th>
               <th
-                className="p-3 cursor-pointer select-none"
+                className="hidden sm:table-cell p-2 sm:p-3 cursor-pointer select-none whitespace-nowrap"
                 onClick={() => toggleSort("price")}
               >
                 مبلغ
               </th>
-              <th className="p-3">وضعیت / عملیات</th>
             </tr>
           </thead>
 
@@ -494,9 +463,9 @@ function OrdersTable({
                 onClick={() => onRowClick(order)}
                 className="hover:bg-white/80 dark:text-gray-900 transition border-b border-white/5 cursor-pointer"
               >
-                <td className="p-3">
+                <td className="p-2 sm:p-3">
                   <span
-                    className={`px-4 py-2 rounded-xl font-bold inline-block ${
+                    className={`px-2 sm:px-4 py-1 sm:py-2 rounded-xl font-bold inline-block text-xs sm:text-base ${
                       order.isChecked && activeTab !== "done"
                         ? "bg-green-100 border border-green-500 text-green-600"
                         : order.isChecked && activeTab === "done"
@@ -507,16 +476,21 @@ function OrdersTable({
                     {order.id}
                   </span>
                 </td>
-                <td className="p-3">{order.name}</td>
-                <td className="p-3">{order.city}</td>
-                <td className="p-3">
+                <td className="p-2 sm:p-3" onClick={(e) => e.stopPropagation()}>
+                  {getActionButtons(order)}
+                </td>
+                <td className="p-2 sm:p-3 truncate max-w-[100px] sm:max-w-[200px]">
+                  {order.name}
+                </td>
+                <td className="p-2 sm:p-3 whitespace-nowrap">
                   {remainingDays(order.deliveryDate)} روز
                 </td>
-                <td className="p-3">
-                  {order.price.toLocaleString()} تومان
+                {/* مقدار فاصله به دقیقه */}
+                <td className="p-2 sm:p-3 whitespace-nowrap">
+                  {order.distance ? `${order.distance} دقیقه` : '-'}
                 </td>
-                <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                  {getActionButtons(order)}
+                <td className="hidden sm:table-cell p-2 sm:p-3 whitespace-nowrap">
+                  {order.price?.toLocaleString()} تومان
                 </td>
               </tr>
             ))}

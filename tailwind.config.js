@@ -34,4 +34,10 @@ module.exports = {
     },
   },
   plugins: [],
+  safelist: [
+  'bg-orange-50', 'bg-orange-100', 'bg-orange-200', 'bg-orange-500', 'text-orange-600', 'border-orange-200', 'peer-focus:ring-orange-300', 'peer-checked:bg-orange-500',
+  'bg-blue-50', 'bg-blue-100', 'bg-blue-200', 'bg-blue-500', 'text-blue-600', 'border-blue-200', 'peer-focus:ring-blue-300', 'peer-checked:bg-blue-500',
+  'bg-red-50', 'text-red-600', 'border-red-200'
+]
+
 };
