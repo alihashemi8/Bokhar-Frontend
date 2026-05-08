@@ -7,6 +7,8 @@ import {
   Truck,
   RotateCcw,
   Search,
+  Check,
+  X,
 } from "lucide-react";
 
 export default function ManageOrders({
@@ -31,7 +33,7 @@ export default function ManageOrders({
   const tabDescriptions = {
     new: "سفارش‌های تازه ثبت‌شده که هنوز بررسی اولیه نشده و در انتظار پذیرش شما هستند.",
     inProgress: "سفارش‌های فعال و در دست اقدام که فرآیند آماده‌سازی یا شستشو هستند",
-    done: "سفارش‌های تکمیل‌شده و آماده تحویل که فقط منتظر ارسال یا تحویل به مشتری هستند.",
+    done: "سفارش‌های تکمیل‌شده و آماده تحویل. موارد تأیید شده را انتخاب و ثبت کنید.",
     delivered: "سفارش‌هایی که با موفقیت به مشتری تحویل داده شده و فرآیند آنها به پایان رسیده است.",
     cancelled: "سفارش‌هایی که به هر دلیلی توسط مشتری لغو و از چرخه خارج شده‌اند.",
     returned: "سفارش‌هایی که پس از تحویل، توسط مشتری مرجوع یا استرداد شده‌اند.",
@@ -185,6 +187,20 @@ export default function ManageOrders({
 
   const getCount = (status) => orders.filter((o) => o.status === status).length;
 
+  // تابع ثبت تغییرات برای تب "انجام شده"
+  const handleBatchDeliver = () => {
+    const selectedOrders = processedOrders.filter((o) => o.isChecked);
+    if (selectedOrders.length === 0) return;
+    
+    // انتقال همه موارد تأیید شده به delivered
+    selectedOrders.forEach((order) => {
+      onStatusChange(order.id, "delivered");
+    });
+  };
+
+  // بررسی آیا دکمه ثبت تغییرات باید نمایش داده شود (فقط برای done)
+  const showBatchDeliverButton = activeStatusTab === "done" && processedOrders.some((o) => o.isChecked);
+
   return (
     <div className="w-full">
       {/* ۶ تب وضعیت با توضیحات زیر آن */}
@@ -237,7 +253,7 @@ export default function ManageOrders({
           })}
         </div>
 
-        {/* 👇 توضیحات تب فعال - بدون باکس و فونت ریزتر در موبایل */}
+        {/* توضیحات تب فعال */}
         <p className="mt-1 mx-3 sm:mx-2 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
           {tabDescriptions[activeStatusTab]}
         </p>
@@ -268,13 +284,14 @@ export default function ManageOrders({
         </div>
       </div>
 
-      {/* عنوان بخش */}
+      {/* عنوان بخش و دکمه ثبت تغییرات */}
       <div className="flex items-center justify-between mb-4 px-4">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
             ({processedOrders.length} مورد)
           </span>
         </h3>
+        
       </div>
 
       {/* جدول سفارشات */}
@@ -287,7 +304,6 @@ export default function ManageOrders({
         toggleCheck={toggleCheck}
         activeTab={activeStatusTab}
         onRowClick={onRowClick}
-        showCheckbox={activeStatusTab !== "done"}
         onStatusChange={onStatusChange} 
       />
     </div>
@@ -310,6 +326,123 @@ function OrdersTable({
     const delivery = new Date(date);
     const diff = Math.ceil((delivery - today) / (1000 * 60 * 60 * 24));
     return diff >= 0 ? diff : 0;
+  };
+
+  // تابع کمکی برای تعیین دکمه‌های مجاز در هر تب
+  const getActionButtons = (order) => {
+    // تحویل داده شده و لغو شده: هیچ عملیاتی مجاز نیست
+    if (activeTab === "delivered" || activeTab === "cancelled") {
+      return (
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          اتمام یافته
+        </span>
+      );
+    }
+
+    // انجام شده: دکمه چک‌باکس بنفش (مشابه جدید) برای انتخاب جهت ثبت تغییرات
+    if (activeTab === "done" && toggleCheck) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleCheck(order.id);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+            ${order.isChecked 
+              ? "bg-violet-100 text-violet-700 border-violet-500 hover:bg-violet-200" 
+              : "bg-gray-100 text-gray-600 border-gray-400 hover:bg-gray-200"
+            }`}
+        >
+          {order.isChecked ? (
+            <>
+               <Truck size={16} />
+              <span>تحویل داده شد</span>
+            </>
+          ) : (
+            <>
+              <Truck size={14} />
+              <span>آماده تحویل</span>
+            </>
+          )}
+        </button>
+      );
+    }
+
+    // برگشت زده: دکمه بازگشت به در حال انجام
+    if (activeTab === "returned" && onStatusChange) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatusChange(order.id, "inProgress");
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-500 hover:bg-slate-200 transition-colors text-xs font-bold"
+        >
+          <RotateCcw size={14} />
+          <span>بازگشت به در حال انجام</span>
+        </button>
+      );
+    }
+
+    // جدید: دکمه تأیید/رد (پذیرش اولیه سفارش)
+    if (activeTab === "new" && toggleCheck) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleCheck(order.id);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+            ${order.isChecked 
+              ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" 
+              : "bg-red-100 text-red-700 border-red-500 hover:bg-red-200"
+            }`}
+        >
+          {order.isChecked ? (
+            <>
+              <Check size={14} />
+              <span>پذیرش شد</span>
+            </>
+          ) : (
+            <>
+              <X size={14} />
+              <span>در انتظار تأیید</span>
+            </>
+          )}
+        </button>
+      );
+    }
+
+    // در حال انجام: دکمه تکمیل خدمات
+    if (activeTab === "inProgress" && toggleCheck) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleCheck(order.id);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors
+            ${order.isChecked 
+              ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" 
+              : "bg-amber-100 text-amber-700 border-amber-500 hover:bg-amber-200"
+            }`}
+        >
+          {order.isChecked ? (
+            <>
+              <Check size={14} />
+              <span>خدمات انجام شد</span>
+            </>
+          ) : (
+            <>
+              <Clock size={14} />
+              <span>در انتظار خدمات</span>
+            </>
+          )}
+        </button>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -350,7 +483,7 @@ function OrdersTable({
               >
                 مبلغ
               </th>
-              <th className="p-3">عملیات</th>
+              <th className="p-3">وضعیت / عملیات</th>
             </tr>
           </thead>
 
@@ -362,20 +495,17 @@ function OrdersTable({
                 className="hover:bg-white/80 dark:text-gray-900 transition border-b border-white/5 cursor-pointer"
               >
                 <td className="p-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCheck(order.id);
-                    }}
-                    disabled={activeTab === "done"}
-                    className={`px-4 py-2 rounded-xl font-bold transition ${
-                      order.isChecked
+                  <span
+                    className={`px-4 py-2 rounded-xl font-bold inline-block ${
+                      order.isChecked && activeTab !== "done"
                         ? "bg-green-100 border border-green-500 text-green-600"
+                        : order.isChecked && activeTab === "done"
+                        ? "bg-violet-100 border border-violet-500 text-violet-600"
                         : "bg-red-100 border border-red-500 text-red-600"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    }`}
                   >
                     {order.id}
-                  </button>
+                  </span>
                 </td>
                 <td className="p-3">{order.name}</td>
                 <td className="p-3">{order.city}</td>
@@ -385,22 +515,8 @@ function OrdersTable({
                 <td className="p-3">
                   {order.price.toLocaleString()} تومان
                 </td>
-                <td className="p-3">
-                  {activeTab === "done" && onStatusChange && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('آیا مطمئن هستید که این سفارش تحویل داده شده است؟')) {
-                          onStatusChange(order.id, "delivered");
-                        }
-                      }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-100 text-violet-700 border border-violet-500 hover:bg-violet-200 transition-colors text-xs font-bold"
-                      title="انتقال به تحویل داده شده"
-                    >
-                      <Truck size={14} />
-                      <span>تحویل داده شد</span>
-                    </button>
-                  )}
+                <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                  {getActionButtons(order)}
                 </td>
               </tr>
             ))}
