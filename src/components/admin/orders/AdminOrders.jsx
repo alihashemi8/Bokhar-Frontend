@@ -123,14 +123,6 @@ export default function AdminOrders() {
     setIsModalOpen(false);
   };
 
-  const updateOrderStatus = (orderId, newStatus) => {
-    setOrders((prevOrders) =>
-      (prevOrders || []).map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-  };
-
   const calculateOrderPrice = (order) => {
     if (!order) return { finalPrice: 0, deliveryBadge: null };
     
@@ -215,9 +207,6 @@ export default function AdminOrders() {
             setCityFilter={setCityFilter}
             toggleCheck={toggleCheck}
             onRowClick={openModal}
-            onStatusChange={(orderId, newStatus) => {
-              updateOrderStatus(orderId, newStatus);
-            }}
           />
         ) : (
           <div className="space-y-6">
@@ -400,6 +389,7 @@ function useOrders(initialData, activeTab, timeView) {
             if (o.status === "new") return { ...o, status: "inProgress", isChecked: false };
             if (o.status === "inProgress") return { ...o, status: "done", isChecked: false };
             if (o.status === "done") return { ...o, status: "delivered", isChecked: false };
+            if (o.status === "returned") return { ...o, status: "inProgress", isChecked: false };
           }
           return o;
         })

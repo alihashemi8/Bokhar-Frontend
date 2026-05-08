@@ -18,7 +18,6 @@ export default function ManageOrders({
   setCityFilter,
   toggleCheck,
   onRowClick,
-  onStatusChange,
 }) {
   const [activeStatusTab, setActiveStatusTab] = useState("new");
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,8 +186,6 @@ export default function ManageOrders({
 
   const getCount = (status) => orders.filter((o) => o.status === status).length;
 
-  const showBatchDeliverButton = activeStatusTab === "done" && processedOrders.some((o) => o.isChecked);
-
   return (
     <div className="w-full">
       {/* تب‌ها */}
@@ -287,7 +284,6 @@ export default function ManageOrders({
         toggleCheck={toggleCheck}
         activeTab={activeStatusTab}
         onRowClick={onRowClick}
-        onStatusChange={onStatusChange} 
       />
     </div>
   );
@@ -299,7 +295,6 @@ function OrdersTable({
   toggleCheck,
   activeTab,
   onRowClick,
-  onStatusChange,
 }) {
   const remainingDays = (date) => {
     const today = new Date();
@@ -347,18 +342,32 @@ function OrdersTable({
       );
     }
 
-    if (activeTab === "returned" && onStatusChange) {
+    if (activeTab === "returned" && toggleCheck) {
       return (
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onStatusChange(order.id, "inProgress");
+            toggleCheck(order.id);
           }}
-          className="flex items-center gap-1 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-500 hover:bg-slate-200 transition-colors text-[10px] sm:text-xs font-bold"
+          className={`flex items-center gap-1 px-1.5 py-1 sm:py-1.5 rounded-lg border text-[10px] sm:text-xs font-bold transition-colors
+            ${order.isChecked 
+              ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" 
+              : "bg-slate-100 text-slate-700 border-slate-500 hover:bg-slate-200"
+            }`}
         >
-          <RotateCcw size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
-          <span className="hidden sm:inline">بازگشت به در حال انجام</span>
-          <span className="sm:hidden">بازگشت</span>
+          {order.isChecked ? (
+            <>
+              <Check size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">تأیید برگشت</span>
+              <span className="sm:hidden">تأیید</span>
+            </>
+          ) : (
+            <>
+              <RotateCcw size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <span className="hidden sm:inline">برگشت به درحال انجام</span>
+              <span className="sm:hidden">بازگشت</span>
+            </>
+          )}
         </button>
       );
     }
@@ -445,7 +454,6 @@ function OrdersTable({
               >
                 مهلت
               </th>
-              {/* ستون فاصله به دقیقه - بین مهلت و مبلغ */}
               <th className="p-2 sm:p-3 whitespace-nowrap">فاصله</th>
               <th
                 className="hidden sm:table-cell p-2 sm:p-3 cursor-pointer select-none whitespace-nowrap"
@@ -485,7 +493,6 @@ function OrdersTable({
                 <td className="p-2 sm:p-3 whitespace-nowrap">
                   {remainingDays(order.deliveryDate)} روز
                 </td>
-                {/* مقدار فاصله به دقیقه */}
                 <td className="p-2 sm:p-3 whitespace-nowrap">
                   {order.distance ? `${order.distance} دقیقه` : '-'}
                 </td>
