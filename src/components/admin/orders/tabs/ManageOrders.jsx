@@ -8,6 +8,8 @@ import {
   RotateCcw,
   Search,
   Check,
+  Home,
+  WashingMachine,
   X,
 } from "lucide-react";
 
@@ -98,7 +100,7 @@ export default function ManageOrders({
     {
       id: "inProgress",
       label: "در حال انجام",
-      icon: Clock,
+      icon: WashingMachine,
       colors: {
         active: "bg-gradient-to-r from-amber-100 to-amber-200 dark:from-amber-700 dark:to-amber-800 shadow-amber-300 dark:shadow-amber-500 border-amber-300 dark:border-amber-600",
         hover: "hover:bg-amber-50 dark:hover:bg-amber-900/30",
@@ -107,7 +109,7 @@ export default function ManageOrders({
     {
       id: "done",
       label: "انجام شده",
-      icon: CheckCircle,
+      icon: Truck,
       colors: {
         active: "bg-gradient-to-r from-emerald-100 to-emerald-200 dark:from-emerald-700 dark:to-emerald-800 shadow-emerald-300 dark:shadow-emerald-500 border-emerald-300 dark:border-emerald-600",
         hover: "hover:bg-emerald-50 dark:hover:bg-emerald-900/30",
@@ -116,7 +118,7 @@ export default function ManageOrders({
     {
       id: "delivered",
       label: "تحویل داده شده",
-      icon: Truck,
+      icon: Home,
       colors: {
         active: "bg-gradient-to-r from-violet-100 to-violet-200 dark:from-violet-700 dark:to-violet-800 shadow-violet-300 dark:shadow-violet-500 border-violet-300 dark:border-violet-600",
         hover: "hover:bg-violet-50 dark:hover:bg-violet-900/30",
@@ -327,7 +329,7 @@ function OrdersTable({
         >
           {order.isChecked ? (
             <>
-               <Truck size={14} className="sm:w-4 sm:h-4 w-3 h-3" />
+               <Home size={14} className="sm:w-4 sm:h-4 w-3 h-3" />
               <span className="hidden sm:inline">تحویل داده شد</span>
               <span className="sm:hidden">تحویل</span>
             </>
@@ -393,7 +395,7 @@ function OrdersTable({
             </>
           ) : (
             <>
-              <X size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
+              <Clock size={12} className="sm:w-4 sm:h-4 w-3 h-3" />
               <span className="hidden sm:inline">در انتظار تأیید</span>
               <span className="sm:hidden">انتظار</span>
             </>
