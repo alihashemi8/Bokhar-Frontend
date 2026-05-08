@@ -6,7 +6,7 @@ import Search from "../../Search";
 import OrdersTable from "./OrdersTable";
 import ManageOrders from "./tabs/ManageOrders";
 import TimeOrders from "./tabs/TimeOrders"
-
+import {FiShoppingCart } from "react-icons/fi";
 export default function AdminOrders() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("orders");
@@ -155,7 +155,7 @@ export default function AdminOrders() {
   }, [filteredTimeOrders, timeSettings]);
 
   return (
-    <div dir="rtl" className="flex min-h-screen overflow-x-hidden bg-gray-50 dark:bg-gray-900 pr-4 sm:pr-6">
+    <div dir="rtl" className="flex min-h-screen overflow-x-hidden pr-4 sm:pr-6">
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
@@ -164,9 +164,11 @@ export default function AdminOrders() {
       />
 
       <main className="flex-1 p-4 sm:p-6 md:pr-64 overflow-x-hidden">
-        <h2 className="text-2xl font-bold text-center md:text-right text-gray-800 dark:text-gray-100 mr-4 mb-8">
-          مدیریت سفارش‌ها
-        </h2>
+<h2 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mr-4 mb-8">
+  <FiShoppingCart className="text-2xl" />
+  مدیریت سفارش‌ها
+</h2>
+
 
         <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
           <button

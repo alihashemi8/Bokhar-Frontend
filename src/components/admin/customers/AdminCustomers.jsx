@@ -131,9 +131,11 @@ export default function AdminCustomers() {
       />
 
       <main className="flex-1 min-w-0 p-4 sm:p-6 md:mr-64 overflow-y-auto">
-        <h1 className="text-2xl font-bold text-center md:text-start text-slate-800 dark:text-gray-900">
-          مشتریان
-        </h1>
+<h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-slate-800 dark:text-gray-900">
+  <FiUsers className="text-2xl" />
+  مشتریان
+</h1>
+
 
         {/* Tabs + Search */}
         <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

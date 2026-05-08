@@ -3,11 +3,12 @@ import Sidebar from "../Sidebar";
 import ServiceDiscountTab from "./tabs/ServiceDiscountTab";
 import GlobalDiscountTab from "./tabs/GlobalDiscountTab";
 import CouponTab from "./tabs/CouponTab";
+import { FiTag } from "react-icons/fi";
 
 export default function AdminDiscounts() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState("discounts");
-  const [activeTab, setActiveTab] = useState("coupon"); // تغییر به coupon
+  const [activeTab, setActiveTab] = useState("coupon"); 
 
   return (
     <div dir="rtl" className="flex min-h-screen">
@@ -19,9 +20,11 @@ export default function AdminDiscounts() {
       />
 
       <main className="flex-1 p-4 sm:p-6 md:pr-64 overflow-x-hidden ">
-        <h2 className="text-2xl font-bold text-center md:text-right text-gray-800 dark:text-gray-100 mr-4 mb-8">
-          مدیریت تخفیف‌ها
-        </h2>
+<h2 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mr-4 mb-8">
+  <FiTag className="text-2xl" />
+  مدیریت تخفیف‌ها
+</h2>
+
 
         <div className="flex gap-3 mb-6 overflow-x-auto pb-4 justify-center no-scrollbar">
           {/* ۱. کدهای تخفیف - اول و پیش‌فرض */}

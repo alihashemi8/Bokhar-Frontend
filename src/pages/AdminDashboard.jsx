@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/admin/Sidebar";
-import { FiUsers, FiShoppingCart, FiTag, FiPackage } from "react-icons/fi";
+import {
+  FiUsers,
+  FiShoppingCart,
+  FiTag,
+  FiPackage,
+  FiLayout,
+} from "react-icons/fi";
 
 export default function AdminDashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -12,7 +18,9 @@ export default function AdminDashboard() {
   // synchronize activeMenu with URL so refresh/direct-link keeps highlight correct
   useEffect(() => {
     // location.pathname مثل "/admin-dashboard/orders"
-    const pathSegment = location.pathname.replace("/admin-dashboard", "").replace(/^\//, "");
+    const pathSegment = location.pathname
+      .replace("/admin-dashboard", "")
+      .replace(/^\//, "");
     setActiveMenu(pathSegment || "dashboard");
   }, [location]);
 
@@ -49,7 +57,12 @@ export default function AdminDashboard() {
 
   const orders = [
     { id: 101, name: "علی رضایی", total: "250,000 تومان", status: "تحویل‌شده" },
-    { id: 102, name: "سارا محمدی", total: "180,000 تومان", status: "در حال آماده‌سازی" },
+    {
+      id: 102,
+      name: "سارا محمدی",
+      total: "180,000 تومان",
+      status: "در حال آماده‌سازی",
+    },
     { id: 103, name: "مهدی کریمی", total: "90,000 تومان", status: "لغوشده" },
   ];
 
@@ -70,7 +83,10 @@ export default function AdminDashboard() {
           className={`flex-1 p-6 overflow-y-auto text-gray-800 dark:text-gray-100 transition-all duration-300
             ${!isSidebarOpen ? "md:mr-64" : ""}`}
         >
-          <h1 className="text-2xl font-bold text-center md:text-start mb-8">داشبورد مدیریت</h1>
+          <h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold mb-8">
+            <FiLayout className="text-2xl" />
+            داشبورد مدیریت
+          </h1>
 
           {/* کارت‌ها */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
@@ -123,8 +139,8 @@ export default function AdminDashboard() {
                           order.status === "تحویل‌شده"
                             ? "text-green-400 dark:text-green-600"
                             : order.status === "لغوشده"
-                            ? "text-red-400 dark:text-red-600"
-                            : "text-yellow-400 dark:text-amber-300"
+                              ? "text-red-400 dark:text-red-600"
+                              : "text-yellow-400 dark:text-amber-300"
                         }`}
                       >
                         {order.status}

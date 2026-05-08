@@ -1,5 +1,5 @@
 import { useState, useContext, useRef, useEffect } from "react";
-import { FiPlus, FiTrash2, FiEdit, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiEdit, FiChevronLeft, FiChevronRight, FiPackage } from "react-icons/fi";
 import Sidebar from "../Sidebar";
 import ServicesModal from "./ServicesModal";
 import { ServicesContext } from "./ServicesContext";
@@ -187,9 +187,11 @@ export default function AdminServices() {
       />
 
       <main className="flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 md:mr-64">
-        <h1 className="text-2xl font-bold text-center md:text-start text-gray-800 dark:text-gray-100 mb-8">
-          خدمات
-        </h1>
+<h1 className="flex items-center justify-center md:justify-start gap-2 text-2xl font-bold text-gray-800 dark:text-gray-100 mb-8">
+  <FiPackage className="text-2xl" />
+  خدمات
+</h1>
+
 
         {isLoading && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

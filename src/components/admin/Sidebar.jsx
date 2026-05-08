@@ -12,6 +12,7 @@ import {
   FiSun,
   FiMoon,
   FiChevronRight,
+  FiShoppingCart,
 } from "react-icons/fi";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -44,7 +45,7 @@ export default function Sidebar({
 
   const allMenuItems = [
     { label: "داشبورد", icon: <FiLayout />, key: "dashboard", path: "/admin-dashboard" },
-    { label: "سفارش‌ها", icon: <FiHome />, key: "orders", path: "/admin-dashboard/orders" },
+    { label: "سفارش‌ها", icon: <FiShoppingCart />, key: "orders", path: "/admin-dashboard/orders" },
     { label: "مشتریان", icon: <FiUsers />, key: "customers", path: "/admin-dashboard/customers" },
     { label: "خدمات", icon: <FiPackage />, key: "services", path: "/admin-dashboard/services" },
     { label: "تخفیف‌ها", icon: <FiTag />, key: "discounts", path: "/admin-dashboard/discounts" },
