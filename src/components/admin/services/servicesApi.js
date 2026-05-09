@@ -1,13 +1,17 @@
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 async function fetchWithAuth(url, options = {}) {
+  const isFormData = options.body instanceof FormData;
+  
   const response = await fetch(`${API_BASE}${url}`, {
     credentials: "include",  
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,      
-    },
+    headers: isFormData 
+      ? { ...options.headers }  // Browser خودش Content-Type رو با boundary تنظیم می‌کنه
+      : {
+          "Content-Type": "application/json",
+          ...options.headers,      
+        },
   });
 
   if (!response.ok) {
@@ -32,16 +36,53 @@ const api = {
   getProducts: () => fetchWithAuth("/products/"),
   getProduct: (id) => fetchWithAuth(`/products/${id}/`),
 
-  createProduct: (data) =>
-    fetchWithAuth("/products/create/", {
+  createProduct: (data) => {
+    // اگر فایل عکس وجود داشت، FormData بساز
+    if (data.imageFile instanceof File) {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('status', data.status || 'active');
+      formData.append('base_price', data.base_price || 0);
+      // pricing رو به صورت JSON string می‌فرستیم چون FormData nested object نمی‌پذیره
+      formData.append('pricing', JSON.stringify(data.pricing));
+      formData.append('image', data.imageFile);
+      
+      return fetchWithAuth("/products/create/", {
+        method: "POST",
+        body: formData,
+      });
+    }
+    
+    // در غیر این صورت JSON معمولی
+    return fetchWithAuth("/products/create/", {
       method: "POST",
       body: JSON.stringify(data),
-    }),
-  updateProduct: (id, data) =>
-    fetchWithAuth(`/products/${id}/update/`, {
+    });
+  },
+
+  updateProduct: (id, data) => {
+    if (data.imageFile instanceof File) {
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('status', data.status || 'active');
+      formData.append('base_price', data.base_price || 0);
+      formData.append('pricing', JSON.stringify(data.pricing));
+      formData.append('image', data.imageFile);
+      
+      return fetchWithAuth(`/products/${id}/update/`, {
+        method: "PUT",
+        body: formData,
+      });
+    }
+    
+    return fetchWithAuth(`/products/${id}/update/`, {
       method: "PUT",
       body: JSON.stringify(data),
-    }),
+    });
+  },
+
   deleteProduct: (id) =>
     fetchWithAuth(`/products/${id}/delete/`, { method: "DELETE" }),
 
@@ -49,4 +90,4 @@ const api = {
     fetchWithAuth(`/products/search/?q=${encodeURIComponent(q)}`),
 };
 
-export default api;   
+export default api;

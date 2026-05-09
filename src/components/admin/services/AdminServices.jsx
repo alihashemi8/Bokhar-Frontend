@@ -62,7 +62,7 @@ export default function AdminServices() {
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
-    setTimeout(() => setToast({ message: "", type: "success" }), 3000);
+    setTimeout(() => setToast({ message, type: "success" }), 3000);
   };
 
   const showConfirm = (message, onConfirm) => {
@@ -107,6 +107,8 @@ export default function AdminServices() {
         category: categoryId,
         status: "active",
         pricing: data.pricing,
+        imageFile: data.imageFile, // اضافه کردن فایل تصویر
+        base_price: 0,
       };
 
       if (editItem) {
@@ -134,6 +136,7 @@ export default function AdminServices() {
         ...product,
         category: product.category?.name || product.category,
         pricing: product.pricing || {},
+        imageUrl: product.image, // اضافه کردن URL تصویر موجود برای نمایش در مودال
       };
       setEditItem(modalData);
       setModalOpen(true);
@@ -150,6 +153,7 @@ export default function AdminServices() {
       try {
         await api.deleteProduct(id);
         await refreshData();
+        showToast("سرویس حذف شد");
       } catch (err) {
         showToast("خطا در حذف سرویس: " + err.message, "error");
       }
@@ -319,7 +323,13 @@ export default function AdminServices() {
                   <div>
                     <div className="w-full aspect-[4/3] mb-3">
                       <img
-                        src={srv.image || "/images/placeholder.png"}
+                        src={
+                          srv.image
+                            ? srv.image.startsWith("http")
+                              ? srv.image
+                              : `${import.meta.env.VITE_API_URL?.replace("/api", "")}${srv.image}`
+                            : "/images/placeholder.png"
+                        }
                         alt={srv.title}
                         className="w-full h-full object-cover rounded-xl border border-sky-200 dark:border-indigo-600 shadow"
                       />

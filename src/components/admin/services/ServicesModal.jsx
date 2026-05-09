@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import BaseModal from "../../basemodal/BaseModal";
 
@@ -141,6 +141,32 @@ export default function ServicesModal({
   const [newMaterialName, setNewMaterialName] = useState("");
   const [isAddingMaterial, setIsAddingMaterial] = useState(false);
 
+  // State و Ref برای تصویر
+  const [serviceImage, setServiceImage] = useState(null);
+  const [serviceImageFile, setServiceImageFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Handlerهای تصویر
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setServiceImageFile(file);
+      setServiceImage(URL.createObjectURL(file));
+    }
+  };
+
+  const removeImage = () => {
+    setServiceImage(null);
+    setServiceImageFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   useEffect(() => {
     setActiveTab(0);
     if (editItem) {
@@ -166,6 +192,15 @@ export default function ServicesModal({
         category: editItem.category || categories[0] || "",
         pricing: mergePricing(editItem.pricing, mergedTabs),
       });
+
+      // اگر تصویر قبلی وجود داشت (از طریق imageUrl یا image)
+      if (editItem.imageUrl || editItem.image) {
+        setServiceImage(editItem.imageUrl || editItem.image);
+      } else {
+        setServiceImage(null);
+      }
+      // در حالت ویرایش، فایل جدیدی انتخاب نشده است
+      setServiceImageFile(null);
     } else {
       setTabs(defaultTabs);
       setMaterials(defaultMaterials);
@@ -174,6 +209,8 @@ export default function ServicesModal({
         category: categories[0] || "",
         pricing: makeEmptyPricing(defaultTabs),
       });
+      setServiceImage(null);
+      setServiceImageFile(null);
     }
     setNewTabName("");
     setNewMaterialName("");
@@ -391,7 +428,15 @@ export default function ServicesModal({
       }
     }
 
-    onSave({ ...form, pricing: cleanPricing });
+    // ارسال فایل تصویر به همراه بقیه داده‌ها
+    const dataToSave = {
+      ...form,
+      pricing: cleanPricing,
+      imageFile: serviceImageFile, // فایل تصویر جدید (اگر انتخاب شده باشد)
+      image: serviceImage // URL تصویر فعلی (برای نمایش)
+    };
+
+    onSave(dataToSave);
   };
 
   const isValid = form.title.trim() && form.category;
@@ -401,9 +446,62 @@ export default function ServicesModal({
       <BaseModal
         isOpen={isOpen}
         onClose={onClose}
-        title={editItem ? "ویرایش سرویس" : "سرویس جدید"}
+        title={
+          <div className="flex items-center justify-between w-full">
+            <span>{editItem ? "ویرایش سرویس" : "سرویس جدید"}</span>
+            <button
+              type="button"
+              onClick={handleImageClick}
+              className="p-1.5 mr-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all"
+              title="افزودن تصویر"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </button>
+          </div>
+        }
       >
+        {/* input مخفی برای انتخاب فایل */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImageChange}
+          accept="image/*"
+          className="hidden"
+        />
+
         <div dir="rtl" className="space-y-4 max-h-[80vh] px-1 overflow-y-auto">
+          {/* پیش‌نمایش تصویر */}
+          {serviceImage && (
+            <div className="relative">
+              <img 
+                src={serviceImage} 
+                alt="پیش‌نمایش سرویس" 
+                className="w-full h-32 object-cover rounded-xl border border-gray-200"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 left-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow-md"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {/* عنوان و دسته‌بندی */}
           <div className="flex gap-2 mt-1 mb-2">
             <input
@@ -519,7 +617,7 @@ export default function ServicesModal({
           {/* محتوای تب */}
           <div className="bg-white border border-gray-200 rounded-b-xl p-3 max-h-[50vh] overflow-y-auto">
             <div className="mb-5">
-                            {/* دراپ‌داون نوع قیمت‌گذاری - بالای لیست جنس‌ها */}
+              {/* دراپ‌داون نوع قیمت‌گذاری - بالای لیست جنس‌ها */}
               <SizeSelector
                 value={data.sizeType}
                 onChange={(v) => setPricingField("sizeType", v)}

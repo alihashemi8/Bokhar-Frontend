@@ -23,7 +23,6 @@ import Order from "./pages/Order";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import AdminOrders from "./components/admin/orders/AdminOrders";
-import AdminCategories from "./components/admin/AdminCategories";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
 import AdminReports from "./components/admin/reports/AdminReports";
@@ -103,10 +102,6 @@ const hideNavbar = currentPath === "/" || currentPath.startsWith("/admin-dashboa
               <AdminServices />
             </ServicesProvider>
           }
-        />
-        <Route
-          path="/admin-dashboard/categories"
-          element={<AdminCategories />}
         />
         <Route
           path="/admin-dashboard/discounts"
