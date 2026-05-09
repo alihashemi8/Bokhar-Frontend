@@ -2,27 +2,25 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import BaseModal from "../../basemodal/BaseModal";
 
-const tabs = ["اتو", "خشکشویی", "سفیدشویی", "ویژه"];
-const materials = ["چرم", "مخمل", "نخی", "کتان"];
+const defaultTabs = ["اتو", "خشکشویی", "سفیدشویی", "ویژه"];
+const defaultMaterials = ["چرم", "مخمل", "نخی", "کتان"];
 
-const makeEmptyPricing = () =>
-  tabs.reduce(
+const makeEmptyPricing = (currentTabs) =>
+  currentTabs.reduce(
     (acc, tab) => ({ ...acc, [tab]: { materialPrices: {}, sizeType: "" } }),
     {}
   );
 
-// ادغام pricing دریافتی از بک‌اند (آرایه) با ساختار پایه
-const mergePricing = (saved = {}) => {
-  const base = makeEmptyPricing();
+const mergePricing = (saved = {}, currentTabs) => {
+  const base = makeEmptyPricing(currentTabs);
 
-  for (const tab of tabs) {
+  for (const tab of currentTabs) {
     const tabData = saved?.[tab];
     if (!tabData) continue;
 
     let materialPrices = {};
 
     if (Array.isArray(tabData.materialPrices)) {
-      // فرمت بک‌اند: آرایه → دیکشنری
       materialPrices = Object.fromEntries(
         tabData.materialPrices.map((mp) => [mp.material, String(mp.price)])
       );
@@ -63,18 +61,29 @@ function Toast({ message, type = "error", onClose }) {
   );
 }
 
-function MaterialPriceInput({ mat, value, onToggle, onChange }) {
+function MaterialPriceInput({ mat, value, onToggle, onChange, onDelete }) {
   const active = value !== undefined && value !== null;
   return (
-    <div className="flex gap-3 items-center">
+    <div className="flex gap-3 items-center group">
       <button
         type="button"
         onClick={onToggle}
-        className={`px-3 py-2 rounded-xl transition min-w-[60px] ${
-          active ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700"
+        className={`px-3 py-2 rounded-xl transition min-w-[60px] flex items-center justify-center gap-2 ${
+          active ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
         }`}
       >
         {mat}
+        {active && (
+          <span 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="opacity-0 group-hover:opacity-100 hover:text-red-200 text-xs font-bold transition-opacity"
+          >
+            ×
+          </span>
+        )}
       </button>
       {active && (
         <input
@@ -92,15 +101,15 @@ function MaterialPriceInput({ mat, value, onToggle, onChange }) {
 
 function SizeSelector({ value, onChange }) {
   return (
-    <div className="relative">
+    <div className="relative mb-4">
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full h-10 px-3 text-sm rounded-xl bg-gray-100 appearance-none"
       >
-        <option value="">نوع ابعاد</option>
-        <option value="singleDouble">تک / دو نفره</option>
-        <option value="meter">متراژی</option>
+        <option value="">هیچکدام</option>
+        <option value="singleDouble">تک نفره / دو نفره</option>
+        <option value="meter">متر مربع (متراژی)</option>
       </select>
       <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs">
         ▼
@@ -117,36 +126,148 @@ export default function ServicesModal({
   onSave,
   isLoading,
 }) {
+  const [tabs, setTabs] = useState(defaultTabs);
+  const [materials, setMaterials] = useState(defaultMaterials);
   const [activeTab, setActiveTab] = useState(0);
   const [form, setForm] = useState({
     title: "",
     category: categories[0] || "",
-    pricing: makeEmptyPricing(),
+    pricing: makeEmptyPricing(defaultTabs),
   });
   const [toast, setToast] = useState({ message: "", type: "error" });
+  
+  const [newTabName, setNewTabName] = useState("");
+  const [isAddingTab, setIsAddingTab] = useState(false);
+  const [newMaterialName, setNewMaterialName] = useState("");
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
 
   useEffect(() => {
     setActiveTab(0);
     if (editItem) {
+      const savedTabs = editItem.pricing ? Object.keys(editItem.pricing) : [];
+      const mergedTabs = [...new Set([...defaultTabs, ...savedTabs])];
+      setTabs(mergedTabs);
+      
+      const savedMaterials = new Set();
+      for (const tabData of Object.values(editItem.pricing || {})) {
+        if (tabData.materialPrices) {
+          if (Array.isArray(tabData.materialPrices)) {
+            tabData.materialPrices.forEach(mp => savedMaterials.add(mp.material));
+          } else {
+            Object.keys(tabData.materialPrices).forEach(m => savedMaterials.add(m));
+          }
+        }
+      }
+      const mergedMaterials = [...new Set([...defaultMaterials, ...savedMaterials])];
+      setMaterials(mergedMaterials);
+      
       setForm({
         title: editItem.title || "",
         category: editItem.category || categories[0] || "",
-        pricing: mergePricing(editItem.pricing),
+        pricing: mergePricing(editItem.pricing, mergedTabs),
       });
     } else {
+      setTabs(defaultTabs);
+      setMaterials(defaultMaterials);
       setForm({
         title: "",
         category: categories[0] || "",
-        pricing: makeEmptyPricing(),
+        pricing: makeEmptyPricing(defaultTabs),
       });
     }
+    setNewTabName("");
+    setNewMaterialName("");
+    setIsAddingTab(false);
+    setIsAddingMaterial(false);
   }, [editItem, isOpen, categories]);
 
   const currentTab = tabs[activeTab];
-  const data = form.pricing[currentTab];
+  const data = form.pricing[currentTab] || { materialPrices: {}, sizeType: "" };
+
+  const addTab = () => {
+    const trimmed = newTabName.trim();
+    if (!trimmed) return;
+    if (tabs.includes(trimmed)) {
+      setToast({ message: "این تب قبلاً وجود دارد.", type: "error" });
+      return;
+    }
+    
+    setTabs([...tabs, trimmed]);
+    setForm(f => ({
+      ...f,
+      pricing: {
+        ...f.pricing,
+        [trimmed]: { materialPrices: {}, sizeType: "" }
+      }
+    }));
+    setNewTabName("");
+    setIsAddingTab(false);
+    setTimeout(() => setActiveTab(tabs.length), 0);
+  };
+
+  const removeTab = (tabToRemove) => {
+    if (tabs.length <= 1) {
+      setToast({ message: "حداقل باید یک تب وجود داشته باشد.", type: "error" });
+      return;
+    }
+    
+    const tabIndex = tabs.indexOf(tabToRemove);
+    const newTabs = tabs.filter(t => t !== tabToRemove);
+    setTabs(newTabs);
+    
+    setForm(f => {
+      const newPricing = { ...f.pricing };
+      delete newPricing[tabToRemove];
+      return { ...f, pricing: newPricing };
+    });
+    
+    if (activeTab >= tabIndex && activeTab > 0) {
+      setActiveTab(activeTab - 1);
+    } else if (activeTab >= newTabs.length) {
+      setActiveTab(newTabs.length - 1);
+    }
+  };
+
+  const addMaterial = () => {
+    const trimmed = newMaterialName.trim();
+    if (!trimmed) return;
+    if (materials.includes(trimmed)) {
+      setToast({ message: "این جنس قبلاً وجود دارد.", type: "error" });
+      return;
+    }
+    
+    setMaterials([...materials, trimmed]);
+    setNewMaterialName("");
+    setIsAddingMaterial(false);
+  };
+
+  const removeMaterial = (matToRemove) => {
+    if (materials.length <= 1) {
+      setToast({ message: "حداقل باید یک جنس وجود داشته باشد.", type: "error" });
+      return;
+    }
+    
+    setMaterials(materials.filter(m => m !== matToRemove));
+    
+    setForm(f => ({
+      ...f,
+      pricing: Object.fromEntries(
+        Object.entries(f.pricing).map(([tab, tabData]) => [
+          tab,
+          {
+            ...tabData,
+            materialPrices: Object.fromEntries(
+              Object.entries(tabData.materialPrices || {}).filter(([k]) => k !== matToRemove)
+            )
+          }
+        ])
+      )
+    }));
+  };
 
   const setPricingField = useCallback(
     (field, value) => {
+      if (!currentTab) return;
       setForm((f) => ({
         ...f,
         pricing: {
@@ -163,8 +284,9 @@ export default function ServicesModal({
 
   const toggleMaterial = useCallback(
     (mat) => {
+      if (!currentTab) return;
       setForm((f) => {
-        const currentPrices = f.pricing[currentTab].materialPrices;
+        const currentPrices = f.pricing[currentTab]?.materialPrices || {};
         const active =
           currentPrices[mat] !== undefined && currentPrices[mat] !== null;
         const newMaterials = active
@@ -189,6 +311,7 @@ export default function ServicesModal({
 
   const setMaterialPrice = useCallback(
     (mat, value) => {
+      if (!currentTab) return;
       setForm((f) => ({
         ...f,
         pricing: {
@@ -196,7 +319,7 @@ export default function ServicesModal({
           [currentTab]: {
             ...f.pricing[currentTab],
             materialPrices: {
-              ...f.pricing[currentTab].materialPrices,
+              ...f.pricing[currentTab]?.materialPrices,
               [mat]: value,
             },
           },
@@ -219,7 +342,7 @@ export default function ServicesModal({
     let hasAnyMaterial = false;
     for (const tab of tabs) {
       const tabData = form.pricing[tab];
-      if (tabData.materialPrices && Object.keys(tabData.materialPrices).length > 0) {
+      if (tabData?.materialPrices && Object.keys(tabData.materialPrices).length > 0) {
         hasAnyMaterial = true;
         for (const [mat, price] of Object.entries(tabData.materialPrices)) {
           if (!price || isNaN(parseInt(price)) || parseInt(price) < 0) {
@@ -244,35 +367,32 @@ export default function ServicesModal({
     return true;
   };
 
+  const handleSave = () => {
+    if (!validateForm()) return;
 
-const handleSave = () => {
-  if (!validateForm()) return;
+    const cleanPricing = {};
 
-  const cleanPricing = {};
+    for (const [tab, tabData] of Object.entries(form.pricing)) {
+      const cleanMaterials = {};
 
-  for (const [tab, tabData] of Object.entries(form.pricing)) {
-    const cleanMaterials = {};
+      for (const [mat, price] of Object.entries(
+        tabData.materialPrices || {}
+      )) {
+        if (price !== "" && price !== null && !isNaN(price)) {
+          cleanMaterials[mat] = String(price);
+        }
+      }
 
-    for (const [mat, price] of Object.entries(
-      tabData.materialPrices || {}
-    )) {
-      if (price !== "" && price !== null && !isNaN(price)) {
-        cleanMaterials[mat] = String(price);
+      if (Object.keys(cleanMaterials).length > 0) {
+        cleanPricing[tab] = {
+          materialPrices: cleanMaterials,
+          sizeType: tabData.sizeType || "",
+        };
       }
     }
 
-    // ✅ فقط اگر حداقل یک جنس قیمت‌گذاری شده باشد
-    if (Object.keys(cleanMaterials).length > 0) {
-      cleanPricing[tab] = {
-        materialPrices: cleanMaterials,
-        sizeType: tabData.sizeType || "",
-      };
-    }
-  }
-
-  onSave({ ...form, pricing: cleanPricing });
-};
-
+    onSave({ ...form, pricing: cleanPricing });
+  };
 
   const isValid = form.title.trim() && form.category;
 
@@ -284,6 +404,7 @@ const handleSave = () => {
         title={editItem ? "ویرایش سرویس" : "سرویس جدید"}
       >
         <div dir="rtl" className="space-y-4 max-h-[80vh] px-1 overflow-y-auto">
+          {/* عنوان و دسته‌بندی */}
           <div className="flex gap-2 mt-1 mb-2">
             <input
               value={form.title}
@@ -318,51 +439,152 @@ const handleSave = () => {
                 form.pricing[tab]?.materialPrices &&
                 Object.keys(form.pricing[tab].materialPrices).length > 0;
               return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setActiveTab(i)}
-                  className={`flex-1 py-2 text-sm border rounded-t-xl transition relative ${
-                    activeTab === i
-                      ? "bg-white border-gray-200 border-b-white z-20 font-semibold"
-                      : "bg-gray-200 border-transparent text-gray-500"
-                  }`}
-                >
-                  {tab}
-                  {hasData && activeTab !== i && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                <div key={i} className="flex-1 relative group">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(i)}
+                    className={`w-full py-2 text-sm border rounded-t-xl transition relative ${
+                      activeTab === i
+                        ? "bg-white border-gray-200 border-b-white z-20 font-semibold"
+                        : "bg-gray-200 border-transparent text-gray-500 hover:bg-gray-300"
+                    }`}
+                  >
+                    {tab}
+                    {hasData && activeTab !== i && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                    )}
+                  </button>
+                  {tabs.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTab(tab);
+                      }}
+                      className="absolute -top-2 -left-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-30 hover:bg-red-600"
+                    >
+                      ×
+                    </button>
                   )}
-                </button>
+                </div>
               );
             })}
+            
+            {/* دکمه + برای تب */}
+            {!isAddingTab ? (
+              <button
+                type="button"
+                onClick={() => setIsAddingTab(true)}
+                className="py-2 px-3 text-sm border rounded-t-xl bg-purple-100 text-purple-700 border-transparent hover:bg-purple-200 transition"
+              >
+                +
+              </button>
+            ) : (
+              <div className="flex-1 flex items-center gap-1 px-2 py-1 border border-purple-300 rounded-t-xl bg-purple-50 border-b-white">
+                <input
+                  value={newTabName}
+                  onChange={(e) => setNewTabName(e.target.value)}
+                  placeholder="نام تب"
+                  className="flex-1 h-7 px-2 text-xs rounded bg-white border-none outline-none"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') addTab();
+                    if (e.key === 'Escape') {
+                      setIsAddingTab(false);
+                      setNewTabName("");
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={addTab}
+                  className="text-green-600 hover:text-green-800 text-sm font-bold px-1"
+                >
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingTab(false);
+                    setNewTabName("");
+                  }}
+                  className="text-red-600 hover:text-red-800 text-sm font-bold px-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
           </div>
 
           {/* محتوای تب */}
           <div className="bg-white border border-gray-200 rounded-b-xl p-3 max-h-[50vh] overflow-y-auto">
             <div className="mb-5">
+                            {/* دراپ‌داون نوع قیمت‌گذاری - بالای لیست جنس‌ها */}
+              <SizeSelector
+                value={data.sizeType}
+                onChange={(v) => setPricingField("sizeType", v)}
+              />
               <div className="text-sm font-semibold mb-2 text-gray-700">
                 جنس‌ها
               </div>
+              
+              
               <div className="space-y-3">
                 {materials.map((mat) => (
                   <MaterialPriceInput
                     key={mat}
                     mat={mat}
-                    value={data.materialPrices[mat]}
+                    value={data.materialPrices?.[mat]}
                     onToggle={() => toggleMaterial(mat)}
                     onChange={(v) => setMaterialPrice(mat, v)}
+                    onDelete={() => removeMaterial(mat)}
                   />
                 ))}
-              </div>
-
-              <div className="mt-4">
-                <div className="text-sm font-semibold mb-2 text-gray-700">
-                  ابعاد
-                </div>
-                <SizeSelector
-                  value={data.sizeType}
-                  onChange={(v) => setPricingField("sizeType", v)}
-                />
+                
+                {/* دکمه + برای جنس در پایین لیست */}
+                {!isAddingMaterial ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingMaterial(true)}
+                    className="w-full py-2 text-sm rounded-xl bg-gray-100 text-gray-600 border border-dashed border-gray-300 hover:bg-gray-200 hover:border-gray-400 transition"
+                  >
+                    + افزودن جنس جدید
+                  </button>
+                ) : (
+                  <div className="flex gap-2 items-center py-2">
+                    <input
+                      value={newMaterialName}
+                      onChange={(e) => setNewMaterialName(e.target.value)}
+                      placeholder="نام جنس جدید"
+                      className="flex-1 h-9 px-3 text-sm rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-purple-500"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') addMaterial();
+                        if (e.key === 'Escape') {
+                          setIsAddingMaterial(false);
+                          setNewMaterialName("");
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={addMaterial}
+                      className="h-9 px-3 rounded-xl bg-green-600 text-white text-sm hover:bg-green-700"
+                    >
+                      تایید
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingMaterial(false);
+                        setNewMaterialName("");
+                      }}
+                      className="h-9 px-3 rounded-xl bg-gray-200 text-gray-700 text-sm hover:bg-gray-300"
+                    >
+                      انصراف
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
