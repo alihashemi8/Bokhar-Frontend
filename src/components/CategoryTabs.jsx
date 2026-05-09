@@ -38,7 +38,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
 
       {/* دسکتاپ */}
       <HorizontalScroller 
-        className="hidden lg:flex px-1 py-3 scrollbar-hide" 
+        className="hidden lg:flex justify-center px-1 py-3 scrollbar-hide" 
         innerClassName="gap-3"
       >
         {categories.map((cat) => {

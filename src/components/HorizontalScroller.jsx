@@ -1,14 +1,41 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
-export default function HorizontalScroller({ children, className = "" }) {
+export default function HorizontalScroller({ 
+  children, 
+  className = "", 
+  innerClassName = "" 
+}) {
   const scrollRef = useRef(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
+  // تشخیص overflow
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
+    const checkOverflow = () => {
+      setIsOverflowing(el.scrollWidth > el.clientWidth);
+    };
+
+    checkOverflow();
+    
+    const resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(el);
+    
+    window.addEventListener('resize', checkOverflow);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', checkOverflow);
+    };
+  }, [children]);
+
+  // مدیریت اسکرول با چرخ موس (فقط وقتی نیاز به اسکرول هست)
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !isOverflowing) return;
+
     const handleWheel = (e) => {
-      // فقط اگر حرکت عمودی قوی‌تر از افقی باشد
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         e.stopPropagation();
@@ -28,14 +55,14 @@ export default function HorizontalScroller({ children, className = "" }) {
     return () => {
       el.removeEventListener('wheel', handleWheel);
     };
-  }, []);
+  }, [isOverflowing]);
 
   return (
     <div 
       ref={scrollRef} 
-      className={`overflow-x-auto ${className}`}
+      className={`overflow-x-auto scrollbar-hide ${className}`}
     >
-      <div className="flex">
+      <div className={`flex ${isOverflowing ? 'justify-start' : 'justify-center'} ${innerClassName}`}>
         {children}
       </div>
     </div>
