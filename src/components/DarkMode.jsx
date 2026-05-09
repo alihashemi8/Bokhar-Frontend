@@ -12,7 +12,7 @@ export default function DarkMode({ className = "" }) {
       title={isDark ? "Light" : "Dark"}
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={
-        "flex items-center justify-center p-2 rounded-full transition  " +
+        "flex items-center justify-center p-2 rounded-full transition cursor-pointer  " +
         "hover:scale-110 active:scale-95 duration-200 " +
         "bg-black/10 dark:bg-black/10 hover:bg-black/20 dark:hover:bg-black/20 " +
         "border border-white/20 dark:border-white/40 shadow-md " +
@@ -20,9 +20,9 @@ export default function DarkMode({ className = "" }) {
       }
     >
       {isDark ? (
-        <Sun size={15} className="text-white hover:text-amber-400" />
+        <Sun size={15} className="text-white hover:text-sky-300" />
       ) : (
-        <Moon size={15} className="text-white hover:text-amber-400" />
+        <Moon size={15} className="text-white hover:text-sky-300" />
       )}
     </button>
   );

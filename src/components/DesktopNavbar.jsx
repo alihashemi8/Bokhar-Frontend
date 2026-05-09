@@ -38,7 +38,7 @@ export default function DesktopNavbar() {
           {/* پیام‌ها */}
           <div
             onClick={() => navigate("/Notifications")}
-            className="flex items-center gap-2 px-6 cursor-pointer hover:text-amber-300 transition"
+            className="flex items-center gap-2 px-6 cursor-pointer hover:text-sky-300 transition"
           >
             <MessageSquare size={22} />
             <span>پیام‌ها</span>
@@ -47,7 +47,7 @@ export default function DesktopNavbar() {
           {/* سبد خرید */}
           <div
             onClick={() => navigate("/order")}
-            className="relative flex items-center gap-2 px-6 cursor-pointer hover:text-amber-300 transition"
+            className="relative flex items-center gap-2 px-6 cursor-pointer hover:text-sky-300 transition"
           >
             <ShoppingCart size={22} />
             {totalItems > 0 && (
@@ -70,7 +70,7 @@ export default function DesktopNavbar() {
           {user?.isAuthenticated ? (
             <div
               onClick={() => navigate("/customer-dashboard")}
-              className="flex items-center gap-2 px-4 cursor-pointer hover:text-amber-300 transition"
+              className="flex items-center gap-2 px-4 cursor-pointer hover:text-sky-300 transition"
             >
               <User size={22} />
               <span className="hidden lg:block">
@@ -80,7 +80,7 @@ export default function DesktopNavbar() {
           ) : (
             <div
               onClick={() => setOpenModal(true)}
-              className="text-gray-800 hover:text-amber-300 dark:text-gray-100 cursor-pointer transition"
+              className="text-gray-800 hover:text-sky-300 dark:text-gray-100 cursor-pointer transition"
             >
               ورود / ثبت نام
             </div>
