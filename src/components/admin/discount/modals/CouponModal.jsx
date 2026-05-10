@@ -412,6 +412,37 @@ export default function CouponModal({ isOpen, onClose, editItem, customer, onSav
     }
   }, [isOpen, editItem]);
 
+  // تعیین عنوان مودال و زیرنویس
+  const getModalTitle = () => {
+    if (editItem) return "ویرایش کد تخفیف";
+    return "افزودن کد تخفیف";
+  };
+
+const getSubtitle = () => {
+  if (editItem) {
+    // اگر editItem.user آبجکت کامل باشه
+    if (editItem.user?.fullname) {
+      return `این کد متعلق به: ${editItem.user.fullname} ${editItem.user.phone ? `(${editItem.user.phone})` : ''}`;
+    } 
+    // اگر customer prop (که از parent پاس داده میشه) وجود داشته باشه
+    else if (customer?.fullname) {
+      return `این کد متعلق به: ${customer.fullname} ${customer.phone ? `(${customer.phone})` : ''}`;
+    }
+    // اگر فقط ID داشته باشیم
+    else if (editItem.user_id || editItem.user) {
+      const id = editItem.user_id || editItem.user;
+      return `این کد متعلق به: مشتری خاص (ID: ${id})`;
+    } else {
+      return "این کد عمومی است";
+    }
+  }
+  if (customer) {
+    return `برای: ${customer.fullname} ${customer.phone ? `(${customer.phone})` : ''}`;
+  }
+  return "کد تخفیف عمومی (قابل استفاده برای همه)";
+};
+
+
   const validate = () => {
     setError(null);
     
@@ -487,27 +518,15 @@ export default function CouponModal({ isOpen, onClose, editItem, customer, onSav
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={editItem ? "ویرایش کد تخفیف" : "افزودن کد تخفیف"}
+      title={getModalTitle()}
       maxWidth="md"
     >
       <div dir="rtl" className="py-1 space-y-4 max-h-[80vh] overflow-y-auto">
         
-        {/* نمایش مشتری انتخاب شده (فقط در حالت ساخت کد جدید برای مشتری) */}
-        {customer && !editItem && (
-          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-800 flex items-center justify-center text-purple-700 dark:text-purple-300 font-bold text-sm">
-              {customer.fullname?.charAt(0) || "?"}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                کد تخفیف اختصاصی برای: {customer.fullname}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {customer.phone}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* متن ساده مشخص کننده مالک کد تخفیف */}
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center -mt-2 mb-2 font-medium">
+          {getSubtitle()}
+        </p>
 
         {/* Schedule Section - moved to top */}
         <ScheduleSection

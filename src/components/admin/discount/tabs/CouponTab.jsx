@@ -124,11 +124,21 @@ export default function CouponTab() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (item) => {
-    setEditingItem(item);
-    setSelectedCustomer(item.user || null);
-    setIsModalOpen(true);
-  };
+const handleEdit = (item) => {
+  setEditingItem(item);
+  
+  // پیدا کردن مشتری از لیست customers با استفاده از user_id
+  const userId = getCouponUserId(item);
+  if (userId) {
+    const customerObj = customers.find(c => String(c.id) === userId);
+    setSelectedCustomer(customerObj || null);
+  } else {
+    setSelectedCustomer(null);
+  }
+  
+  setIsModalOpen(true);
+};
+
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -457,7 +467,7 @@ export default function CouponTab() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 h-full z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
           <div 
             className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-gray-200 dark:border-neutral-700"
             onClick={(e) => e.stopPropagation()}
