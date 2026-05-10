@@ -329,7 +329,7 @@ function ScheduleSection({ isEnabled, schedule, onToggle, onChange, error }) {
   );
 }
 
-export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
+export default function CouponModal({ isOpen, onClose, editItem, customer, onSaved }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
@@ -449,7 +449,6 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
     setLoading(true);
     try {
       const payload = {
-        // کد تخفیف توسط بک‌اند تولید می‌شود یا در ویرایش همان قبلی می‌ماند
         type: discount.activeType,
         value: discount.activeType === "percent" 
           ? Number(discount.percent) 
@@ -457,6 +456,11 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
         usage_limit: usageLimit ? parseInt(usageLimit) : null,
         min_order_amount: minOrder ? parseInt(minOrder) : null,
         is_active: isActive,
+        
+        // اضافه کردن user فقط موقع ساخت کد جدید برای مشتری خاص
+        // وقتی editItem null باشه یعنی داریم کد جدید می‌سازیم
+        ...(customer && !editItem && { user: customer.id }),
+        
         ...(scheduleOn && {
           starts_at: persianToISO(schedule.startDate, schedule.startTime),
           ends_at: persianToISO(schedule.endDate, schedule.endTime)
@@ -488,6 +492,23 @@ export default function CouponModal({ isOpen, onClose, editItem, onSaved }) {
     >
       <div dir="rtl" className="py-1 space-y-4 max-h-[80vh] overflow-y-auto">
         
+        {/* نمایش مشتری انتخاب شده (فقط در حالت ساخت کد جدید برای مشتری) */}
+        {customer && !editItem && (
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-800 flex items-center justify-center text-purple-700 dark:text-purple-300 font-bold text-sm">
+              {customer.fullname?.charAt(0) || "?"}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                کد تخفیف اختصاصی برای: {customer.fullname}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {customer.phone}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Schedule Section - moved to top */}
         <ScheduleSection
           isEnabled={scheduleOn}
