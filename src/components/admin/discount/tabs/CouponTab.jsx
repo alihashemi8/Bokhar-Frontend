@@ -50,7 +50,7 @@ export default function CouponTab() {
     try {
       setLoading(true);
       const res = await fetchCoupons();
-      console.log("Fetched coupons:", res); // برای دیباگ
+      console.log("Fetched coupons:", res);
       setItems(res);
     } catch (err) {
       console.error("Error loading coupons:", err);
@@ -63,7 +63,7 @@ export default function CouponTab() {
   const loadCustomers = async () => {
     try {
       const res = await fetchCustomers();
-      console.log("Fetched customers:", res); // برای دیباگ
+      console.log("Fetched customers:", res);
       setCustomers(res);
     } catch (err) {
       console.error("Error loading customers:", err);
@@ -76,44 +76,27 @@ export default function CouponTab() {
     loadCustomers();
   }, []);
 
-  // تابع کمکی برای گرفتن ID یوزر از کوپن (با هر ساختاری که باشه)
   const getCouponUserId = (coupon) => {
     if (!coupon) return null;
-    // اگه user یه شئ باشه با id
     if (coupon.user && typeof coupon.user === 'object' && coupon.user.id) {
       return String(coupon.user.id);
     }
-    // اگه user فقط یه عدد/رشته باشه (ID)
     if (coupon.user && (typeof coupon.user === 'number' || typeof coupon.user === 'string')) {
       return String(coupon.user);
     }
-    // اگه فیلدش user_id باشه
     if (coupon.user_id !== undefined && coupon.user_id !== null) {
       return String(coupon.user_id);
     }
     return null;
   };
 
-  // بررسی اینکه آیا مشتری کد تخفیف فعال دارد یا نه
   const getCustomerActiveCoupon = (customerId) => {
     const strCustomerId = String(customerId);
     const now = new Date();
     
-    console.log(`Checking active coupon for customer ${strCustomerId}`);
-    console.log("All coupons:", items);
-    
     const activeCoupon = items.find(coupon => {
       const couponUserId = getCouponUserId(coupon);
       
-      console.log(`Checking coupon ${coupon.code}:`, {
-        couponUserId,
-        customerId: strCustomerId,
-        isMatch: couponUserId === strCustomerId,
-        isActive: coupon.is_active,
-        endsAt: coupon.ends_at,
-        startsAt: coupon.starts_at
-      });
-
       if (couponUserId !== strCustomerId) return false;
       if (!coupon.is_active) return false;
       if (coupon.ends_at && new Date(coupon.ends_at) < now) return false;
@@ -121,7 +104,6 @@ export default function CouponTab() {
       return true;
     });
     
-    console.log("Found active coupon:", activeCoupon);
     return activeCoupon;
   };
 
@@ -129,7 +111,6 @@ export default function CouponTab() {
     return !!getCustomerActiveCoupon(customerId);
   };
 
-  // Handlers
   const handleAdd = () => {
     setSelectedCustomer(null);
     setEditingItem(null);
@@ -156,14 +137,12 @@ export default function CouponTab() {
   };
 
   const handleSaved = () => {
-    // کمی تاخیر برای اینکه مطمئن شویم بک‌اند داده رو ذخیره کرده
     setTimeout(() => {
       loadCoupons();
     }, 300);
     handleCloseModal();
   };
 
-  // Delete handlers
   const openDeleteConfirm = (item) => {
     setDeleteConfirm({ isOpen: true, item });
   };
@@ -202,13 +181,11 @@ export default function CouponTab() {
     return new Date(dateStr).toLocaleDateString('fa-IR');
   };
 
-  // Filter customers based on search
   const filteredCustomers = customers.filter(c => 
     c.fullname?.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
     c.phone?.includes(customerSearchTerm)
   );
 
-  // Stats
   const activeCoupons = items.filter(c => c.is_active).length;
   const exclusiveCoupons = items.filter(c => c.user || c.user_id).length;
 
@@ -315,11 +292,11 @@ export default function CouponTab() {
               <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="bg-gray-50/80 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700/50">
-                    <th className="py-3 px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">مشتری</th>
-                    <th className="py-3 px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">تماس</th>
-                    <th className="py-3 px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300">وضعیت کد تخفیف</th>
-                    <th className="py-3 px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">کد فعال فعلی</th>
-                    <th className="py-3 px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300">عملیات</th>
+                    <th className="py-3 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">مشتری</th>
+                    <th className="py-3 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">تماس</th>
+                    <th className="py-3 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300">وضعیت</th>
+                    <th className="py-3 px-2 sm:px-3 lg:px-6 text-right font-semibold text-gray-700 dark:text-gray-300">کد فعال</th>
+                    <th className="py-3 px-2 sm:px-3 lg:px-6 text-center font-semibold text-gray-700 dark:text-gray-300">عملیات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800/50">
@@ -332,38 +309,45 @@ export default function CouponTab() {
                         key={customer.id} 
                         className="group hover:bg-purple-50/50 dark:hover:bg-purple-500/5 transition-colors duration-200"
                       >
-                        <td className="py-3 px-3 lg:px-6">
-                          <div className="flex items-center gap-3">
+                        <td className="py-3 px-2 sm:px-3 lg:px-6">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <div>
-                              <p className="font-medium text-gray-900 dark:text-gray-100">{customer.fullname}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">ID: {customer.id}</p>
+                              <p className="font-medium text-gray-900 dark:text-gray-100 text-xs sm:text-sm">{customer.fullname}</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 hidden sm:block">ID: {customer.id}</p>
                             </div>
                           </div>
                         </td>
                         
-                        <td className="py-3 px-3 lg:px-6 text-gray-600 dark:text-gray-300 font-mono dir-ltr text-left">
+                        <td className="py-3 px-2 sm:px-3 lg:px-6 text-gray-600 dark:text-gray-300 font-mono dir-ltr text-left text-xs sm:text-sm">
                           {customer.phone}
                         </td>
                         
-                        <td className="py-3 px-3 lg:px-6 text-center">
+                        {/* وضعیت - در موبایل فقط آیکون، در دسکتاپ آیکون و متن */}
+                        <td className="py-3 px-2 sm:px-3 lg:px-6 text-center">
                           {hasCoupon ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                              <CheckCircle2 className="w-3 h-3" />
-                                فعال
-                            </span>
+                            <div 
+                              className="inline-flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                              title="فعال"
+                            >
+                              <CheckCircle2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                              <span className="hidden sm:inline mr-1 text-xs font-medium">فعال</span>
+                            </div>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400">
-                              <XCircle className="w-3 h-3" />
-                            غیر فعال
-                            </span>
+                            <div 
+                              className="inline-flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700/50 dark:text-gray-400"
+                              title="غیر فعال"
+                            >
+                              <XCircle className="w-5 h-5 sm:w-4 sm:h-4" />
+                              <span className="hidden sm:inline mr-1 text-xs font-medium">غیرفعال</span>
+                            </div>
                           )}
                         </td>
 
-                        <td className="py-3 px-3 lg:px-6">
+                        <td className="py-3 px-2 sm:px-3 lg:px-6">
                           {hasCoupon ? (
                             <div className="flex flex-col gap-1">
-                              <div className="flex items-center gap-2">
-                                <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono text-purple-700 dark:text-purple-400">
+                              <div className="flex items-center gap-1 sm:gap-2">
+                                <code className="px-1.5 sm:px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-[10px] sm:text-xs font-mono text-purple-700 dark:text-purple-400 truncate max-w-[80px] sm:max-w-none">
                                   {activeCoupon.code}
                                 </code>
                                 <button 
@@ -371,10 +355,10 @@ export default function CouponTab() {
                                   className="p-1 text-gray-400 hover:text-purple-600 transition"
                                   title="کپی کد"
                                 >
-                                  <Copy className="w-3 h-3" />
+                                  <Copy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                 </button>
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">
                                 {activeCoupon.type === 'percent' ? (
                                   <span>% {activeCoupon.value}</span>
                                 ) : (
@@ -392,23 +376,26 @@ export default function CouponTab() {
                           )}
                         </td>
 
-                        <td className="py-3 px-3 lg:px-6 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        {/* عملیات - در موبایل فقط آیکون، در دسکتاپ دکمه کامل */}
+                        <td className="py-3 px-2 sm:px-3 lg:px-6 text-center">
+                          <div className="flex items-center justify-center gap-1 sm:gap-2">
                             {hasCoupon ? (
                               <button
                                 onClick={() => handleEdit(activeCoupon)}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 transition"
+                                className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-lg text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 dark:hover:bg-sky-500/20 transition"
+                                title="ویرایش کد"
                               >
-                                <Pencil className="w-3.5 h-3.5" />
-                                ویرایش کد
+                                <Pencil className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                <span className="hidden sm:inline mr-1 text-xs font-medium">ویرایش</span>
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleAddForCustomer(customer)}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition"
+                                className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 rounded-lg text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20 transition"
+                                title="ساخت کد جدید"
                               >
-                                <Plus className="w-3.5 h-3.5" />
-                                ساخت کد جدید
+                                <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                                <span className="hidden sm:inline mr-1 text-xs font-medium">ساختن</span>
                               </button>
                             )}
                           </div>
