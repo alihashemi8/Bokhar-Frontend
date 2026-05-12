@@ -1,34 +1,29 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FiTrash2, FiTag, FiLoader } from "react-icons/fi";
+import { FiTrash2, FiTag } from "react-icons/fi";
 import { useToast } from "../../context/ToastContext";
 import { useModal } from "../../context/ModalContext";
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCart } from "../../context/CartContext"; // Added import
 import { 
   fetchCart, 
   removeCartItem, 
   updateCartQuantity,
 } from "../../api/cartService";
 
-
 export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
   const { showConfirm } = useModal();
+  const { refreshCart } = useCart(); // Added: for syncing navbar badge
   
-  // ✅ استیت‌های محلی برای داده‌های API
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null); // برای نمایش لودینگ روی دکمه خاص
 
-  // ───────────────────────────────────────────
-  // بارگذاری اولیه سبد از بک‌اند
-  // ───────────────────────────────────────────
   const loadCart = useCallback(async () => {
     setLoading(true);
     try {
       const result = await fetchCart();
       if (result.success) {
-        // فرض می‌کنیم داده در result.data.items یا result.data قرار دارد
-   const items = result.data.cart || [];
+        const items = result.data.cart || [];
         setCartItems(transformBackendCart(items));
       } else {
         addToast(result.error || "خطا در بارگذاری سبد خرید", "error");
@@ -45,9 +40,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     loadCart();
   }, [loadCart]);
 
-  // ───────────────────────────────────────────
-  // محاسبه قیمت‌ها
-  // ───────────────────────────────────────────
   const totalPrice = useMemo(() => {
     return cartItems?.reduce(
       (sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1),
@@ -74,123 +66,112 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     }
   }, [totalPrice, originalTotalPrice, onTotalChange]);
 
-  // ───────────────────────────────────────────
-  // توابع عملیاتی با اتصال API
-  // ───────────────────────────────────────────
-
-const handleIncreaseQty = async (item) => {
-  const itemKey = item.id_unique;  // ✅ فقط id_unique
-  
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-  
-  const newQty = (item.qty || 1) + 1;
-  
-  // آپدیت خوش‌بینانه
-  setCartItems(prev => prev.map(i => 
-    i.id === item.id ? { ...i, qty: newQty } : i
-  ));
-  
-  setUpdatingId(item.id);
-  try {
-    const result = await updateCartQuantity(itemKey, newQty);
-    if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
+  const handleIncreaseQty = async (item) => {
+    const itemKey = item.id_unique;
     
-    if (result.data?.items) {
-      setCartItems(transformBackendCart(result.data.items));
+    if (!itemKey) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
     }
-  } catch (error) {
-    addToast(error.message || "خطا در افزایش تعداد", "error");
-    loadCart();
-  } finally {
-    setUpdatingId(null);
-  }
-};
-
-
-const handleDecreaseQty = async (item) => {
-  if (item.qty <= 1) return;
-  
-  const itemKey = item.id_unique;  // ✅ فقط id_unique
-  
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-  
-  const newQty = item.qty - 1;
-  
-  setCartItems(prev => prev.map(i => 
-    i.id === item.id ? { ...i, qty: newQty } : i
-  ));
-  
-  setUpdatingId(item.id);
-  try {
-    const result = await updateCartQuantity(itemKey, newQty);
-    if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
     
-    if (result.data?.items) {
-      setCartItems(transformBackendCart(result.data.items));
-    }
-  } catch (error) {
-    addToast(error.message || "خطا در کاهش تعداد", "error");
-    loadCart();
-  } finally {
-    setUpdatingId(null);
-  }
-};
-
-
-const handleRemove = (item) => {
-  const name = item.name || "محصول";
-  const itemKey = item.id_unique;  // ✅ فقط id_unique
-  
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-
-  // ✅ لوگ باید اینجا باشه (داخل تابع)
-  console.log("Removing item with key:", itemKey);
-  console.log("Full item:", item);
-
-  showConfirm({
-    title: "حذف آیتم",
-    message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
-    confirmText: "بله، حذف کن",
-    cancelText: "انصراف",
-    variant: "danger",
-    onConfirm: async () => {
-      try {
-        const result = await removeCartItem(itemKey);
-        if (result.success) {
-          setCartItems(prev => prev.filter(i => i.id !== item.id));
-          addToast(`«${name}» حذف شد`, "success");
-          if (result.data?.items) {
-            setCartItems(transformBackendCart(result.data.items));
-          }
-        } else {
-          throw new Error(result.error || "خطا در حذف");
-        }
-      } catch (error) {
-        addToast(error.message || "خطا در حذف آیتم", "error");
-        loadCart();
+    const newQty = (item.qty || 1) + 1;
+    
+    // آپدیت خوش‌بینانه
+    setCartItems(prev => prev.map(i => 
+      i.id === item.id ? { ...i, qty: newQty } : i
+    ));
+    
+    try {
+      const result = await updateCartQuantity(itemKey, newQty);
+      if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
+      
+      if (result.data?.items) {
+        setCartItems(transformBackendCart(result.data.items));
       }
-    },
-  });
-};
+      
+      // Sync navbar badge
+      await refreshCart(); 
+    } catch (error) {
+      addToast(error.message || "خطا در افزایش تعداد", "error");
+      loadCart();
+    }
+  };
 
+  const handleDecreaseQty = async (item) => {
+    if (item.qty <= 1) return;
+    
+    const itemKey = item.id_unique;
+    
+    if (!itemKey) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
+    }
+    
+    const newQty = item.qty - 1;
+    
+    setCartItems(prev => prev.map(i => 
+      i.id === item.id ? { ...i, qty: newQty } : i
+    ));
+    
+    try {
+      const result = await updateCartQuantity(itemKey, newQty);
+      if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
+      
+      if (result.data?.items) {
+        setCartItems(transformBackendCart(result.data.items));
+      }
+      
+      // Sync navbar badge
+      await refreshCart();
+    } catch (error) {
+      addToast(error.message || "خطا در کاهش تعداد", "error");
+      loadCart();
+    }
+  };
 
-  // ───────────────────────────────────────────
-  // رندر کامپوننت
-  // ───────────────────────────────────────────
+  const handleRemove = (item) => {
+    const name = item.name || "محصول";
+    const itemKey = item.id_unique;
+    
+    if (!itemKey) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
+    }
+
+    showConfirm({
+      title: "حذف آیتم",
+      message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
+      confirmText: "بله، حذف کن",
+      cancelText: "انصراف",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const result = await removeCartItem(itemKey);
+          if (result.success) {
+            setCartItems(prev => prev.filter(i => i.id !== item.id));
+            addToast(`«${name}» حذف شد`, "success");
+            if (result.data?.items) {
+              setCartItems(transformBackendCart(result.data.items));
+            }
+            
+            // Sync navbar badge
+            await refreshCart();
+          } else {
+            throw new Error(result.error || "خطا در حذف");
+          }
+        } catch (error) {
+          addToast(error.message || "خطا در حذف آیتم", "error");
+          loadCart();
+        }
+      },
+    });
+  };
+
   if (loading) {
     return (
       <div className="w-full max-w-5xl mx-auto mb-20 md:mb-0">
         <div className="flex items-center justify-center h-64">
-          <FiLoader className="w-8 h-8 animate-spin text-sky-600" />
+          <div className="w-8 h-8 border-4 border-sky-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -232,7 +213,6 @@ const handleRemove = (item) => {
                     const finalUnitPrice = item.totalPrice || 0;
                     const originalTotal = originalUnitPrice * (item.qty || 1);
                     const finalTotal = finalUnitPrice * (item.qty || 1);
-                    const isUpdating = updatingId === item.id;
 
                     return (
                       <motion.tr
@@ -243,7 +223,6 @@ const handleRemove = (item) => {
                         transition={{ duration: 0.25 }}
                         className="border-b border-slate-200/60 dark:border-slate-700/50"
                       >
-                        {/* نام محصول */}
                         <td className="py-4 px-4 text-slate-900 dark:text-slate-200 font-semibold">
                           <div className="flex items-center gap-2">
                             {item.name}
@@ -256,23 +235,21 @@ const handleRemove = (item) => {
                           </div>
                         </td>
 
-                        {/* تعداد */}
                         <td className="py-4 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleDecreaseQty(item)}
-                              disabled={item.qty <= 1 || isUpdating}
+                              disabled={item.qty <= 1}
                               className={`
                                 w-8 h-8 flex items-center justify-center rounded-lg text-lg
                                 transition 
-                                ${
-                                  item.qty <= 1 || isUpdating
-                                    ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
-                                    : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                ${item.qty <= 1
+                                  ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
+                                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                                 }
                               `}
                             >
-                              {isUpdating ? <FiLoader className="animate-spin text-xs" /> : "−"}
+                              −
                             </button>
 
                             <span className="text-base font-bold text-slate-700 dark:text-slate-200 w-6 text-center">
@@ -281,32 +258,21 @@ const handleRemove = (item) => {
 
                             <button
                               onClick={() => handleIncreaseQty(item)}
-                              disabled={isUpdating}
-                              className={`
-                                w-8 h-8 flex items-center justify-center rounded-lg text-lg
-                                transition
-                                ${isUpdating 
-                                  ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
-                                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-                                }
-                              `}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg text-lg transition bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                             >
-                              {isUpdating ? <FiLoader className="animate-spin text-xs" /> : "+"}
+                              +
                             </button>
                           </div>
                         </td>
 
-                        {/* خدمات */}
                         <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
                           {item.options?.service || "-"}
                         </td>
 
-                        {/* جنس */}
                         <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
                           {item.options?.material || "-"}
                         </td>
 
-                        {/* قیمت */}
                         <td className="py-4 px-4 text-right text-slate-800 dark:text-slate-200">
                           {hasDiscount ? (
                             <div className="flex flex-col">
@@ -322,7 +288,6 @@ const handleRemove = (item) => {
                           )}
                         </td>
 
-                        {/* جمع */}
                         <td className="py-4 px-4 text-right text-slate-900 dark:text-white font-bold">
                           {hasDiscount ? (
                             <div className="flex flex-col items-end">
@@ -338,12 +303,10 @@ const handleRemove = (item) => {
                           )}
                         </td>
 
-                        {/* حذف */}
                         <td className="py-4 px-4 text-center">
                           <button
                             onClick={() => handleRemove(item)}
-                            disabled={isUpdating}
-                            className="text-red-500 hover:text-red-600 transition disabled:opacity-50"
+                            className="text-red-500 hover:text-red-600 transition"
                           >
                             <FiTrash2 size={20} />
                           </button>
@@ -378,7 +341,6 @@ const handleRemove = (item) => {
               const finalUnitPrice = item.totalPrice || 0;
               const originalTotal = originalUnitPrice * (item.qty || 1);
               const finalTotal = finalUnitPrice * (item.qty || 1);
-              const isUpdating = updatingId === item.id;
 
               return (
                 <motion.div
@@ -436,16 +398,16 @@ const handleRemove = (item) => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleDecreaseQty(item)}
-                        disabled={item.qty <= 1 || isUpdating}
+                        disabled={item.qty <= 1}
                         className={`
                           w-8 h-8 rounded-lg flex items-center justify-center text-base
-                          ${item.qty <= 1 || isUpdating
+                          ${item.qty <= 1
                             ? "bg-slate-300 dark:bg-slate-700 opacity-40"
                             : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
                           }
                         `}
                       >
-                        {isUpdating ? <FiLoader className="animate-spin" /> : "−"}
+                        −
                       </button>
 
                       <span className="text-slate-900 dark:text-white text-base font-bold w-6 text-center">
@@ -454,17 +416,15 @@ const handleRemove = (item) => {
 
                       <button
                         onClick={() => handleIncreaseQty(item)}
-                        disabled={isUpdating}
-                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center text-base disabled:opacity-40"
+                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center text-base"
                       >
-                        {isUpdating ? <FiLoader className="animate-spin" /> : "+"}
+                        +
                       </button>
                     </div>
 
                     <button
                       onClick={() => handleRemove(item)}
-                      disabled={isUpdating}
-                      className="text-red-500 hover:text-red-600 p-2 disabled:opacity-50"
+                      className="text-red-500 hover:text-red-600 p-2"
                     >
                       <FiTrash2 size={18} />
                     </button>
@@ -481,11 +441,9 @@ const handleRemove = (item) => {
           )}
         </div>
 
-        {/* Footer: Total with Discount Info */}
         {cartItems.length > 0 && (
           <div className="border-t border-slate-200 dark:border-slate-700 pt-4 md:pt-5 mt-6 md:mt-8">
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-              {/* بخش چپ: عنوان و سود */}
               <div className="flex flex-col">
                 <span className="text-slate-700 dark:text-slate-300 font-bold text-lg md:text-xl">
                   مبلغ نهایی
@@ -497,7 +455,6 @@ const handleRemove = (item) => {
                 )}
               </div>
 
-              {/* بخش راست: قیمت‌ها */}
               <div className={`
                 flex flex-col items-start md:items-end
                 bg-slate-50 dark:bg-slate-800/50 
@@ -515,7 +472,6 @@ const handleRemove = (item) => {
               </div>
             </div>
 
-            {/* دکمه انتخاب مکان */}
             {goToTimeStep && (
               <button
                 onClick={goToTimeStep}
@@ -540,14 +496,10 @@ const handleRemove = (item) => {
   );
 }
 
-// ───────────────────────────────────────────
-// کمکی: تبدیل داده بک‌اند به فرمت Factor.jsx
-// ───────────────────────────────────────────
 function transformBackendCart(backendItems) {
   if (!Array.isArray(backendItems)) return [];
   
   return backendItems.map((item, index) => {
-    // تشخیص خودکار فیلدهای مختلف بک‌اند
     const finalPrice = item.final_price || item.unit_price || item.price || 0;
     const originalPrice = item.original_price || item.base_price || finalPrice;
     

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { User, ShoppingCart, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, ShoppingCart, MessageSquare, Loader2 } from "lucide-react"; // Loader2 اضافه شد
 import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
@@ -9,10 +9,17 @@ import { useAuth } from "../context/AuthContext";
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
-  const { totalItems } = useCart();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { totalItems, loading: cartLoading, refreshCart } = useCart();
 
-  if (loading) return null;
+  // وقتی کاربر لاگین می‌کند، سبد را از سرور.refresh می‌کنیم
+  useEffect(() => {
+    if (user?.isAuthenticated) {
+      refreshCart();
+    }
+  }, [user?.isAuthenticated, refreshCart]);
+
+  if (authLoading) return null;
 
   return (
     <>
@@ -50,11 +57,18 @@ export default function DesktopNavbar() {
             className="relative flex items-center gap-2 px-6 cursor-pointer hover:text-sky-300 transition"
           >
             <ShoppingCart size={22} />
-            {totalItems > 0 && (
-              <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                {totalItems}
+            
+            {/* Badge با لودینگ اسپینر */}
+            {cartLoading ? (
+              <span className="absolute -top-2 -right-1 w-5 h-5 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full">
+                <Loader2 size={12} className="animate-spin text-gray-500 dark:text-gray-400" />
               </span>
-            )}
+            ) : totalItems > 0 ? (
+              <span className="absolute -top-2 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold shadow-sm">
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
+            ) : null}
+            
             <span>سبد خرید</span>
           </div>
         </div>
