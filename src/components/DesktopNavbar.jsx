@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, ShoppingCart, MessageSquare, Loader2 } from "lucide-react"; // Loader2 اضافه شد
+import { User, ShoppingCart, MessageSquare, Loader2, Home } from "lucide-react"; // Home اضافه شد
 import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
@@ -8,16 +8,24 @@ import { useAuth } from "../context/AuthContext";
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
+  const [showLogo, setShowLogo] = useState(true); 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { totalItems, loading: cartLoading, refreshCart } = useCart();
 
-  // وقتی کاربر لاگین می‌کند، سبد را از سرور.refresh می‌کنیم
   useEffect(() => {
     if (user?.isAuthenticated) {
       refreshCart();
     }
   }, [user?.isAuthenticated, refreshCart]);
+
+  // تغییر خودکار هر 4 ثانیه
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setShowLogo(prev => !prev);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (authLoading) return null;
 
@@ -32,14 +40,36 @@ export default function DesktopNavbar() {
       >
         {/* بخش راست */}
         <div className="flex items-center gap-6">
-          {/* لوگو */}
+          {/* لوگو و آیکون Home */}
           <div
             onClick={() => navigate("/shop")}
-            className="text-center font-bold text-2xl px-6 tracking-wide select-none cursor-pointer"
+            className="relative flex items-center justify-center px-6 cursor-pointer select-none z-10 h-11"
           >
-            <span className="bg-gradient-to-r from-yellow-400 to-purple-300 bg-clip-text text-transparent">
-              Logo
-            </span>
+            {/* تصویر Logo */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${
+                showLogo ? "opacity-100 scale-100" : "opacity-0 scale-50"
+              }`}
+            >
+              <img 
+                src="/Logo.png" 
+                alt="Logo" 
+                className="h-11 w-auto object-contain -my-5"
+              />
+            </div>
+
+            {/* آیکون Home */}
+            <div
+              className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${
+                !showLogo ? "opacity-100 scale-100" : "opacity-0 scale-50"
+              }`}
+            >
+              <Home 
+                size={30} 
+                className="text-gray-800 dark:text-gray-100 hover:text-sky-300 -my-5" 
+                strokeWidth={1.5}
+              />
+            </div>
           </div>
 
           {/* پیام‌ها */}
@@ -102,7 +132,6 @@ export default function DesktopNavbar() {
         </div>
       </nav>
 
-      {/* مودال ورود */}
       <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
     </>
   );

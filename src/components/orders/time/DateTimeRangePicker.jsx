@@ -115,7 +115,7 @@ export default function DateTimeRangePicker({
       amount: 0,
       type: 'economy',
       label: 'رایگان',
-      desc: 'سرویس اقتصادی (72+ ساعت)',
+      desc: 'سرویس اقتصادی (48+ ساعت)',
       color: 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20',
       borderColor: 'border-emerald-200 dark:border-emerald-800',
       textColor: 'text-emerald-700 dark:text-emerald-300',
