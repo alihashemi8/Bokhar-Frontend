@@ -99,19 +99,23 @@ export const addToCart = async (productId, quantity = 1, options = {}) => {
   }
 };
 
-
-export const updateCartQuantity = async (idUnique, newQuantity) => {
+export const removeCartItem = async (idUnique) => {
   try {
-    const response = await api.patch(`/cart/${idUnique}/`, { quantity: newQuantity });
+    // ✅ encodeURIComponent برای فارسی‌ها ضروریه
+    const encodedId = encodeURIComponent(idUnique);
+    const response = await api.post(`/cart/remove/${encodedId}/`);
     return { success: true, data: response.data };
   } catch (error) {
+    console.error('Remove error:', error.response?.status, error.response?.data);
     return { success: false, error: error.response?.data };
   }
 };
 
-export const removeCartItem = async (idUnique) => {
+export const updateCartQuantity = async (idUnique, newQuantity) => {
   try {
-    const response = await api.post(`/cart/remove/${idUnique}/`);
+    // ✅ اینجا هم encode کن
+    const encodedId = encodeURIComponent(idUnique);
+    const response = await api.patch(`/cart/${encodedId}/`, { quantity: newQuantity });
     return { success: true, data: response.data };
   } catch (error) {
     return { success: false, error: error.response?.data };

@@ -6,8 +6,9 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { 
   fetchCart, 
   removeCartItem, 
-  updateCartQuantity 
+  updateCartQuantity,
 } from "../../api/cartService";
+
 
 export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
@@ -77,91 +78,110 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   // توابع عملیاتی با اتصال API
   // ───────────────────────────────────────────
 
-  const handleIncreaseQty = async (item) => {
-    const newQty = (item.qty || 1) + 1;
-    const itemKey = item.id_unique || item.id;
+const handleIncreaseQty = async (item) => {
+  const itemKey = item.id_unique;  // ✅ فقط id_unique
+  
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+  
+  const newQty = (item.qty || 1) + 1;
+  
+  // آپدیت خوش‌بینانه
+  setCartItems(prev => prev.map(i => 
+    i.id === item.id ? { ...i, qty: newQty } : i
+  ));
+  
+  setUpdatingId(item.id);
+  try {
+    const result = await updateCartQuantity(itemKey, newQty);
+    if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
     
-    // آپدیت خوش‌بینانه (Optimistic UI)
-    setCartItems(prev => prev.map(i => 
-      i.id === item.id ? { ...i, qty: newQty } : i
-    ));
-    
-    setUpdatingId(item.id);
-    try {
-      const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) {
-        throw new Error(result.error || "خطا در به‌روزرسانی");
-      }
-      // در صورت موفقیت، داده‌ها از سرور به‌روز می‌شوند
-      if (result.data?.items) {
-        setCartItems(transformBackendCart(result.data.items));
-      }
-    } catch (error) {
-      addToast(error.message || "خطا در افزایش تعداد", "error");
-      // بازگشت به حالت قبل در صورت خطا
-      loadCart();
-    } finally {
-      setUpdatingId(null);
+    if (result.data?.items) {
+      setCartItems(transformBackendCart(result.data.items));
     }
-  };
+  } catch (error) {
+    addToast(error.message || "خطا در افزایش تعداد", "error");
+    loadCart();
+  } finally {
+    setUpdatingId(null);
+  }
+};
 
-  const handleDecreaseQty = async (item) => {
-    if (item.qty <= 1) return;
+
+const handleDecreaseQty = async (item) => {
+  if (item.qty <= 1) return;
+  
+  const itemKey = item.id_unique;  // ✅ فقط id_unique
+  
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+  
+  const newQty = item.qty - 1;
+  
+  setCartItems(prev => prev.map(i => 
+    i.id === item.id ? { ...i, qty: newQty } : i
+  ));
+  
+  setUpdatingId(item.id);
+  try {
+    const result = await updateCartQuantity(itemKey, newQty);
+    if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
     
-    const newQty = item.qty - 1;
-    const itemKey = item.id_unique || item.id;
-    
-    setCartItems(prev => prev.map(i => 
-      i.id === item.id ? { ...i, qty: newQty } : i
-    ));
-    
-    setUpdatingId(item.id);
-    try {
-      const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) {
-        throw new Error(result.error || "خطا در به‌روزرسانی");
-      }
-      if (result.data?.items) {
-        setCartItems(transformBackendCart(result.data.items));
-      }
-    } catch (error) {
-      addToast(error.message || "خطا در کاهش تعداد", "error");
-      loadCart();
-    } finally {
-      setUpdatingId(null);
+    if (result.data?.items) {
+      setCartItems(transformBackendCart(result.data.items));
     }
-  };
+  } catch (error) {
+    addToast(error.message || "خطا در کاهش تعداد", "error");
+    loadCart();
+  } finally {
+    setUpdatingId(null);
+  }
+};
 
-  const handleRemove = (item) => {
-    const name = item.name || "محصول";
-    const itemKey = item.id_unique || item.id;
 
-    showConfirm({
-      title: "حذف آیتم",
-      message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
-      confirmText: "بله، حذف کن",
-      cancelText: "انصراف",
-      variant: "danger",
-      onConfirm: async () => {
-        try {
-          const result = await removeCartItem(itemKey);
-          if (result.success) {
-            setCartItems(prev => prev.filter(i => i.id !== item.id));
-            addToast(`«${name}» حذف شد`, "success");
-            // اگر سربر داده برگشتی جدید داشت، بروزرسانی کن
-            if (result.data?.items) {
-              setCartItems(transformBackendCart(result.data.items));
-            }
-          } else {
-            throw new Error(result.error || "خطا در حذف");
+const handleRemove = (item) => {
+  const name = item.name || "محصول";
+  const itemKey = item.id_unique;  // ✅ فقط id_unique
+  
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+
+  // ✅ لوگ باید اینجا باشه (داخل تابع)
+  console.log("Removing item with key:", itemKey);
+  console.log("Full item:", item);
+
+  showConfirm({
+    title: "حذف آیتم",
+    message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
+    confirmText: "بله، حذف کن",
+    cancelText: "انصراف",
+    variant: "danger",
+    onConfirm: async () => {
+      try {
+        const result = await removeCartItem(itemKey);
+        if (result.success) {
+          setCartItems(prev => prev.filter(i => i.id !== item.id));
+          addToast(`«${name}» حذف شد`, "success");
+          if (result.data?.items) {
+            setCartItems(transformBackendCart(result.data.items));
           }
-        } catch (error) {
-          addToast(error.message || "خطا در حذف آیتم", "error");
-          loadCart();
+        } else {
+          throw new Error(result.error || "خطا در حذف");
         }
-      },
-    });
-  };
+      } catch (error) {
+        addToast(error.message || "خطا در حذف آیتم", "error");
+        loadCart();
+      }
+    },
+  });
+};
+
 
   // ───────────────────────────────────────────
   // رندر کامپوننت
