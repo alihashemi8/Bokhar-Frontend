@@ -19,6 +19,7 @@
     "dayjs": "^1.11.19",
     "framer-motion": "^12.23.24",
     "jalaali-js": "^1.2.8",
+    "jalali-moment": "^3.3.11",
     "leaflet": "^1.9.4",
     "leaflet-geosearch": "^4.2.2",
     "lucide-react": "^0.544.0",

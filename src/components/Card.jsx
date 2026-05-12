@@ -72,6 +72,7 @@ export default function Card({ id, image, title, base_price, category, onDiscoun
       <ServiceModal
         isOpen={open}
         onClose={() => setOpen(false)}
+        productId={id}
         pricing={pricing || {}}
         itemTitle={title}
       />

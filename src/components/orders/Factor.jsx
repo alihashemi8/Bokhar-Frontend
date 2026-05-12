@@ -1,24 +1,59 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { FiTrash2, FiTag } from "react-icons/fi";
-import { useCart } from "../../context/CartContext";
+import { FiTrash2, FiTag, FiLoader } from "react-icons/fi";
 import { useToast } from "../../context/ToastContext";
 import { useModal } from "../../context/ModalContext";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { 
+  fetchCart, 
+  removeCartItem, 
+  updateCartQuantity 
+} from "../../api/cartService";
 
 export default function Factor({ onTotalChange, goToTimeStep }) {
-  const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
   const { addToast } = useToast();
   const { showConfirm } = useModal();
+  
+  // ✅ استیت‌های محلی برای داده‌های API
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null); // برای نمایش لودینگ روی دکمه خاص
 
-  // محاسبه مجموع کل با تخفیف
+  // ───────────────────────────────────────────
+  // بارگذاری اولیه سبد از بک‌اند
+  // ───────────────────────────────────────────
+  const loadCart = useCallback(async () => {
+    setLoading(true);
+    try {
+      const result = await fetchCart();
+      if (result.success) {
+        // فرض می‌کنیم داده در result.data.items یا result.data قرار دارد
+   const items = result.data.cart || [];
+        setCartItems(transformBackendCart(items));
+      } else {
+        addToast(result.error || "خطا در بارگذاری سبد خرید", "error");
+      }
+    } catch (err) {
+      console.error("Cart load error:", err);
+      addToast("خطای شبکه در دریافت سبد خرید", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [addToast]);
+
+  useEffect(() => {
+    loadCart();
+  }, [loadCart]);
+
+  // ───────────────────────────────────────────
+  // محاسبه قیمت‌ها
+  // ───────────────────────────────────────────
   const totalPrice = useMemo(() => {
     return cartItems?.reduce(
       (sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1),
-      0,
+      0
     );
   }, [cartItems]);
 
-  // محاسبه مجموع کل بدون تخفیف (قیمت اصلی)
   const originalTotalPrice = useMemo(() => {
     return cartItems?.reduce((sum, item) => {
       const originalPrice = item.options?.originalPrice || item.totalPrice || 0;
@@ -26,33 +61,120 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     }, 0);
   }, [cartItems]);
 
-  // آیا سبد تخفیف دارد؟
   const hasAnyDiscount = originalTotalPrice > totalPrice;
   const savingsAmount = originalTotalPrice - totalPrice;
 
   useEffect(() => {
-    if (onTotalChange) onTotalChange({ 
-      total: totalPrice, 
-      originalTotal: originalTotalPrice 
-    });
+    if (onTotalChange) {
+      onTotalChange({ 
+        total: totalPrice, 
+        originalTotal: originalTotalPrice 
+      });
+    }
   }, [totalPrice, originalTotalPrice, onTotalChange]);
 
-  // حذف با Modal
+  // ───────────────────────────────────────────
+  // توابع عملیاتی با اتصال API
+  // ───────────────────────────────────────────
+
+  const handleIncreaseQty = async (item) => {
+    const newQty = (item.qty || 1) + 1;
+    const itemKey = item.id_unique || item.id;
+    
+    // آپدیت خوش‌بینانه (Optimistic UI)
+    setCartItems(prev => prev.map(i => 
+      i.id === item.id ? { ...i, qty: newQty } : i
+    ));
+    
+    setUpdatingId(item.id);
+    try {
+      const result = await updateCartQuantity(itemKey, newQty);
+      if (!result.success) {
+        throw new Error(result.error || "خطا در به‌روزرسانی");
+      }
+      // در صورت موفقیت، داده‌ها از سرور به‌روز می‌شوند
+      if (result.data?.items) {
+        setCartItems(transformBackendCart(result.data.items));
+      }
+    } catch (error) {
+      addToast(error.message || "خطا در افزایش تعداد", "error");
+      // بازگشت به حالت قبل در صورت خطا
+      loadCart();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDecreaseQty = async (item) => {
+    if (item.qty <= 1) return;
+    
+    const newQty = item.qty - 1;
+    const itemKey = item.id_unique || item.id;
+    
+    setCartItems(prev => prev.map(i => 
+      i.id === item.id ? { ...i, qty: newQty } : i
+    ));
+    
+    setUpdatingId(item.id);
+    try {
+      const result = await updateCartQuantity(itemKey, newQty);
+      if (!result.success) {
+        throw new Error(result.error || "خطا در به‌روزرسانی");
+      }
+      if (result.data?.items) {
+        setCartItems(transformBackendCart(result.data.items));
+      }
+    } catch (error) {
+      addToast(error.message || "خطا در کاهش تعداد", "error");
+      loadCart();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleRemove = (item) => {
     const name = item.name || "محصول";
-    const service = item.options?.service || "";
+    const itemKey = item.id_unique || item.id;
 
     showConfirm({
       title: "حذف آیتم",
-      message: `می‌خوای «${name}» ${service ? `(${service})` : ""} را حذف کنی؟`,
+      message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
       confirmText: "بله، حذف کن",
       cancelText: "انصراف",
-      onConfirm: () => {
-        removeFromCart(item);
-        addToast(`«${name}» حذف شد.`, "success");
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const result = await removeCartItem(itemKey);
+          if (result.success) {
+            setCartItems(prev => prev.filter(i => i.id !== item.id));
+            addToast(`«${name}» حذف شد`, "success");
+            // اگر سربر داده برگشتی جدید داشت، بروزرسانی کن
+            if (result.data?.items) {
+              setCartItems(transformBackendCart(result.data.items));
+            }
+          } else {
+            throw new Error(result.error || "خطا در حذف");
+          }
+        } catch (error) {
+          addToast(error.message || "خطا در حذف آیتم", "error");
+          loadCart();
+        }
       },
     });
   };
+
+  // ───────────────────────────────────────────
+  // رندر کامپوننت
+  // ───────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="w-full max-w-5xl mx-auto mb-20 md:mb-0">
+        <div className="flex items-center justify-center h-64">
+          <FiLoader className="w-8 h-8 animate-spin text-sky-600" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -61,13 +183,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div
-        className="
-          p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-2xl border 
-          bg-white/90 dark:bg-slate-900/60 backdrop-blur-xl 
-          border-slate-200 dark:border-slate-700
-        "
-      >
+      <div className="p-4 md:p-6 rounded-2xl md:rounded-3xl shadow-2xl border bg-white/90 dark:bg-slate-900/60 backdrop-blur-xl border-slate-200 dark:border-slate-700">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-slate-800 dark:text-white">
           فاکتور خرید
         </h2>
@@ -89,13 +205,14 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
             <tbody>
               <AnimatePresence>
-                {cartItems.length ? (
+                {cartItems.length > 0 ? (
                   cartItems.map((item) => {
                     const hasDiscount = item.options?.isDiscounted;
                     const originalUnitPrice = item.options?.originalPrice || 0;
                     const finalUnitPrice = item.totalPrice || 0;
                     const originalTotal = originalUnitPrice * (item.qty || 1);
                     const finalTotal = finalUnitPrice * (item.qty || 1);
+                    const isUpdating = updatingId === item.id;
 
                     return (
                       <motion.tr
@@ -123,34 +240,38 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                         <td className="py-4 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => decreaseQty(item)}
-                              disabled={item.qty <= 1}
+                              onClick={() => handleDecreaseQty(item)}
+                              disabled={item.qty <= 1 || isUpdating}
                               className={`
                                 w-8 h-8 flex items-center justify-center rounded-lg text-lg
                                 transition 
                                 ${
-                                  item.qty <= 1
+                                  item.qty <= 1 || isUpdating
                                     ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
                                     : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                                 }
                               `}
                             >
-                              −
+                              {isUpdating ? <FiLoader className="animate-spin text-xs" /> : "−"}
                             </button>
 
-                            <span className="text-base font-bold text-slate-700 dark:text-slate-200">
+                            <span className="text-base font-bold text-slate-700 dark:text-slate-200 w-6 text-center">
                               {item.qty}
                             </span>
 
                             <button
-                              onClick={() => increaseQty(item)}
-                              className="
+                              onClick={() => handleIncreaseQty(item)}
+                              disabled={isUpdating}
+                              className={`
                                 w-8 h-8 flex items-center justify-center rounded-lg text-lg
-                                bg-slate-100 hover:bg-slate-200 
-                                dark:bg-slate-800 dark:hover:bg-slate-700
-                              "
+                                transition
+                                ${isUpdating 
+                                  ? "bg-slate-200 dark:bg-slate-700 cursor-not-allowed opacity-45"
+                                  : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                                }
+                              `}
                             >
-                              +
+                              {isUpdating ? <FiLoader className="animate-spin text-xs" /> : "+"}
                             </button>
                           </div>
                         </td>
@@ -201,7 +322,8 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                         <td className="py-4 px-4 text-center">
                           <button
                             onClick={() => handleRemove(item)}
-                            className="text-red-500 hover:text-red-600 transition"
+                            disabled={isUpdating}
+                            className="text-red-500 hover:text-red-600 transition disabled:opacity-50"
                           >
                             <FiTrash2 size={20} />
                           </button>
@@ -210,14 +332,17 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                     );
                   })
                 ) : (
-                  <tr>
+                  <motion.tr
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
                     <td
                       colSpan={7}
                       className="py-10 text-center text-slate-400 dark:text-slate-300"
                     >
                       سبد خرید خالی است
                     </td>
-                  </tr>
+                  </motion.tr>
                 )}
               </AnimatePresence>
             </tbody>
@@ -233,6 +358,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
               const finalUnitPrice = item.totalPrice || 0;
               const originalTotal = originalUnitPrice * (item.qty || 1);
               const finalTotal = finalUnitPrice * (item.qty || 1);
+              const isUpdating = updatingId === item.id;
 
               return (
                 <motion.div
@@ -240,10 +366,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
-                  className="
-                    p-3 rounded-xl border bg-white dark:bg-slate-900 
-                    border-slate-200 dark:border-slate-700 shadow-sm
-                  "
+                  className="p-3 rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-sm"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex flex-col">
@@ -292,18 +415,17 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => decreaseQty(item)}
-                        disabled={item.qty <= 1}
+                        onClick={() => handleDecreaseQty(item)}
+                        disabled={item.qty <= 1 || isUpdating}
                         className={`
                           w-8 h-8 rounded-lg flex items-center justify-center text-base
-                          ${
-                            item.qty <= 1
-                              ? "bg-slate-300 dark:bg-slate-700 opacity-40"
-                              : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
+                          ${item.qty <= 1 || isUpdating
+                            ? "bg-slate-300 dark:bg-slate-700 opacity-40"
+                            : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"
                           }
                         `}
                       >
-                        −
+                        {isUpdating ? <FiLoader className="animate-spin" /> : "−"}
                       </button>
 
                       <span className="text-slate-900 dark:text-white text-base font-bold w-6 text-center">
@@ -311,19 +433,18 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                       </span>
 
                       <button
-                        onClick={() => increaseQty(item)}
-                        className="
-                          w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 
-                          hover:bg-slate-200 flex items-center justify-center text-base
-                        "
+                        onClick={() => handleIncreaseQty(item)}
+                        disabled={isUpdating}
+                        className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 flex items-center justify-center text-base disabled:opacity-40"
                       >
-                        +
+                        {isUpdating ? <FiLoader className="animate-spin" /> : "+"}
                       </button>
                     </div>
 
                     <button
                       onClick={() => handleRemove(item)}
-                      className="text-red-500 hover:text-red-600 p-2"
+                      disabled={isUpdating}
+                      className="text-red-500 hover:text-red-600 p-2 disabled:opacity-50"
                     >
                       <FiTrash2 size={18} />
                     </button>
@@ -332,12 +453,17 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
               );
             })}
           </AnimatePresence>
+          
+          {cartItems.length === 0 && !loading && (
+            <div className="text-center py-10 text-slate-400 dark:text-slate-300">
+              سبد خرید خالی است
+            </div>
+          )}
         </div>
 
-        {/* Footer: Total with Discount Info - Responsive */}
+        {/* Footer: Total with Discount Info */}
         {cartItems.length > 0 && (
           <div className="border-t border-slate-200 dark:border-slate-700 pt-4 md:pt-5 mt-6 md:mt-8">
-            {/* محتوای مبلغ نهایی - ریسپانسیو */}
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
               {/* بخش چپ: عنوان و سود */}
               <div className="flex flex-col">
@@ -351,7 +477,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                 )}
               </div>
 
-              {/* بخش راست: قیمت‌ها - استایل مخصوص موبایل */}
+              {/* بخش راست: قیمت‌ها */}
               <div className={`
                 flex flex-col items-start md:items-end
                 bg-slate-50 dark:bg-slate-800/50 
@@ -369,10 +495,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
               </div>
             </div>
 
-            {/* دکمه انتخاب مکان - در موبایل و دسکتاپ نمایش داده می‌شود */}
+            {/* دکمه انتخاب مکان */}
             {goToTimeStep && (
               <button
                 onClick={goToTimeStep}
+                disabled={cartItems.length === 0}
                 className="
                   w-full h-12 md:h-14 mt-4 md:mt-6 rounded-xl md:rounded-2xl
                   bg-sky-600 hover:bg-sky-700 active:scale-[0.98]
@@ -380,6 +507,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                   text-white font-bold text-base md:text-lg
                   shadow-lg shadow-sky-600/30 
                   transition-all
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
                 "
               >
                 انتخاب مکان
@@ -390,4 +518,31 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
       </div>
     </motion.div>
   );
+}
+
+// ───────────────────────────────────────────
+// کمکی: تبدیل داده بک‌اند به فرمت Factor.jsx
+// ───────────────────────────────────────────
+function transformBackendCart(backendItems) {
+  if (!Array.isArray(backendItems)) return [];
+  
+  return backendItems.map((item, index) => {
+    // تشخیص خودکار فیلدهای مختلف بک‌اند
+    const finalPrice = item.final_price || item.unit_price || item.price || 0;
+    const originalPrice = item.original_price || item.base_price || finalPrice;
+    
+    return {
+      id: item.id || item.product_id || index, 
+      id_unique: item.id_unique || item.cart_item_id || item.uuid || `item-${index}`,
+      name: item.product_name || item.name || item.title || "محصول",
+      qty: item.quantity || item.qty || 1,
+      totalPrice: finalPrice,
+      options: {
+        service: item.service_name || item.service || item.service_type || "-",
+        material: item.material_name || item.material || item.material_type || "-",
+        originalPrice: originalPrice,
+        isDiscounted: originalPrice > finalPrice
+      }
+    };
+  });
 }
