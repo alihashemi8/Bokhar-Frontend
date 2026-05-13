@@ -23,7 +23,7 @@ export default function DesktopNavbar() {
   useEffect(() => {
     const interval = setInterval(() => {
       setShowLogo(prev => !prev);
-    }, 4000);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
