@@ -3,7 +3,6 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 
-// ساعت‌های جدید: ۸ صبح تا ۱۳ و ۱۶ تا ۲۰
 export const timeSlots = ["۸ صبح تا ۱۳", "۱۶ تا ۲۰"];
 
 export default function TimeSelector({
@@ -12,10 +11,12 @@ export default function TimeSelector({
   selectedTime,
   setSelectedTime,
   minDate,
-  disabledTimeSlots = [], // اسلات‌های غیرفعال (برای منطق ۲۴ ساعته)
+  disabledTimeSlots = [],
+  disabledDates = [], // ✅ prop جدید: آرایه‌ای از تاریخ‌های غیرفعال (YYYY-MM-DD)
+  isLoading = false,
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   const prevMinDateRef = useRef(null);
 
@@ -32,6 +33,7 @@ export default function TimeSelector({
       : new DateObject({ calendar: persian, locale: persian_fa });
   }, [minDate, toDateObj]);
 
+  // ریست کردن هفته وقتی minDate عوض می‌شه
   useEffect(() => {
     const currentKey = minDate 
       ? (minDate instanceof DateObject 
@@ -45,20 +47,27 @@ export default function TimeSelector({
     }
   }, [minDate]);
 
+  // انیمیشن لودینگ
   useEffect(() => {
-    setIsLoading(true);
-    const t = setTimeout(() => setIsLoading(false), 200);
-    return () => clearTimeout(t);
-  }, [weekOffset]);
+    if (isLoading) {
+      setIsAnimating(true);
+    } else {
+      const t = setTimeout(() => setIsAnimating(false), 200);
+      return () => clearTimeout(t);
+    }
+  }, [isLoading, weekOffset]);
 
+  // ساخت لیست ۷ روز آینده (بدون جمعه)
   const days = useMemo(() => {
     const result = [];
     let i = 0;
+    let added = 0;
 
-    while (result.length < 7) {
+    while (added < 7) {
       const day = new DateObject(baseDate).add(weekOffset * 7 + i, "days");
-      if (day.weekDay.index !== 6) { // فیلتر جمعه
+      if (day.weekDay.index !== 6) { // 6 = جمعه
         result.push(day);
+        added++;
       }
       i++;
     }
@@ -74,6 +83,18 @@ export default function TimeSelector({
     return toDateObj(selectedDate)?.format("YYYY/MM/DD");
   }, [selectedDate, toDateObj]);
 
+  // ✅ چک کردن اینکه آیا تاریخ در لیست disabledDates هست یا نه
+  const isDateDisabled = useCallback((dateObj) => {
+    if (!disabledDates || disabledDates.length === 0) return false;
+    
+    const dateStr = dateObj.format("YYYY-MM-DD");
+    const dateStrSlash = dateObj.format("YYYY/MM/DD");
+    
+    return disabledDates.some(d => 
+      d === dateStr || d === dateStrSlash || d === dateObj.toJulianDay().toString()
+    );
+  }, [disabledDates]);
+
   const handlePrevWeek = useCallback(() => {
     setWeekOffset((p) => Math.max(0, p - 1));
   }, []);
@@ -83,7 +104,13 @@ export default function TimeSelector({
   }, []);
 
   const handleDateSelect = useCallback((day) => {
+    // چک کردن minDate
     if (minDateObj && day.toJulianDay() < minDateObj.toJulianDay()) {
+      return;
+    }
+    
+    // ✅ چک کردن disabledDates
+    if (isDateDisabled(day)) {
       return;
     }
     
@@ -93,11 +120,11 @@ export default function TimeSelector({
     }
     
     setSelectedDate(day);
-  }, [minDateObj, selectedDate, setSelectedDate, toDateObj]);
+  }, [minDateObj, selectedDate, setSelectedDate, toDateObj, isDateDisabled]);
 
   const handleTimeSelect = useCallback((slot) => {
     if (selectedTime === slot) return;
-    if (disabledTimeSlots.includes(slot)) return; // چک کردن غیرفعال بودن
+    if (disabledTimeSlots.includes(slot)) return;
     setSelectedTime(slot);
   }, [selectedTime, setSelectedTime, disabledTimeSlots]);
 
@@ -108,7 +135,7 @@ export default function TimeSelector({
         <button
           disabled={weekOffset === 0}
           onClick={handlePrevWeek}
-          className="text-pink-500 disabled:text-gray-300"
+          className="text-pink-500 disabled:text-gray-300 transition-colors"
         >
           → هفته قبل
         </button>
@@ -119,15 +146,15 @@ export default function TimeSelector({
 
         <button
           onClick={handleNextWeek}
-          className="text-pink-500"
+          className="text-pink-500 transition-colors"
         >
           هفته بعد ←
         </button>
       </div>
 
       {/* Days */}
-      <div className="flex md:grid md:grid-cols-7 gap-1 overflow-x-auto scrollbar-hide">
-        {isLoading
+      <div className="flex md:grid md:grid-cols-7 gap-1 overflow-x-auto scrollbar-hide pb-2">
+        {isAnimating
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
@@ -135,20 +162,19 @@ export default function TimeSelector({
               />
             ))
           : days.map((day) => {
-              const isDisabled =
-                minDateObj &&
-                day.toJulianDay() < minDateObj.toJulianDay();
-
+              const isBeforeMin = minDateObj && day.toJulianDay() < minDateObj.toJulianDay();
+              const isDisabledDate = isDateDisabled(day);
               const isSelected = selectedDateKey === day.format("YYYY/MM/DD");
 
               return (
                 <div
                   key={day.toJulianDay()}
                   onClick={() => handleDateSelect(day)}
-                  className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition-all duration-300 flex-shrink-0
+                  title={isDisabledDate ? "این روز ظرفیت تکمیل است" : ""}
+                  className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition-all duration-300 flex-shrink-0 relative overflow-hidden
                     ${
-                      isDisabled
-                        ? "opacity-40 cursor-not-allowed"
+                      isBeforeMin || isDisabledDate
+                        ? "opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         : isSelected
                         ? `
                           bg-gradient-to-r
@@ -168,6 +194,11 @@ export default function TimeSelector({
                         `
                     }`}
                 >
+                  {/* نشانگر تکمیل ظرفیت */}
+                  {(isDisabledDate) && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                  
                   <p className="text-sm font-medium text-pink-500">
                     {day.weekDay.name}
                   </p>
@@ -223,7 +254,6 @@ export default function TimeSelector({
         </div>
       )}
       
-      {/* پیام راهنما برای تحویل فوری */}
       {selectedDate && disabledTimeSlots.length > 0 && disabledTimeSlots.length < timeSlots.length && (
         <p className="mt-2 text-xs text-center text-amber-600 dark:text-amber-400">
           * برای تحویل فوری (۲۴ ساعته) در همان روز، فقط بازه زمانی متفاوت قابل انتخاب است

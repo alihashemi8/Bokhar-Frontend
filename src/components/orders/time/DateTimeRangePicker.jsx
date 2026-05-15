@@ -3,6 +3,7 @@ import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import TimeSelector, { timeSlots } from "./TimeSelector";
+import { capacityApi } from "../../../api/capacityApi"; 
 
 export default function DateTimeRangePicker({
   value,
@@ -15,10 +16,58 @@ export default function DateTimeRangePicker({
   const [pickupDate, setPickupDate] = useState(null);
   const [pickupTime, setPickupTime] = useState(null);
   
+  // ✅ استیت‌های جدید برای اتصال به API
+  const [rushSettings, setRushSettings] = useState({
+    fee_24h: 100000,
+    fee_48h: 50000,
+    free_after_hours: 72
+  });
+  const [disabledDates, setDisabledDates] = useState([]); // روزهای غیرفعال از ادمین
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  
   const hasNotifiedRef = useRef(false);
   const prevValueRef = useRef(null);
 
-  /* ---------- init ---------- */
+  /* ---------- لود تنظیمات از TimeOrders (capacityApi) ---------- */
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setIsLoadingSettings(true);
+        // دریافت تنظیمات فوری و تمپلیت‌ها
+        const [rushRes, templateRes] = await Promise.all([
+          capacityApi.getRushFeeSettings(),
+          capacityApi.getDeliveryTemplates()
+        ]);
+
+        if (rushRes.data) {
+          setRushSettings({
+            fee_24h: rushRes.data.fee_24h || 100000,
+            fee_48h: rushRes.data.fee_48h || 50000,
+            free_after_hours: rushRes.data.free_after_hours || 72,
+            is_24h_enabled: rushRes.data.is_24h_enabled !== false, // پیش‌فرض true
+            is_48h_enabled: rushRes.data.is_48h_enabled !== false
+          });
+        }
+
+        // استخراج روزهای غیرفعال از تمپلیت‌ها (فرض بر اینه که فیلد disabled_dates داری)
+        if (templateRes.data && Array.isArray(templateRes.data)) {
+          const disabled = templateRes.data
+            .filter(t => t.is_active === false || t.capacity <= 0)
+            .map(t => t.date); // یا هر فیلدی که تاریخ روز باشه
+          setDisabledDates(disabled);
+        }
+      } catch (error) {
+        console.warn("⚠️ خطا در لود تنظیمات ظرفیت:", error);
+        // در صورت خطا، از مقادیر پیش‌فرض استفاده می‌شه
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  /* ---------- init value ---------- */
   useEffect(() => {
     if (!value || value === prevValueRef.current) return;
     prevValueRef.current = value;
@@ -57,7 +106,7 @@ export default function DateTimeRangePicker({
     }
   }, [value]);
 
-  /* ---------- محاسبه تعداد ساعت بین تحویل و دریافت ---------- */
+  /* ---------- محاسبه اختلاف ساعت ---------- */
   const calculateHoursDiff = useCallback(() => {
     if (!deliveryDate || !deliveryTime || !pickupDate || !pickupTime) return 0;
     
@@ -66,7 +115,7 @@ export default function DateTimeRangePicker({
     const dayDiff = pickupObj.toJulianDay() - deliveryObj.toJulianDay();
     
     const getMidHour = (slot) => {
-      if (slot === "۸صبح  تا ۱۳") return 10.5;
+      if (slot === "۸صبح  تا ۱۳" || slot === "۸ صبح تا ۱۳") return 10.5;
       if (slot === "۱۶ تا ۲۰") return 18;
       return 12;
     };
@@ -75,21 +124,23 @@ export default function DateTimeRangePicker({
     const pickupHour = getMidHour(pickupTime);
     
     let totalHours = (dayDiff * 24) + (pickupHour - deliveryHour);
-    
     return Math.max(0, totalHours);
   }, [deliveryDate, deliveryTime, pickupDate, pickupTime]);
 
-  /* ---------- pricing logic ---------- */
+  /* ---------- pricing logic ✅ داینامیک شد ---------- */
   const priceInfo = useMemo(() => {
     const hours = calculateHoursDiff();
     
     if (hours <= 0) return null;
     
-    if (hours <= 24) {
+    // استفاده از تنظیمات دریافتی از API
+    const { fee_24h, fee_48h, free_after_hours, is_24h_enabled, is_48h_enabled } = rushSettings;
+    
+    if (hours <= 24 && is_24h_enabled) {
       return {
-        amount: 100000,
+        amount: fee_24h,
         type: 'express',
-        label: '۱۰۰,۰۰۰ تومان',
+        label: `${fee_24h.toLocaleString('fa-IR')} تومان`,
         desc: 'سرویس فوری (تا 24 ساعت)',
         color: 'from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20',
         borderColor: 'border-red-200 dark:border-red-800',
@@ -98,11 +149,11 @@ export default function DateTimeRangePicker({
       };
     }
     
-    if (hours <= 48) {
+    if (hours <= 48 && is_48h_enabled) {
       return {
-        amount: 50000,
+        amount: fee_48h,
         type: 'standard',
-        label: '۵۰,۰۰۰ تومان',
+        label: `${fee_48h.toLocaleString('fa-IR')} تومان`,
         desc: 'سرویس استاندارد (تا 48 ساعت)',
         color: 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20',
         borderColor: 'border-amber-200 dark:border-amber-800',
@@ -115,24 +166,25 @@ export default function DateTimeRangePicker({
       amount: 0,
       type: 'economy',
       label: 'رایگان',
-      desc: 'سرویس اقتصادی (48+ ساعت)',
+      desc: `سرویس اقتصادی (${free_after_hours}+ ساعت)`,
       color: 'from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20',
       borderColor: 'border-emerald-200 dark:border-emerald-800',
       textColor: 'text-emerald-700 dark:text-emerald-300',
       hours: hours
     };
-  }, [calculateHoursDiff]);
+  }, [calculateHoursDiff, rushSettings]);
 
   /* ---------- pickup min date ---------- */
   const pickupMinDate = deliveryDate ? new DateObject(deliveryDate) : null;
 
-  /* ---------- محاسبه اسلات‌های غیرفعال ---------- */
+  /* ---------- محاسبه اسلات‌های غیرفعال (منطق 24 ساعته + ظرفیت) ---------- */
   const disabledPickupSlots = useMemo(() => {
     if (!deliveryDate || !pickupDate || !deliveryTime) return [];
     
     const deliveryObj = new DateObject(deliveryDate);
     const pickupObj = new DateObject(pickupDate);
     
+    // منطق 24 ساعته محلی (عدم انتخاب اسلات قبل از تحویل)
     if (deliveryObj.toJulianDay() === pickupObj.toJulianDay()) {
       if (deliveryTime === "۸ صبح تا ۱۳") {
         return ["۸ صبح تا ۱۳"];
@@ -271,14 +323,21 @@ export default function DateTimeRangePicker({
       dir="rtl"
       className="w-full max-w-3xl mx-auto rounded-3xl mb-20 md:mb-0 p-4 md:p-8 shadow-xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
     >
+      {isLoadingSettings && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-sm text-center animate-pulse">
+          در حال دریافت تنظیمات ظرفیت...
+        </div>
+      )}
+      
       <h2 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-sky-600 to-purple-600 bg-clip-text text-transparent">
         انتخاب بازه زمانی تحویل و دریافت
       </h2>
       <p className="my-4 text-center text-xs text-gray-500 dark:text-gray-400">
-        * تحویل فوری (۲۴ ساعته): اگر امروز ۸-۱۳ تحویل می‌دهید، همان روز ۱۶-۲۰ تحویل می‌گیرید (۱۰۰ هزار تومان). 
-        برای ۴۸ ساعت (۵۰ هزار تومان) و رایگان ۷۲+ ساعت فاصله بدهید.
+        * {rushSettings.is_24h_enabled ? `تحویل فوری (۲۴ ساعته): ${rushSettings.fee_24h?.toLocaleString('fa-IR')} تومان` : 'سرویس ۲۴ ساعته غیرفعال است'} | 
+        {rushSettings.is_48h_enabled ? ` ۴۸ ساعته: ${rushSettings.fee_48h?.toLocaleString('fa-IR')} تومان` : ' سرویس ۴۸ ساعته غیرفعال است'} | 
+        {rushSettings.free_after_hours}+ ساعت: رایگان
       </p>
-      {/* تغییر اصلی اینجا: از lg:grid-cols-2 به flex flex-col تغییر کرد */}
+      
       <div className="flex flex-col gap-6 md:gap-8">
         {/* Delivery Section */}
         <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -300,6 +359,8 @@ export default function DateTimeRangePicker({
             setSelectedDate={handleDeliveryDateChange}
             selectedTime={deliveryTime}
             setSelectedTime={handleDeliveryTimeChange}
+            disabledDates={disabledDates} // ✅ ارسال روزهای غیرفعال
+            isLoading={isLoadingSettings}
           />
         </div>
 
@@ -325,11 +386,12 @@ export default function DateTimeRangePicker({
             setSelectedTime={handlePickupTimeChange}
             minDate={pickupMinDate}
             disabledTimeSlots={disabledPickupSlots}
+            isLoading={isLoadingSettings}
           />
         </div>
       </div>
 
-      {/* Pricing Summary */}
+      {/* Pricing Summary - داینامیک شد */}
       {isComplete && priceInfo && (
         <div className={`mt-8 p-6 rounded-2xl border-2 ${priceInfo.borderColor} bg-gradient-to-r ${priceInfo.color} animate-fadeInUp`}>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
@@ -345,28 +407,27 @@ export default function DateTimeRangePicker({
               <span className={`text-3xl font-black ${priceInfo.textColor}`}>
                 {priceInfo.label}
               </span>
-{priceInfo.amount === 0 && (
-  <span className="text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded font-bold">
-    تخفیف ویژه
-  </span>
-)}
-
+              {priceInfo.amount === 0 && (
+                <span className="text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded font-bold">
+                  تخفیف ویژه
+                </span>
+              )}
             </div>
           </div>
           
           <div className="mt-4 pt-4 border-t border-gray-400/20 grid grid-cols-3 gap-2 text-center text-xs">
             <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'express' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
               <div className="font-bold mb-1 text-red-700 dark:text-red-300">۲۴ ساعته</div>
-              <div className="font-black text-lg">۱۰۰,۰۰۰</div>
-              <div className="text-[10px] opacity-75">سریع‌ترین</div>
+              <div className="font-black text-lg">{rushSettings.fee_24h?.toLocaleString('fa-IR') || '۱۰۰,۰۰۰'}</div>
+              <div className="text-[10px] opacity-75">{rushSettings.is_24h_enabled ? 'سریع‌ترین' : 'غیرفعال'}</div>
             </div>
             <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'standard' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
               <div className="font-bold mb-1 text-amber-700 dark:text-amber-300">۴۸ ساعته</div>
-              <div className="font-black text-lg">۵۰,۰۰۰</div>
-              <div className="text-[10px] opacity-75">سریع</div>
+              <div className="font-black text-lg">{rushSettings.fee_48h?.toLocaleString('fa-IR') || '۵۰,۰۰۰'}</div>
+              <div className="text-[10px] opacity-75">{rushSettings.is_48h_enabled ? 'سریع' : 'غیرفعال'}</div>
             </div>
             <div className={`p-3 rounded-xl transition-all ${priceInfo.type === 'economy' ? 'bg-white/50 dark:bg-white/20 font-bold shadow-sm' : 'bg-white/20 opacity-60'}`}>
-              <div className="font-bold mb-1 text-emerald-700 dark:text-emerald-300">۷۲+ ساعت</div>
+              <div className="font-bold mb-1 text-emerald-700 dark:text-emerald-300">{rushSettings.free_after_hours || '۷۲'}+ ساعت</div>
               <div className="font-black text-lg">رایگان</div>
               <div className="text-[10px] opacity-75">عادی</div>
             </div>
