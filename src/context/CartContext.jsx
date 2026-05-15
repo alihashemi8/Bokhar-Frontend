@@ -11,27 +11,34 @@ export const useCart = () => {
   return context;
 };
 
-// همان تابع تبدیل Factor
+// ✅ تابع تبدیل یکپارچه با Factor.js
 function transformBackendCart(backendItems) {
   if (!Array.isArray(backendItems)) return [];
   
-  return backendItems.map((item, index) => {
-    const finalPrice = item.final_price || item.unit_price || item.price || 0;
-    const originalPrice = item.original_price || item.base_price || finalPrice;
+  return backendItems.map((item) => {
+    // استخراج مقادیر از بک‌اند (همسان با Factor.js)
+    const unitPrice = parseInt(item.unit_price || item.price || 0);
+    const originalPrice = parseInt(item.original_price || unitPrice);
+    const quantity = parseInt(item.quantity || 1);
+    
+    // محاسبه جمع کل خط
+    const finalLineTotal = item.total_price || (unitPrice * quantity);
+    const originalLineTotal = item.original_total || (originalPrice * quantity);
     
     return {
-      id: item.id || item.product_id || index, 
-      id_unique: item.id_unique || item.cart_item_id || item.uuid || `item-${index}`,
-      name: item.product_name || item.name || item.title || "محصول",
-      qty: item.quantity || item.qty || 1,
-      totalPrice: finalPrice,
-      price: finalPrice, // برای سازگاری با کامپوننت‌های قدیمی
-      options: {
-        service: item.service_name || item.service || item.service_type || "-",
-        material: item.material_name || item.material || item.material_type || "-",
-        originalPrice: originalPrice,
-        isDiscounted: originalPrice > finalPrice
-      }
+      id_unique: item.id_unique, // کلید اصلی برای عملیات‌ها
+      name: item.product_name || "محصول",
+      qty: quantity,
+      unitPrice: unitPrice,               // قیمت واحد نهایی
+      originalUnitPrice: originalPrice,   // قیمت واحد اصلی
+      finalLineTotal: finalLineTotal,     // جمع کل خط (قیمت × تعداد)
+      originalLineTotal: originalLineTotal, // جمع کل خط اصلی
+      hasDiscount: originalPrice > unitPrice,
+      // اطلاعات تکمیلی
+      sizeDisplay: item.size_display || (item.size ? `سایز ${item.size}` : "-"),
+      service: item.service || "-",
+      material: item.material || "-",
+      productId: item.product_id
     };
   });
 }
@@ -39,17 +46,26 @@ function transformBackendCart(backendItems) {
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // ✅ وضعیت لاگین
 
   // لود اصلی از API
   const loadCart = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
       const result = await fetchCart();
+      
       if (result.success) {
         const items = result.data?.cart || result.data?.items || [];
         setCartItems(transformBackendCart(items));
+        setIsAuthenticated(true);
       } else {
-        setCartItems([]);
+        // ✅ هندل کردن خطای 401
+        if (result.unauthorized) {
+          setIsAuthenticated(false);
+          setCartItems([]); // پاک کردن سبد برای کاربر لاگین نشده
+        } else {
+          setCartItems([]);
+        }
       }
     } catch (err) {
       console.error("Cart load error:", err);
@@ -64,36 +80,40 @@ export function CartProvider({ children }) {
     loadCart();
   }, [loadCart]);
 
-  // محاسبات با useMemo برای پرفورمنس
+  // محاسبات بهینه شده با ساختار جدید
   const totalItems = useMemo(() => 
     cartItems.reduce((sum, item) => sum + (item.qty || 1), 0),
   [cartItems]);
 
+  // ✅ استفاده از finalLineTotal که قبلاً محاسبه شده (unitPrice × qty)
   const totalPrice = useMemo(() => 
-    cartItems.reduce((sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1), 0),
+    cartItems.reduce((sum, item) => sum + (item.finalLineTotal || 0), 0),
   [cartItems]);
 
+  // ✅ استفاده از originalLineTotal
   const originalTotalPrice = useMemo(() => 
-    cartItems.reduce((sum, item) => {
-      const originalPrice = item.options?.originalPrice || item.totalPrice || 0;
-      return sum + originalPrice * (item.qty || 1);
-    }, 0),
+    cartItems.reduce((sum, item) => sum + (item.originalLineTotal || 0), 0),
   [cartItems]);
 
   const hasAnyDiscount = originalTotalPrice > totalPrice;
   const savingsAmount = originalTotalPrice - totalPrice;
 
+  // ✅ تعداد آیتم‌های منحصر به فرد (برای badge می‌تواند مفید باشد)
+  const uniqueItemsCount = useMemo(() => cartItems.length, [cartItems]);
+
   return (
     <CartContext.Provider
       value={{
-        cartItems,           // آرایه آیتم‌ها (هم‌ struktur با Factor)
-        totalItems,          // عدد Badge
-        totalPrice,          // قیمت نهایی
-        originalTotalPrice,  // قیمت قبل تخفیف
-        hasAnyDiscount,      // boolean آیا تخفیف داریم؟
-        savingsAmount,       // مبلغ صرفه‌جویی
-        loading,             // برای نمایش اسکلتون در Badge
-        refreshCart: loadCart, // تابع رفرش (بعد از add/remove/update صدا بزنید)
+        cartItems,           // آرایه آیتم‌ها (ساختار یکسان با Factor.js)
+        totalItems,          // مجموع تعداد کل (برای نمایش در badge)
+        uniqueItemsCount,    // تعداد آیتم‌های متفاوت
+        totalPrice,          // قیمت نهایی کل سبد
+        originalTotalPrice,  // قیمت قبل از تخفیف
+        hasAnyDiscount,      // آیا تخفیف وجود دارد؟
+        savingsAmount,       // مبلغ صرفه‌جویی شده
+        loading,             // وضعیت لودینگ
+        isAuthenticated,     // وضعیت احراز هویت (برای نمایش پیام لاگین)
+        refreshCart: loadCart, // تابع رفرش
       }}
     >
       {children}

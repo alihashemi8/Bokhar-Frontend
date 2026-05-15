@@ -11,31 +11,78 @@ const api = axios.create({
   }
 });
 
-// ✅ Interceptor برای خواندن خودکار CSRF قبل از هر درخواست
+// ✅ تابع بهبود یافته خواندن کوکی
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    // 🔧 FIX: اضافه کردن let برای i
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// ✅ Interceptor برای CSRF
 api.interceptors.request.use((config) => {
   const token = getCookie('csrftoken');
   if (token) {
     config.headers['X-CSRFToken'] = token;
   }
+  // لاگ برای دیباگ
+  console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
   return config;
+}, (error) => {
+  console.error('Request Error:', error);
+  return Promise.reject(error);
 });
 
-// ✅ Interceptor برای هندل کردن خطاهای عمومی (اختیاری ولی مفید)
+// ✅ Interceptor بهبود یافته برای پاسخ
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 403) {
+    // 🔧 FIX: هندل کردن خطاهای شبکه (وقتی error.response وجود ندارد)
+    if (!error.response) {
+      console.error('Network Error:', error.message);
+      // خطای CORS یا عدم اتصال به سرور
+      if (error.message === 'Network Error') {
+        console.error('سرور در دسترس نیست یا خطای CORS وجود دارد');
+      }
+      return Promise.reject({
+        ...error,
+        isNetworkError: true,
+        userMessage: 'خطای شبکه: لطفاً اتصال اینترنت را بررسی کنید'
+      });
+    }
+
+    console.error('API Error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      data: error.response?.data,
+      message: error.message
+    });
+
+    if (error.response?.status === 401) {
+      console.error('Authentication required - User not logged in');
+    } else if (error.response?.status === 403) {
       console.error('CSRF Error or Permission Denied');
     }
     return Promise.reject(error);
   }
 );
 
-// ✅ تابع تبدیل اصلاح شده با پشتیبانی اعداد فارسی
+// تبدیل تاریخ شمسی به میلادی
 const toGregorian = (shamsiDateStr) => {
   if (!shamsiDateStr) return null;
   try {
-    // تبدیل اعداد فارسی به انگلیسی
     const faToEn = (str) => str.replace(/[۰-۹]/g, w => String.fromCharCode(w.charCodeAt(0) - 1728));
     const cleanDate = faToEn(shamsiDateStr).replace(/\//g, '-');
     
@@ -68,82 +115,133 @@ export const fetchCart = async () => {
     const response = await api.get('/cart/');
     return { success: true, data: response.data };
   } catch (error) {
-    return { success: false, error: error.response?.data || "خطا در دریافت سبد" };
+    if (error.response?.status === 401 || error.unauthorized) {
+      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
+    }
+    return { 
+      success: false, 
+      error: error.userMessage || error.response?.data || "خطا در دریافت سبد",
+      isNetworkError: error.isNetworkError 
+    };
   }
 };
 
 export const addToCart = async (productId, quantity = 1, options = {}) => {
   try {
     const payload = {
-      quantity: parseInt(quantity), // مطمئن شو integer هست
+      quantity: parseInt(quantity),
       service: options.service || "",
       material: options.material || "",
       size: options.size || null,
     };
     
-    console.log("Sending to cart:", { productId, payload }); // لاگ برای دیباگ
+    console.log("Sending to cart:", { productId, payload });
     
     const response = await api.post(`/cart/add/${productId}/`, payload);
     return { success: true, data: response.data };
   } catch (error) {
-    // لاگ دقیق خطا
-    console.error("Cart API Error:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      payload: error.config?.data // چی فرستادی
-    });
+    // 🔧 FIX: لاگ بهتر برای دیباگ
+    console.error("Cart API Error Details:", error);
+    
+    // 🔧 FIX: هندل کردن خطای شبکه
+    if (error.isNetworkError || !error.response) {
+      return { 
+        success: false, 
+        error: "خطای شبکه: اتصال به سرور برقرار نشد",
+        isNetworkError: true
+      };
+    }
+    
+    if (error.response?.status === 401) {
+      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
+    }
+    
+    // 🔧 FIX: استخراج پیام خطای صحیح از پاسخ سرور
+    const errorMessage = typeof error.response?.data === 'string' 
+      ? error.response.data 
+      : error.response?.data?.error 
+      || error.response?.data?.detail 
+      || error.response?.data?.message 
+      || "خطا در افزودن به سبد";
+    
     return { 
       success: false, 
-      error: error.response?.data || error.message 
+      error: errorMessage,
+      status: error.response?.status
     };
   }
 };
 
 export const removeCartItem = async (idUnique) => {
   try {
-    // ✅ encodeURIComponent برای فارسی‌ها ضروریه
     const encodedId = encodeURIComponent(idUnique);
     const response = await api.post(`/cart/remove/${encodedId}/`);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error('Remove error:', error.response?.status, error.response?.data);
-    return { success: false, error: error.response?.data };
+    console.error('Remove error:', error);
+    if (error.response?.status === 401 || error.unauthorized) {
+      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
+    }
+    if (error.response?.status === 404) {
+      return { success: false, error: "آیتم در سبد یافت نشد" };
+    }
+    return { success: false, error: error.userMessage || error.response?.data || "خطای حذف آیتم" };
+  }
+};
+
+export const decrementCartItem = async (idUnique) => {
+  try {
+    const encodedId = encodeURIComponent(idUnique);
+    const response = await api.post(`/cart/decrement/${encodedId}/`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    return { success: false, error: error.userMessage || error.response?.data || "خطا در کاهش تعداد" };
   }
 };
 
 export const updateCartQuantity = async (idUnique, newQuantity) => {
   try {
-    // ✅ اینجا هم encode کن
     const encodedId = encodeURIComponent(idUnique);
-    const response = await api.patch(`/cart/${encodedId}/`, { quantity: newQuantity });
+    const response = await api.patch(`/cart/update/${encodedId}/`, { quantity: newQuantity });
     return { success: true, data: response.data };
   } catch (error) {
-    return { success: false, error: error.response?.data };
+    if (error.response?.status === 401 || error.unauthorized) {
+      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
+    }
+    if (error.response?.status === 404) {
+      return { success: false, error: "آیتم در سبد یافت نشد" };
+    }
+    return { success: false, error: error.userMessage || error.response?.data || "خطای بروزرسانی" };
   }
 };
 
 export const clearCart = async () => {
   try {
-    await api.delete('/cart/delete/');
+    await api.post('/cart/delete/');
     return { success: true };
   } catch (error) {
-    return { success: false, error: error.response?.data };
+    if (error.response?.status === 401 || error.unauthorized) {
+      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
+    }
+    return { success: false, error: error.userMessage || error.response?.data || "خطای پاک کردن سبد" };
   }
 };
 
 const transformCartItems = (cartItems) => {
-  // تطابق با خروجی بک‌اند: cartItems باید از API اومده باشن نه state محلی
   return cartItems.map(item => ({
-    service_item_id: item.id, // این باید product_id یا id_unique باشه که بک‌اند می‌ده
-    quantity: item.qty || item.quantity,
-    unit_price: item.totalPrice,
-    original_price: item.options?.originalPrice || item.totalPrice,
-    description: `${item.options?.service || ''} - ${item.options?.material || ''}`.trim()
+    service_item_id: item.id_unique,
+    product_id: item.product_id,
+    quantity: item.quantity,
+    unit_price: item.unit_price,
+    original_price: item.original_price || item.unit_price,
+    description: `${item.service || ''} - ${item.material || ''}`.trim(),
+    size: item.size,
+    size_display: item.size_display
   }));
 };
 
 export const createOrder = async ({
-  cartItems, // باید از fetchCart گرفته شده باشه نه از state محلی
+  cartItems,
   datetime,
   location,
   discountCode,
@@ -174,10 +272,19 @@ export const createOrder = async ({
     const response = await api.post('/orders/create/', payload);
     return { success: true, data: response.data };
   } catch (error) {
-    console.error("Order creation failed:", error.response?.data);
+    console.error("Order creation failed:", error);
+    if (error.response?.status === 401 || error.unauthorized) {
+      return { success: false, errors: { general: "لطفاً ابتدا وارد حساب کاربری شوید" }, unauthorized: true };
+    }
+    
+    // اگر خطای اعتبارسنجی فیلدها باشد
+    if (error.response?.status === 400 && typeof error.response.data === 'object') {
+      return { success: false, errors: error.response.data };
+    }
+    
     return { 
       success: false, 
-      errors: error.response?.data || { general: "خطای سرور" } 
+      errors: { general: error.userMessage || "خطای سرور در ایجاد سفارش" } 
     };
   }
 };
@@ -192,23 +299,9 @@ export const getTimeCapacity = async (date, shift) => {
     });
     return response.data; 
   } catch (error) {
-    return { available: false, remaining: 0 };
+    console.error('Capacity check error:', error);
+    return { available: false, remaining: 0, error: true };
   }
 };
-
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
 
 export default api;

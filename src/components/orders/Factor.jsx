@@ -3,7 +3,7 @@ import { FiTrash2, FiTag } from "react-icons/fi";
 import { useToast } from "../../context/ToastContext";
 import { useModal } from "../../context/ModalContext";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useCart } from "../../context/CartContext"; // Added import
+import { useCart } from "../../context/CartContext";
 import { 
   fetchCart, 
   removeCartItem, 
@@ -13,7 +13,7 @@ import {
 export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
   const { showConfirm } = useModal();
-  const { refreshCart } = useCart(); // Added: for syncing navbar badge
+  const { refreshCart } = useCart();
   
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,12 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         const items = result.data.cart || [];
         setCartItems(transformBackendCart(items));
       } else {
-        addToast(result.error || "خطا در بارگذاری سبد خرید", "error");
+        // هندل کردن خطای 401
+        if (result.unauthorized) {
+          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+        } else {
+          addToast(result.error || "خطا در بارگذاری سبد خرید", "error");
+        }
       }
     } catch (err) {
       console.error("Cart load error:", err);
@@ -40,18 +45,20 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     loadCart();
   }, [loadCart]);
 
+  // محاسبه قیمت نهایی (با تخفیف) - جمع کل سبد
   const totalPrice = useMemo(() => {
     return cartItems?.reduce(
-      (sum, item) => sum + (item.totalPrice || 0) * (item.qty || 1),
+      (sum, item) => sum + (item.finalLineTotal || 0),
       0
     );
   }, [cartItems]);
 
+  // محاسبه قیمت اصلی (قبل تخفیف) - جمع کل سبد
   const originalTotalPrice = useMemo(() => {
-    return cartItems?.reduce((sum, item) => {
-      const originalPrice = item.options?.originalPrice || item.totalPrice || 0;
-      return sum + originalPrice * (item.qty || 1);
-    }, 0);
+    return cartItems?.reduce(
+      (sum, item) => sum + (item.originalLineTotal || 0),
+      0
+    );
   }, [cartItems]);
 
   const hasAnyDiscount = originalTotalPrice > totalPrice;
@@ -76,20 +83,25 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     
     const newQty = (item.qty || 1) + 1;
     
-    // آپدیت خوش‌بینانه
+    // آپدیت خوش‌بینانه با استفاده از id_unique (نه id)
     setCartItems(prev => prev.map(i => 
-      i.id === item.id ? { ...i, qty: newQty } : i
+      i.id_unique === itemKey ? { ...i, qty: newQty } : i
     ));
     
     try {
       const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
+      if (!result.success) {
+        if (result.unauthorized) {
+          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+        } else {
+          throw new Error(result.error || "خطا در به‌روزرسانی");
+        }
+      }
       
       if (result.data?.items) {
         setCartItems(transformBackendCart(result.data.items));
       }
       
-      // Sync navbar badge
       await refreshCart(); 
     } catch (error) {
       addToast(error.message || "خطا در افزایش تعداد", "error");
@@ -110,18 +122,23 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     const newQty = item.qty - 1;
     
     setCartItems(prev => prev.map(i => 
-      i.id === item.id ? { ...i, qty: newQty } : i
+      i.id_unique === itemKey ? { ...i, qty: newQty } : i
     ));
     
     try {
       const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) throw new Error(result.error || "خطا در به‌روزرسانی");
+      if (!result.success) {
+        if (result.unauthorized) {
+          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+        } else {
+          throw new Error(result.error || "خطا در به‌روزرسانی");
+        }
+      }
       
       if (result.data?.items) {
         setCartItems(transformBackendCart(result.data.items));
       }
       
-      // Sync navbar badge
       await refreshCart();
     } catch (error) {
       addToast(error.message || "خطا در کاهش تعداد", "error");
@@ -148,16 +165,20 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         try {
           const result = await removeCartItem(itemKey);
           if (result.success) {
-            setCartItems(prev => prev.filter(i => i.id !== item.id));
+            // حذف از استیت با استفاده از id_unique
+            setCartItems(prev => prev.filter(i => i.id_unique !== itemKey));
             addToast(`«${name}» حذف شد`, "success");
             if (result.data?.items) {
               setCartItems(transformBackendCart(result.data.items));
             }
             
-            // Sync navbar badge
             await refreshCart();
           } else {
-            throw new Error(result.error || "خطا در حذف");
+            if (result.unauthorized) {
+              addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+            } else {
+              throw new Error(result.error || "خطا در حذف");
+            }
           }
         } catch (error) {
           addToast(error.message || "خطا در حذف آیتم", "error");
@@ -196,6 +217,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
               <tr className="bg-slate-100/70 dark:bg-slate-800/70 text-slate-500 dark:text-slate-300">
                 <th className="py-3 px-4 text-right">محصول</th>
                 <th className="py-3 px-4 text-center">تعداد</th>
+                <th className="py-3 px-4 text-center">سایز</th>
                 <th className="py-3 px-4 text-center">خدمت</th>
                 <th className="py-3 px-4 text-center">جنس</th>
                 <th className="py-3 px-4 text-right">قیمت واحد</th>
@@ -208,15 +230,16 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
               <AnimatePresence>
                 {cartItems.length > 0 ? (
                   cartItems.map((item) => {
-                    const hasDiscount = item.options?.isDiscounted;
-                    const originalUnitPrice = item.options?.originalPrice || 0;
-                    const finalUnitPrice = item.totalPrice || 0;
-                    const originalTotal = originalUnitPrice * (item.qty || 1);
-                    const finalTotal = finalUnitPrice * (item.qty || 1);
+                    const hasDiscount = item.hasDiscount;
+                    // استفاده از مقادیر آماده از بک‌اند
+                    const finalUnitPrice = item.unitPrice || 0;
+                    const originalUnitPrice = item.originalUnitPrice || finalUnitPrice;
+                    const finalLineTotal = item.finalLineTotal || 0;
+                    const originalLineTotal = item.originalLineTotal || finalLineTotal;
 
                     return (
                       <motion.tr
-                        key={item.id}
+                        key={item.id_unique} // استفاده از id_unique به جای id
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -265,12 +288,17 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           </div>
                         </td>
 
+                        {/* اضافه شدن ستون سایز */}
                         <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
-                          {item.options?.service || "-"}
+                          {item.sizeDisplay || "-"}
                         </td>
 
                         <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
-                          {item.options?.material || "-"}
+                          {item.service || "-"}
+                        </td>
+
+                        <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
+                          {item.material || "-"}
                         </td>
 
                         <td className="py-4 px-4 text-right text-slate-800 dark:text-slate-200">
@@ -292,14 +320,14 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           {hasDiscount ? (
                             <div className="flex flex-col items-end">
                               <span className="text-xs line-through text-slate-400 dark:text-slate-500 font-normal">
-                                {originalTotal.toLocaleString()}
+                                {originalLineTotal.toLocaleString()}
                               </span>
                               <span className="text-green-600 dark:text-green-400">
-                                {finalTotal.toLocaleString()}
+                                {finalLineTotal.toLocaleString()}
                               </span>
                             </div>
                           ) : (
-                            finalTotal.toLocaleString()
+                            finalLineTotal.toLocaleString()
                           )}
                         </td>
 
@@ -320,7 +348,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                     animate={{ opacity: 1 }}
                   >
                     <td
-                      colSpan={7}
+                      colSpan={8} // تغییر از 7 به 8 به خاطر اضافه شدن ستون سایز
                       className="py-10 text-center text-slate-400 dark:text-slate-300"
                     >
                       سبد خرید خالی است
@@ -336,15 +364,15 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         <div className="md:hidden space-y-3">
           <AnimatePresence>
             {cartItems.map((item) => {
-              const hasDiscount = item.options?.isDiscounted;
-              const originalUnitPrice = item.options?.originalPrice || 0;
-              const finalUnitPrice = item.totalPrice || 0;
-              const originalTotal = originalUnitPrice * (item.qty || 1);
-              const finalTotal = finalUnitPrice * (item.qty || 1);
+              const hasDiscount = item.hasDiscount;
+              const finalUnitPrice = item.unitPrice || 0;
+              const originalUnitPrice = item.originalUnitPrice || finalUnitPrice;
+              const finalLineTotal = item.finalLineTotal || 0;
+              const originalLineTotal = item.originalLineTotal || finalLineTotal;
 
               return (
                 <motion.div
-                  key={item.id}
+                  key={item.id_unique} // استفاده از id_unique
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
@@ -360,16 +388,22 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           تخفیف دار
                         </span>
                       )}
+                      {/* نمایش سایز در موبایل */}
+                      {item.sizeDisplay && (
+                        <span className="text-xs text-slate-500 mt-1">
+                          سایز: {item.sizeDisplay}
+                        </span>
+                      )}
                     </div>
                     
                     <div className="flex flex-col items-end">
                       {hasDiscount && (
                         <span className="text-xs line-through text-slate-400 dark:text-slate-500">
-                          {originalTotal.toLocaleString()} تومان
+                          {originalLineTotal.toLocaleString()} تومان
                         </span>
                       )}
                       <span className={`font-bold text-sm ${hasDiscount ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-                        {finalTotal.toLocaleString()} تومان
+                        {finalLineTotal.toLocaleString()} تومان
                       </span>
                     </div>
                   </div>
@@ -377,11 +411,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                   <div className="text-xs text-slate-500 dark:text-slate-300 leading-relaxed mb-3 space-y-1">
                     <div className="flex justify-between">
                       <span>خدمت:</span>
-                      <span>{item.options?.service || "-"}</span>
+                      <span>{item.service || "-"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>جنس:</span>
-                      <span>{item.options?.material || "-"}</span>
+                      <span>{item.material || "-"}</span>
                     </div>
                     {hasDiscount && (
                       <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
@@ -496,25 +530,34 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   );
 }
 
+// تابع تبدیل بهبود یافته برای سازگاری با خروجی جدید __iter__
 function transformBackendCart(backendItems) {
   if (!Array.isArray(backendItems)) return [];
   
-  return backendItems.map((item, index) => {
-    const finalPrice = item.final_price || item.unit_price || item.price || 0;
-    const originalPrice = item.original_price || item.base_price || finalPrice;
+  return backendItems.map((item) => {
+    // استخراج مقادیر از بک‌اند
+    const unitPrice = parseInt(item.unit_price || item.price || 0);
+    const originalPrice = parseInt(item.original_price || unitPrice);
+    const quantity = parseInt(item.quantity || 1);
+    
+    // محاسبه جمع کل خط (اگه بک‌اند نفرستاده بود)
+    const totalPrice = item.total_price || (unitPrice * quantity);
+    const originalTotal = item.original_total || (originalPrice * quantity);
     
     return {
-      id: item.id || item.product_id || index, 
-      id_unique: item.id_unique || item.cart_item_id || item.uuid || `item-${index}`,
-      name: item.product_name || item.name || item.title || "محصول",
-      qty: item.quantity || item.qty || 1,
-      totalPrice: finalPrice,
-      options: {
-        service: item.service_name || item.service || item.service_type || "-",
-        material: item.material_name || item.material || item.material_type || "-",
-        originalPrice: originalPrice,
-        isDiscounted: originalPrice > finalPrice
-      }
+      id_unique: item.id_unique, // شناسه یکتا برای عملیات‌ها
+      name: item.product_name || "محصول",
+      qty: quantity,
+      unitPrice: unitPrice,           // قیمت واحد نهایی (با تخفیف)
+      originalUnitPrice: originalPrice, // قیمت واحد اصلی
+      finalLineTotal: totalPrice,     // جمع کل خط نهایی
+      originalLineTotal: originalTotal, // جمع کل خط اصلی
+      hasDiscount: originalPrice > unitPrice,
+      // موارد اضافی
+      sizeDisplay: item.size_display || (item.size ? `سایز ${item.size}` : "-"),
+      service: item.service || "-",
+      material: item.material || "-",
+      productId: item.product_id
     };
   });
 }
