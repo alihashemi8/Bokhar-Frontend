@@ -357,7 +357,7 @@ export default function DateTimeRangePicker({
   return (
     <div
       dir="rtl"
-      className="w-full max-w-3xl mx-auto rounded-3xl mb-20 md:mb-0 p-4 md:p-8 shadow-xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+      className="w-full max-w-3xl mx-auto rounded-3xl mb-15 md:mb-0 p-4 md:p-8 shadow-xl border bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
     >
       {isLoadingSettings && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-sm text-center animate-pulse">

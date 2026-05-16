@@ -196,7 +196,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   return (
     <motion.div
       dir="rtl"
-      className="w-full max-w-5xl mx-auto mb-20 md:mb-0"
+      className="w-full max-w-5xl mx-auto mb-15 md:mb-0"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
     >

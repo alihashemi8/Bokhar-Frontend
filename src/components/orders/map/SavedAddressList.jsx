@@ -9,7 +9,7 @@ export default function SavedAddressList({
   if (!addresses.length) return null;
 
   return (
-    <div dir="rtl" className="w-full md:w-[75%] mx-auto mt-4 flex flex-col gap-3 mb-20 md:mb-0">
+    <div dir="rtl" className="w-full md:w-[75%] mx-auto mt-4 flex flex-col gap-3 mb-15 md:mb-0">
       {addresses.map((item) => (
         <div
           key={item.id}

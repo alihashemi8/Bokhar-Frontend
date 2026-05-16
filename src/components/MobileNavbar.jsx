@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, ShoppingCart, MessageSquare, Home } from "lucide-react";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -7,10 +7,32 @@ import { useAuth } from "../context/AuthContext";
 
 export default function MobileNavbar() {
   const [openModal, setOpenModal] = useState(false);
+  const [showLogo, setShowLogo] = useState(true); 
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    setShowLogo(true);
+    
+    const initTimer = setTimeout(() => {
+      if (window.scrollY <= 50) {
+        setShowLogo(false);
+      }
+    }, 2000);
+
+    const handleScroll = () => {
+      setShowLogo(window.scrollY > 80);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      clearTimeout(initTimer);
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   if (loading) return null;
 
@@ -22,6 +44,8 @@ export default function MobileNavbar() {
     }
   };
 
+  const isHomeActive = location.pathname === "/" || location.pathname === "/shop";
+
   return (
     <>
       <nav
@@ -32,11 +56,9 @@ export default function MobileNavbar() {
                    dark:shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.3)]
                    pb-[env(safe-area-inset-bottom)] transition-all duration-300"
       >
-        <div className="flex justify-around items-center h-16 px-2 max-w-lg mx-auto">
-          {/* خانه - اصلاح وضعیت اکتیو برای /shop هم */}
-          <NavItem
-            icon={<Home size={22} strokeWidth={2} />}
-            label="خانه"
+        <div dir="rtl" className="flex justify-around items-center h-16 px-2 max-w-lg mx-auto">
+          {/* خانه - با انیمیشن لوگو/آیکون */}
+          <button
             onClick={() => {
               if (window.location.hash === "#/") {
                 window.scrollTo({ top: 0, behavior: "smooth" });
@@ -44,8 +66,47 @@ export default function MobileNavbar() {
                 navigate("/shop");
               }
             }}
-            active={location.pathname === "/" || location.pathname === "/shop"}
-          />
+            className={`
+              relative flex flex-col items-center justify-center gap-1 
+              w-16 h-14 rounded-2xl transition-all duration-300 ease-out
+              ${isHomeActive 
+                ? "text-sky-500 dark:text-sky-400 scale-105 bg-sky-50 dark:bg-sky-900/20 shadow-sm" 
+                : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              }
+            `}
+            aria-label="خانه"
+          >
+            <div className={`relative w-6 h-6 flex items-center justify-center ${isHomeActive ? "drop-shadow-sm" : ""}`}>
+              {/* تصویر Logo */}
+              <div
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${
+                  showLogo ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                }`}
+              >
+                <img 
+                  src="/Logo.png" 
+                  alt="Logo" 
+                  className="h-6 w-auto object-contain"
+                />
+              </div>
+
+              {/* آیکون Home */}
+              <div
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-in-out ${
+                  !showLogo ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                }`}
+              >
+                <Home 
+                  size={22} 
+                  strokeWidth={2}
+                  className={isHomeActive ? "text-sky-500 dark:text-sky-400" : "text-current"}
+                />
+              </div>
+            </div>
+            <span className="text-[10px] font-medium tracking-tight">
+              خانه
+            </span>
+          </button>
 
           {/* پیام‌ها */}
           <NavItem
@@ -111,7 +172,6 @@ function NavItem({ icon, label, onClick, active }) {
       <span className="text-[10px] font-medium tracking-tight">
         {label}
       </span>
-      
-   </button>
+    </button>
   );
 }

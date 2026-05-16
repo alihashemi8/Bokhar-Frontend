@@ -71,7 +71,7 @@ export default function Payment({
   return (
     <motion.div
       dir="rtl"
-      className="w-full max-w-xl mx-auto mt-12 mb-17 pb-4 px-4"
+      className="w-full max-w-xl mx-auto mb-12 md:mb-0 pb-4 px-4"
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
     >
