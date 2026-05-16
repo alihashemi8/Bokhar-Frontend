@@ -12,7 +12,7 @@ export default function TimeSelector({
   setSelectedTime,
   minDate,
   disabledTimeSlots = [],
-  disabledDates = [], // ✅ prop جدید: آرایه‌ای از تاریخ‌های غیرفعال (YYYY-MM-DD)
+  disabledDates = [], // آرایه‌ای از تاریخ‌های میلادی YYYY-MM-DD
   isLoading = false,
 }) {
   const [weekOffset, setWeekOffset] = useState(0);
@@ -83,16 +83,22 @@ export default function TimeSelector({
     return toDateObj(selectedDate)?.format("YYYY/MM/DD");
   }, [selectedDate, toDateObj]);
 
-  // ✅ چک کردن اینکه آیا تاریخ در لیست disabledDates هست یا نه
+  // ✅ چک کردن دقیق‌تر disabledDates
   const isDateDisabled = useCallback((dateObj) => {
-    if (!disabledDates || disabledDates.length === 0) return false;
+    if (!disabledDates || !Array.isArray(disabledDates) || disabledDates.length === 0) {
+      return false;
+    }
     
-    const dateStr = dateObj.format("YYYY-MM-DD");
-    const dateStrSlash = dateObj.format("YYYY/MM/DD");
+    // تبدیل تاریخ شمسی به میلادی برای مقایسه
+    const gregorianDate = dateObj.convert("gregorian").format("YYYY-MM-DD");
+    const persianDate = dateObj.format("YYYY/MM/DD");
     
-    return disabledDates.some(d => 
-      d === dateStr || d === dateStrSlash || d === dateObj.toJulianDay().toString()
-    );
+    // چک کردن هر دو فرمت (میلادی و شمسی)
+    return disabledDates.some(d => {
+      if (typeof d !== 'string') return false;
+      const normalized = d.trim();
+      return normalized === gregorianDate || normalized === persianDate;
+    });
   }, [disabledDates]);
 
   const handlePrevWeek = useCallback(() => {
@@ -104,13 +110,12 @@ export default function TimeSelector({
   }, []);
 
   const handleDateSelect = useCallback((day) => {
-    // چک کردن minDate
     if (minDateObj && day.toJulianDay() < minDateObj.toJulianDay()) {
       return;
     }
     
-    // ✅ چک کردن disabledDates
     if (isDateDisabled(day)) {
+      console.log("🚫 Date is disabled by admin:", day.format("YYYY-MM-DD"));
       return;
     }
     
@@ -135,7 +140,7 @@ export default function TimeSelector({
         <button
           disabled={weekOffset === 0}
           onClick={handlePrevWeek}
-          className="text-pink-500 disabled:text-gray-300 transition-colors"
+          className="text-pink-500 disabled:text-gray-300 transition-colors font-medium"
         >
           → هفته قبل
         </button>
@@ -146,7 +151,7 @@ export default function TimeSelector({
 
         <button
           onClick={handleNextWeek}
-          className="text-pink-500 transition-colors"
+          className="text-pink-500 transition-colors font-medium"
         >
           هفته بعد ←
         </button>
@@ -163,17 +168,16 @@ export default function TimeSelector({
             ))
           : days.map((day) => {
               const isBeforeMin = minDateObj && day.toJulianDay() < minDateObj.toJulianDay();
-              const isDisabledDate = isDateDisabled(day);
+              const isDisabled = isDateDisabled(day);
               const isSelected = selectedDateKey === day.format("YYYY/MM/DD");
 
               return (
                 <div
                   key={day.toJulianDay()}
                   onClick={() => handleDateSelect(day)}
-                  title={isDisabledDate ? "این روز ظرفیت تکمیل است" : ""}
                   className={`w-20 h-24 my-3 mx-0.5 rounded-2xl border flex flex-col justify-center text-center transition-all duration-300 flex-shrink-0 relative overflow-hidden
                     ${
-                      isBeforeMin || isDisabledDate
+                      isBeforeMin || isDisabled
                         ? "opacity-40 cursor-not-allowed bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         : isSelected
                         ? `
@@ -194,9 +198,12 @@ export default function TimeSelector({
                         `
                     }`}
                 >
-                  {/* نشانگر تکمیل ظرفیت */}
-                  {(isDisabledDate) && (
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  {/* نشانگر تکمیل ظرفیت یا غیرفعال بودن */}
+                  {isDisabled && (
+                    <>
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                      <div className="absolute inset-0 bg-red-500/5 pointer-events-none" />
+                    </>
                   )}
                   
                   <p className="text-sm font-medium text-pink-500">
@@ -223,7 +230,6 @@ export default function TimeSelector({
                 key={slot}
                 onClick={() => handleTimeSelect(slot)}
                 disabled={isDisabled}
-                title={isDisabled ? "این بازه برای تحویل فوری در همان روز در دسترس نیست" : ""}
                 className={`px-5 py-3 rounded-xl text-sm border transition-all duration-300 font-bold
                   ${
                     isDisabled

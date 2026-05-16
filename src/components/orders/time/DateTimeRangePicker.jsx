@@ -16,49 +16,74 @@ export default function DateTimeRangePicker({
   const [pickupDate, setPickupDate] = useState(null);
   const [pickupTime, setPickupTime] = useState(null);
   
-  // ✅ استیت‌های جدید برای اتصال به API
+  // ✅ استیت‌های API
   const [rushSettings, setRushSettings] = useState({
     fee_24h: 100000,
     fee_48h: 50000,
-    free_after_hours: 72
+    free_after_hours: 72,
+    is_24h_enabled: true,
+    is_48h_enabled: true
   });
-  const [disabledDates, setDisabledDates] = useState([]); // روزهای غیرفعال از ادمین
+  const [disabledDates, setDisabledDates] = useState([]); 
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   
   const hasNotifiedRef = useRef(false);
   const prevValueRef = useRef(null);
 
-  /* ---------- لود تنظیمات از TimeOrders (capacityApi) ---------- */
+  /* ---------- لود تنظیمات از API ---------- */
   useEffect(() => {
     const loadSettings = async () => {
       try {
         setIsLoadingSettings(true);
-        // دریافت تنظیمات فوری و تمپلیت‌ها
+        setLoadError(null);
+        
         const [rushRes, templateRes] = await Promise.all([
           capacityApi.getRushFeeSettings(),
           capacityApi.getDeliveryTemplates()
         ]);
+
+        console.log("📦 API Response - Rush:", rushRes.data);
+        console.log("📦 API Response - Templates:", templateRes.data);
 
         if (rushRes.data) {
           setRushSettings({
             fee_24h: rushRes.data.fee_24h || 100000,
             fee_48h: rushRes.data.fee_48h || 50000,
             free_after_hours: rushRes.data.free_after_hours || 72,
-            is_24h_enabled: rushRes.data.is_24h_enabled !== false, // پیش‌فرض true
+            is_24h_enabled: rushRes.data.is_24h_enabled !== false,
             is_48h_enabled: rushRes.data.is_48h_enabled !== false
           });
         }
 
-        // استخراج روزهای غیرفعال از تمپلیت‌ها (فرض بر اینه که فیلد disabled_dates داری)
+        // ✅ فیکس اصلی: استخراج درست disabled_dates از آرایه JSONField
         if (templateRes.data && Array.isArray(templateRes.data)) {
-          const disabled = templateRes.data
-            .filter(t => t.is_active === false || t.capacity <= 0)
-            .map(t => t.date); // یا هر فیلدی که تاریخ روز باشه
-          setDisabledDates(disabled);
+          // جمع‌آوری همه تاریخ‌های غیرفعال از همه تمپلیت‌های فعال
+          const allDisabledDates = templateRes.data
+            .filter(t => t.is_active !== false) // فقط تمپلیت‌های فعال
+            .flatMap(t => {
+              // اطمینان از اینکه disabled_dates آرایه است و خالی نیست
+              if (Array.isArray(t.disabled_dates) && t.disabled_dates.length > 0) {
+                return t.disabled_dates;
+              }
+              return [];
+            });
+          
+          // حذف تاریخ‌های تکراری
+          const uniqueDates = [...new Set(allDisabledDates)];
+          
+          console.log("📅 Disabled dates extracted:", uniqueDates);
+          setDisabledDates(uniqueDates);
+        } else {
+          console.warn("⚠️ No templates found or invalid format");
+          setDisabledDates([]);
         }
+        
       } catch (error) {
-        console.warn("⚠️ خطا در لود تنظیمات ظرفیت:", error);
-        // در صورت خطا، از مقادیر پیش‌فرض استفاده می‌شه
+        console.error("❌ Error loading capacity settings:", error);
+        setLoadError("خطا در بارگذاری تنظیمات. لطفاً صفحه را رفرش کنید.");
+        // مقدار پیش‌فرض در صورت خطا
+        setDisabledDates([]);
       } finally {
         setIsLoadingSettings(false);
       }
@@ -127,13 +152,12 @@ export default function DateTimeRangePicker({
     return Math.max(0, totalHours);
   }, [deliveryDate, deliveryTime, pickupDate, pickupTime]);
 
-  /* ---------- pricing logic ✅ داینامیک شد ---------- */
+  /* ---------- pricing logic ---------- */
   const priceInfo = useMemo(() => {
     const hours = calculateHoursDiff();
     
     if (hours <= 0) return null;
     
-    // استفاده از تنظیمات دریافتی از API
     const { fee_24h, fee_48h, free_after_hours, is_24h_enabled, is_48h_enabled } = rushSettings;
     
     if (hours <= 24 && is_24h_enabled) {
@@ -174,17 +198,15 @@ export default function DateTimeRangePicker({
     };
   }, [calculateHoursDiff, rushSettings]);
 
-  /* ---------- pickup min date ---------- */
   const pickupMinDate = deliveryDate ? new DateObject(deliveryDate) : null;
 
-  /* ---------- محاسبه اسلات‌های غیرفعال (منطق 24 ساعته + ظرفیت) ---------- */
+  /* ---------- محاسبه اسلات‌های غیرفعال ---------- */
   const disabledPickupSlots = useMemo(() => {
     if (!deliveryDate || !pickupDate || !deliveryTime) return [];
     
     const deliveryObj = new DateObject(deliveryDate);
     const pickupObj = new DateObject(pickupDate);
     
-    // منطق 24 ساعته محلی (عدم انتخاب اسلات قبل از تحویل)
     if (deliveryObj.toJulianDay() === pickupObj.toJulianDay()) {
       if (deliveryTime === "۸ صبح تا ۱۳") {
         return ["۸ صبح تا ۱۳"];
@@ -318,6 +340,20 @@ export default function DateTimeRangePicker({
 
   const isComplete = deliveryDate && deliveryTime && pickupDate && pickupTime;
 
+  if (loadError) {
+    return (
+      <div className="w-full max-w-3xl mx-auto p-8 text-center bg-red-50 dark:bg-red-900/20 rounded-3xl border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300">
+        <p className="mb-4">{loadError}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+        >
+          تلاش مجدد
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       dir="rtl"
@@ -359,7 +395,7 @@ export default function DateTimeRangePicker({
             setSelectedDate={handleDeliveryDateChange}
             selectedTime={deliveryTime}
             setSelectedTime={handleDeliveryTimeChange}
-            disabledDates={disabledDates} // ✅ ارسال روزهای غیرفعال
+            disabledDates={disabledDates}
             isLoading={isLoadingSettings}
           />
         </div>
@@ -386,12 +422,13 @@ export default function DateTimeRangePicker({
             setSelectedTime={handlePickupTimeChange}
             minDate={pickupMinDate}
             disabledTimeSlots={disabledPickupSlots}
+            disabledDates={disabledDates} // ✅ اعمال تاریخ‌های غیرفعال برای تحویل گرفتن هم
             isLoading={isLoadingSettings}
           />
         </div>
       </div>
 
-      {/* Pricing Summary - داینامیک شد */}
+      {/* Pricing Summary */}
       {isComplete && priceInfo && (
         <div className={`mt-8 p-6 rounded-2xl border-2 ${priceInfo.borderColor} bg-gradient-to-r ${priceInfo.color} animate-fadeInUp`}>
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
@@ -443,7 +480,7 @@ export default function DateTimeRangePicker({
           className={`
             w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-lg transition-all transform
             ${isComplete
-              ? "bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl  cursor-pointer"
+              ? "bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white shadow-lg hover:shadow-xl cursor-pointer"
               : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
             }
           `}
@@ -451,7 +488,6 @@ export default function DateTimeRangePicker({
           {isComplete ? "تایید زمان تحویل " : "لطفاً تاریخ و زمان را انتخاب کنید"}
         </button>
       </div>
-
     </div>
   );
 }
