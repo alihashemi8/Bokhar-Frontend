@@ -14,7 +14,6 @@ export default function MobileNavbar() {
 
   if (loading) return null;
 
-  // تابع کلیک روی پروفایل
   const handleProfileClick = () => {
     if (user?.isAuthenticated) {
       navigate("/customer-dashboard");
@@ -26,60 +25,65 @@ export default function MobileNavbar() {
   return (
     <>
       <nav
-        className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2
-                   w-[92%] max-w-lg flex justify-between items-center
-                   bg-white/10 dark:bg-black/20 backdrop-blur-lg rounded-2xl px-4 py-2 shadow-lg z-50 transition-colors"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 
+                   bg-white/85 dark:bg-gray-900/90 backdrop-blur-xl 
+                   border-t border-gray-200/50 dark:border-gray-700/50 
+                   rounded-t-3xl shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] 
+                   dark:shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.3)]
+                   pb-[env(safe-area-inset-bottom)] transition-all duration-300"
       >
-        {/* پروفایل */}
-        <NavItem
-          icon={<User size={22} />}
-          label={
-            user?.isAuthenticated
-              ? user.fullname || "پروفایل"
-              : "ورود / ثبت نام"
-          }
-          onClick={handleProfileClick}
-          active={location.pathname === "/profile"}
-        />
+        <div className="flex justify-around items-center h-16 px-2 max-w-lg mx-auto">
+          {/* خانه - اصلاح وضعیت اکتیو برای /shop هم */}
+          <NavItem
+            icon={<Home size={22} strokeWidth={2} />}
+            label="خانه"
+            onClick={() => {
+              if (window.location.hash === "#/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              } else {
+                navigate("/shop");
+              }
+            }}
+            active={location.pathname === "/" || location.pathname === "/shop"}
+          />
 
-        {/* سبد خرید */}
-        <NavItem
-          icon={
-            <div className="relative">
-              <ShoppingCart size={22} />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                  {totalItems > 99 ? "99+" : totalItems}
-                </span>
-              )}
-            </div>
-          }
-          label="سبد"
-          onClick={() => navigate("/order")}
-          active={location.pathname === "/order"}
-        />
+          {/* پیام‌ها */}
+          <NavItem
+            icon={<MessageSquare size={22} strokeWidth={2} />}
+            label="پیام‌ها"
+            onClick={() => navigate("/notifications")}
+            active={location.pathname === "/notifications"}
+          />
 
-        {/* پیام‌ها */}
-        <NavItem
-          icon={<MessageSquare size={22} />}
-          label="پیام‌ها"
-          onClick={() => navigate("/notifications")}
-          active={location.pathname === "/notifications"}
-        />
-
-        {/* خانه */}
-        <NavItem
-          icon={<Home size={22} />}
-          label="خانه"
-          onClick={() => {
-            if (window.location.hash === "#/") {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            } else {
-              navigate("/shop");
+          {/* سبد خرید */}
+          <NavItem
+            icon={
+              <div className="relative">
+                <ShoppingCart size={22} strokeWidth={2} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-gradient-to-br from-red-500 to-red-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-sm ring-2 ring-white dark:ring-gray-900">
+                    {totalItems > 99 ? "99+" : totalItems}
+                  </span>
+                )}
+              </div>
             }
-          }}
-          active={location.pathname === "/"}
-        />
+            label="سبد"
+            onClick={() => navigate("/order")}
+            active={location.pathname === "/order"}
+          />
+
+          {/* پروفایل */}
+          <NavItem
+            icon={<User size={22} strokeWidth={2} />}
+            label={
+              user?.isAuthenticated
+                ? user.fullname || "پروفایل"
+                : "ورود / ثبت نام"
+            }
+            onClick={handleProfileClick}
+            active={location.pathname === "/customer-dashboard"}
+          />
+        </div>
       </nav>
 
       <AuthModal isOpen={openModal} onClose={() => setOpenModal(false)} />
@@ -92,20 +96,22 @@ function NavItem({ icon, label, onClick, active }) {
     <button
       onClick={onClick}
       className={`
-        flex flex-col items-center justify-center gap-1 px-2 py-1 rounded-lg
-        transition-all duration-300
-        ${
-          active
-            ? "text-amber-400 scale-110"
-            : "text-gray-600 dark:text-gray-300 hover:text-amber-300 scale-100"
+        relative flex flex-col items-center justify-center gap-1 
+        w-16 h-14 rounded-2xl transition-all duration-300 ease-out
+        ${active 
+          ? "text-sky-500 dark:text-sky-400 scale-105 bg-sky-50 dark:bg-sky-900/20 shadow-sm" 
+          : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-300 hover:bg-gray-50 dark:hover:bg-gray-800/50"
         }
       `}
       aria-label={label}
     >
-      {icon}
-      <span className="text-[10px] transition-colors duration-300">
+      <div className={`${active ? "drop-shadow-sm" : ""} transition-transform duration-300`}>
+        {icon}
+      </div>
+      <span className="text-[10px] font-medium tracking-tight">
         {label}
       </span>
-    </button>
+      
+   </button>
   );
 }
