@@ -1,11 +1,11 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { Calendar, X, Clock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { Calendar, X, Clock, AlertCircle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import DateObject from "react-date-object";
 import PropTypes from "prop-types";
-import { capacityApi } from "../../../../api/capacityApi"; 
+import { capacityApi } from "../../../../api/capacityApi";
 
 export default function TimeOrders({ 
   orders = [], 
@@ -15,7 +15,16 @@ export default function TimeOrders({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [templates, setTemplates] = useState([]);
+  const [error, setError] = useState(null);
   
+  // Ref برای جلوگیری از stale closure
+  const templatesRef = useRef([]);
+  
+  // آپدیت ref وقتی templates تغییر می‌کنه
+  useEffect(() => {
+    templatesRef.current = templates;
+  }, [templates]);
+
   const [deliverySettings, setDeliverySettings] = useState({
     urgent24h: {
       enabled: true,
@@ -38,14 +47,25 @@ export default function TimeOrders({
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
         const [feeRes, templateRes] = await Promise.all([
           capacityApi.getRushFeeSettings(),
           capacityApi.getDeliveryTemplates()
         ]);
 
         const feeData = feeRes.data || {};
-        const templatesData = templateRes.data || [];
+        const templatesData = Array.isArray(templateRes.data) ? templateRes.data : [];
+        
+        console.log("✅ Templates loaded:", templatesData);
         setTemplates(templatesData);
+
+        // اگه تمپلیتی نیست، خطا نشون بده
+        if (templatesData.length === 0) {
+          setError("هیچ تمپلیت تحویلی در سیستم یافت نشد. لطفاً از پنل داخلی جنگو یک تمپلیت بسازید.");
+          setLoading(false);
+          return;
+        }
 
         const template = templatesData[0] || {};
         
@@ -66,11 +86,17 @@ export default function TimeOrders({
           }
         });
 
-        if (templatesData[0]?.disabled_dates) {
-          setDisabledDates(templatesData[0].disabled_dates);
-        }
+        // اطمینان از اینکه disabled_dates همیشه آرایه است
+        const fetchedDisabledDates = Array.isArray(template.disabled_dates) 
+          ? template.disabled_dates 
+          : [];
+          
+        console.log("✅ Disabled dates from API:", fetchedDisabledDates);
+        setDisabledDates(fetchedDisabledDates);
+        
       } catch (error) {
         console.error("❌ Error loading settings:", error);
+        setError("خطا در بارگذاری تنظیمات از سرور");
       } finally {
         setLoading(false);
       }
@@ -98,86 +124,192 @@ export default function TimeOrders({
     return counts;
   }, [orders]);
 
-  const notifyParent = useCallback((newSettings) => {
+  const notifyParent = useCallback((newSettings, dates) => {
     onSettingsChange?.({
-      disabledDates,
+      disabledDates: dates ?? disabledDates,
       deliverySettings: newSettings ?? deliverySettings
     });
   }, [onSettingsChange, disabledDates, deliverySettings]);
 
-  const addDisabledDate = (date) => {
-    if (!date || !date.isValid) return;
-    const gregorianDate = date.convert("gregorian").format("YYYY-MM-DD");
+  /* ---------- Sync برای تاریخ‌ها (با فرمت Gregorian) ---------- */
+  const syncDatesToBackend = useCallback(async (datesToSave) => {
+    const currentTemplates = templatesRef.current;
     
-    if (!disabledDates.includes(gregorianDate)) {
-      const updated = [...disabledDates, gregorianDate].sort();
-      setDisabledDates(updated);
+    console.log("🟡 syncDatesToBackend called");
+    console.log("🟡 Templates available:", currentTemplates.length);
+    console.log("🟡 Dates to save (should be Gregorian):", datesToSave);
+    
+    if (currentTemplates.length === 0) {
+      console.error("🔴 No templates available in ref!");
+      alert("خطا: تمپلیتی یافت نشد. لطفاً صفحه را رفرش کنید.");
+      return;
     }
-  };
 
-  const toPersianDate = (gregorianDate) => {
-    return new DateObject({
-      date: gregorianDate,
-      calendar: persian,
-      locale: persian_fa
-    }).format("YYYY/MM/DD");
-  };
-
-  const removeDisabledDate = useCallback((date) => {
-    const updated = disabledDates.filter(d => d !== date);
-    setDisabledDates(updated);
-  }, [disabledDates]);
-
-  const syncToBackend = useCallback(async (newSettings) => {
     try {
       setSaving(true);
+      const template = currentTemplates[0];
       
-      if (templates.length > 0) {
-        const template = templates[0];
-        await capacityApi.updateDeliveryTemplate(template.id, {
-          urgent_24_capacity: newSettings.urgent24h.limit,
-          urgent_48_capacity: newSettings.urgent48h.limit,
-        });
-      }
+      // اطمینان از فرمت میلادی
+      const formattedDates = datesToSave.map(date => {
+        // اگه تاریخ string هست و فرمتش درسته، همونو برگردون
+        if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return date;
+        }
+        // اگه آبجکت DateObject هست، تبدیل کن
+        if (date && date.format) {
+          return date.convert("gregorian").format("YYYY-MM-DD");
+        }
+        return String(date);
+      });
 
-      const feeData = {
-        is_24h_enabled: newSettings.urgent24h.enabled,
-        is_48h_enabled: newSettings.urgent48h.enabled,
-        fee_24h: newSettings.urgent24h.priceType === 'fixed' ? newSettings.urgent24h.fixedValue : 0,
-        percent_24h: newSettings.urgent24h.priceType === 'percentage' ? newSettings.urgent24h.priceValue : 0,
-        fee_48h: newSettings.urgent48h.priceType === 'fixed' ? newSettings.urgent48h.fixedValue : 0,
-        percent_48h: newSettings.urgent48h.priceType === 'percentage' ? newSettings.urgent48h.priceValue : 0,
+      const payload = {
+        disabled_dates: formattedDates,
       };
       
-      await capacityApi.updateRushFeeSettings(feeData);
-      notifyParent(newSettings);
+      console.log("🟢 Sending to API:", payload);
+      
+      const response = await capacityApi.updateDeliveryTemplate(template.id, payload);
+      console.log("🟢 API Response:", response.data);
+      
+      notifyParent(null, formattedDates);
       
     } catch (error) {
-      console.error("❌ Save error:", error);
-      alert("خطا در ذخیره تنظیمات. لطفاً دوباره تلاش کنید.");
+      console.error("❌ Error saving dates:", error);
+      console.error("❌ Response data:", error.response?.data);
+      alert("خطا در ذخیره تاریخ‌های غیرفعال");
     } finally {
       setSaving(false);
     }
-  }, [templates, notifyParent]);
+  }, [notifyParent]);
 
+  /* ---------- Sync برای تنظیمات (ظرفیت و هزینه) ---------- */
+  const syncSettingsToBackend = useCallback(async (newSettings) => {
+    const currentTemplates = templatesRef.current;
+    
+    if (currentTemplates.length === 0) {
+      console.error("🔴 No templates available!");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const template = currentTemplates[0];
+      
+      const payload = {
+        urgent_24_capacity: newSettings.urgent24h.limit,
+        urgent_48_capacity: newSettings.urgent48h.limit,
+      };
+      
+      console.log("🟢 Sending settings to API:", payload);
+      
+      await capacityApi.updateDeliveryTemplate(template.id, payload);
+      notifyParent(newSettings, null);
+      
+    } catch (error) {
+      console.error("❌ Error saving settings:", error);
+      alert("خطا در ذخیره تنظیمات ظرفیت");
+    } finally {
+      setSaving(false);
+    }
+  }, [notifyParent]);
+
+  /* ---------- اضافه کردن تاریخ ---------- */
+  const addDisabledDate = useCallback((date) => {
+    if (!date || !date.isValid) {
+      console.warn("⚠️ Invalid date selected");
+      return;
+    }
+    
+    // تبدیل به میلادی
+    const gregorianDate = date.convert("gregorian").format("YYYY-MM-DD");
+    console.log("📅 Adding date - Persian:", date.format("YYYY-MM-DD"), "→ Gregorian:", gregorianDate);
+    
+    setDisabledDates(prev => {
+      if (prev.includes(gregorianDate)) {
+        console.log("⚠️ Date already exists");
+        return prev;
+      }
+      
+      const updated = [...prev, gregorianDate].sort();
+      
+      // Sync به بک‌اند با تاریخ جدید
+      // از setTimeout استفاده می‌کنیم تا مطمئن شویم state آپدیت شده
+      setTimeout(() => syncDatesToBackend(updated), 0);
+      
+      return updated;
+    });
+  }, [syncDatesToBackend]);
+
+  const toPersianDate = (gregorianDate) => {
+    try {
+      return new DateObject({
+        date: gregorianDate,
+        calendar: persian,
+        locale: persian_fa
+      }).format("YYYY/MM/DD");
+    } catch (e) {
+      return gregorianDate;
+    }
+  };
+
+  /* ---------- حذف تاریخ ---------- */
+  const removeDisabledDate = useCallback((date) => {
+    console.log("🗑️ Removing date:", date);
+    
+    setDisabledDates(prev => {
+      const updated = prev.filter(d => d !== date);
+      setTimeout(() => syncDatesToBackend(updated), 0);
+      return updated;
+    });
+  }, [syncDatesToBackend]);
+
+  /* ---------- آپدیت تنظیمات ---------- */
   const updateSettings = useCallback((type, field, value) => {
     const updated = {
       ...deliverySettings,
       [type]: { ...deliverySettings[type], [field]: value }
     };
     setDeliverySettings(updated);
-    syncToBackend(updated);
-  }, [deliverySettings, syncToBackend]);
+    syncSettingsToBackend(updated);
+  }, [deliverySettings, syncSettingsToBackend]);
 
   const getProgress = (current, limit) => {
     if (limit === 0) return 0;
     return Math.min(100, Math.round((current / limit) * 100));
   };
 
+  /* ---------- رندرها ---------- */
   if (loading) {
     return (
       <div className="w-full h-64 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+        <p className="text-red-700 dark:text-red-300 mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2 mx-auto transition-colors"
+        >
+          <RefreshCw size={18} />
+          بارگذاری مجدد
+        </button>
+      </div>
+    );
+  }
+
+  if (templates.length === 0) {
+    return (
+      <div className="w-full p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl text-center">
+        <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-3" />
+        <p className="text-yellow-800 dark:text-yellow-200 mb-4">
+          هیچ تمپلیت تحویلی یافت نشد. لطفاً ابتدا در پنل مدیریت جنگو یک تمپلیت بسازید.
+        </p>
       </div>
     );
   }
@@ -203,7 +335,7 @@ export default function TimeOrders({
                 مدیریت روزهای غیرفعال
               </h3>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                انتخاب تاریخ تعطیل از تقویم شمسی
+                انتخاب تاریخ تعطیل از تقویم شمسی (به صورت خودکار به میلادی ذخیره می‌شود)
               </p>
             </div>
           </div>
@@ -241,7 +373,7 @@ export default function TimeOrders({
                   <button 
                     onClick={() => removeDisabledDate(date)} 
                     disabled={saving}
-                    className="mr-1 p-1 hover:bg-red-200 dark:hover:bg-red-800 rounded-full disabled:opacity-50"
+                    className="mr-1 hover:bg-red-200 dark:hover:bg-red-800 rounded-full p-0.5 disabled:opacity-50 transition-colors"
                   >
                     <X size={14} />
                   </button>
