@@ -231,7 +231,7 @@ export default function Order() {
         onStepClick={handleStepClick}
       />
 
-      <div className="min-h-[400px] mt-6">
+      <div className="min-h-[400px] mt-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

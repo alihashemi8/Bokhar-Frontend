@@ -2,7 +2,7 @@ import React from "react";
 
 export default function StepProgress({ steps, step, maxStep, onStepClick }) {
   return (
-    <div className="flex items-center justify-between relative mb-8 md:mt-20">
+    <div className="flex items-center justify-between relative  md:mt-20">
       {/* خط پیشرفت زمینه */}
 
 
