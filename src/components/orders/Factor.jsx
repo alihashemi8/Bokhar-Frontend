@@ -26,7 +26,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         const items = result.data.cart || [];
         setCartItems(transformBackendCart(items));
       } else {
-        // هندل کردن خطای 401
         if (result.unauthorized) {
           addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
         } else {
@@ -45,7 +44,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     loadCart();
   }, [loadCart]);
 
-  // محاسبه قیمت نهایی (با تخفیف) - جمع کل سبد
   const totalPrice = useMemo(() => {
     return cartItems?.reduce(
       (sum, item) => sum + (item.finalLineTotal || 0),
@@ -53,7 +51,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     );
   }, [cartItems]);
 
-  // محاسبه قیمت اصلی (قبل تخفیف) - جمع کل سبد
   const originalTotalPrice = useMemo(() => {
     return cartItems?.reduce(
       (sum, item) => sum + (item.originalLineTotal || 0),
@@ -83,7 +80,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     
     const newQty = (item.qty || 1) + 1;
     
-    // آپدیت خوش‌بینانه با استفاده از id_unique (نه id)
     setCartItems(prev => prev.map(i => 
       i.id_unique === itemKey ? { ...i, qty: newQty } : i
     ));
@@ -165,7 +161,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         try {
           const result = await removeCartItem(itemKey);
           if (result.success) {
-            // حذف از استیت با استفاده از id_unique
             setCartItems(prev => prev.filter(i => i.id_unique !== itemKey));
             addToast(`«${name}» حذف شد`, "success");
             if (result.data?.items) {
@@ -231,7 +226,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                 {cartItems.length > 0 ? (
                   cartItems.map((item) => {
                     const hasDiscount = item.hasDiscount;
-                    // استفاده از مقادیر آماده از بک‌اند
                     const finalUnitPrice = item.unitPrice || 0;
                     const originalUnitPrice = item.originalUnitPrice || finalUnitPrice;
                     const finalLineTotal = item.finalLineTotal || 0;
@@ -239,7 +233,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
                     return (
                       <motion.tr
-                        key={item.id_unique} // استفاده از id_unique به جای id
+                        key={item.id_unique}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -288,7 +282,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           </div>
                         </td>
 
-                        {/* اضافه شدن ستون سایز */}
                         <td className="py-4 px-4 text-center text-slate-700 dark:text-slate-300">
                           {item.sizeDisplay || "-"}
                         </td>
@@ -301,33 +294,39 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           {item.material || "-"}
                         </td>
 
-                        <td className="py-4 px-4 text-right text-slate-800 dark:text-slate-200">
+                        {/* قیمت واحد - قیمت اصلی خط‌خورده، قیمت نهایی سبز */}
+                        <td className="py-4 px-4 text-right">
                           {hasDiscount ? (
-                            <div className="flex flex-col">
-                              <span className="text-xs line-through text-slate-400 dark:text-slate-500">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs line-through text-slate-400 dark:text-slate-500 decoration-slate-400">
                                 {originalUnitPrice.toLocaleString()}
                               </span>
-                              <span className="text-green-600 dark:text-green-400 font-semibold">
+                              <span className="text-green-600 dark:text-green-400 font-bold">
                                 {finalUnitPrice.toLocaleString()}
                               </span>
                             </div>
                           ) : (
-                            finalUnitPrice.toLocaleString()
+                            <span className="text-slate-800 dark:text-slate-200 font-semibold">
+                              {finalUnitPrice.toLocaleString()}
+                            </span>
                           )}
                         </td>
 
-                        <td className="py-4 px-4 text-right text-slate-900 dark:text-white font-bold">
+                        {/* قیمت کل - قیمت اصلی خط‌خورده، قیمت نهایی سبز و بولد */}
+                        <td className="py-4 px-4 text-right">
                           {hasDiscount ? (
-                            <div className="flex flex-col items-end">
-                              <span className="text-xs line-through text-slate-400 dark:text-slate-500 font-normal">
+                            <div className="flex flex-col gap-0.5 items-end">
+                              <span className="text-xs line-through text-slate-400 dark:text-slate-500 decoration-slate-400 font-normal">
                                 {originalLineTotal.toLocaleString()}
                               </span>
-                              <span className="text-green-600 dark:text-green-400">
+                              <span className="text-green-600 dark:text-green-400 font-extrabold text-base">
                                 {finalLineTotal.toLocaleString()}
                               </span>
                             </div>
                           ) : (
-                            finalLineTotal.toLocaleString()
+                            <span className="text-slate-900 dark:text-white font-bold text-base">
+                              {finalLineTotal.toLocaleString()}
+                            </span>
                           )}
                         </td>
 
@@ -348,7 +347,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                     animate={{ opacity: 1 }}
                   >
                     <td
-                      colSpan={8} // تغییر از 7 به 8 به خاطر اضافه شدن ستون سایز
+                      colSpan={8}
                       className="py-10 text-center text-slate-400 dark:text-slate-300"
                     >
                       سبد خرید خالی است
@@ -372,7 +371,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
               return (
                 <motion.div
-                  key={item.id_unique} // استفاده از id_unique
+                  key={item.id_unique}
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
@@ -388,7 +387,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                           تخفیف دار
                         </span>
                       )}
-                      {/* نمایش سایز در موبایل */}
                       {item.sizeDisplay && (
                         <span className="text-xs text-slate-500 mt-1">
                           سایز: {item.sizeDisplay}
@@ -396,9 +394,10 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                       )}
                     </div>
                     
+                    {/* قیمت کل در موبایل - قیمت اصلی خط‌خورده، قیمت نهایی سبز */}
                     <div className="flex flex-col items-end">
                       {hasDiscount && (
-                        <span className="text-xs line-through text-slate-400 dark:text-slate-500">
+                        <span className="text-xs line-through text-slate-400 dark:text-slate-500 mb-0.5">
                           {originalLineTotal.toLocaleString()} تومان
                         </span>
                       )}
@@ -417,15 +416,25 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                       <span>جنس:</span>
                       <span>{item.material || "-"}</span>
                     </div>
-                    {hasDiscount && (
-                      <div className="flex justify-between text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
-                        <span>قیمت واحد:</span>
-                        <div>
-                          <span className="line-through ml-1">{originalUnitPrice.toLocaleString()}</span>
-                          <span className="text-green-600 dark:text-green-400">{finalUnitPrice.toLocaleString()}</span>
-                        </div>
+                    
+                    {/* قیمت واحد در موبایل */}
+                    <div className="flex justify-between pt-1 border-t border-slate-100 dark:border-slate-800 mt-1">
+                      <span>قیمت واحد:</span>
+                      <div className="flex flex-col items-end">
+                        {hasDiscount ? (
+                          <>
+                            <span className="line-through text-slate-400 text-[10px]">
+                              {originalUnitPrice.toLocaleString()}
+                            </span>
+                            <span className="text-green-600 dark:text-green-400 font-semibold">
+                              {finalUnitPrice.toLocaleString()}
+                            </span>
+                          </>
+                        ) : (
+                          <span>{finalUnitPrice.toLocaleString()}</span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
@@ -478,31 +487,53 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         {cartItems.length > 0 && (
           <div className="border-t border-slate-200 dark:border-slate-700 pt-4 md:pt-5 mt-6 md:mt-8">
             <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
-              <div className="flex flex-col">
+              
+              {/* بخش سود و توضیحات */}
+              <div className="flex flex-col gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 md:p-4 rounded-xl md:bg-transparent ">
                 <span className="text-slate-700 dark:text-slate-300 font-bold text-lg md:text-xl">
                   مبلغ نهایی
                 </span>
+                
                 {hasAnyDiscount && (
-                  <span className="text-xs md:text-sm text-green-600 dark:text-green-400 mt-1">
-                    سود شما از این خرید: {savingsAmount.toLocaleString()} تومان
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm md:text-base text-green-600 dark:text-green-400 font-semibold">
+                      💰 سود شما از این خرید: {savingsAmount.toLocaleString()} تومان
+                    </span>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <span className="line-through decoration-slate-400">
+                        {originalTotalPrice.toLocaleString()} تومان
+                      </span>
+                      <span>−</span>
+                      <span className="text-red-500 dark:text-red-400">
+                        {savingsAmount.toLocaleString()} تومان تخفیف
+                      </span>
+                      <span>=</span>
+                      <span className="text-green-600 dark:text-green-400 font-bold">
+                        {totalPrice.toLocaleString()} تومان
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              <div className={`
-                flex flex-col items-start md:items-end
-                bg-slate-50 dark:bg-slate-800/50 
-                p-3 md:p-0 rounded-xl md:bg-transparent md:rounded-none
-                w-full md:w-auto
-              `}>
+              {/* بخش قیمت نهایی بزرگ */}
+              <div className="flex flex-col items-start md:items-end bg-slate-50 dark:bg-slate-800/50 p-4 md:p-0 rounded-xl md:bg-transparent">
                 {hasAnyDiscount && (
-                  <span className="text-base md:text-xl line-through text-slate-400 dark:text-slate-500 mb-1">
-                    {originalTotalPrice.toLocaleString()} تومان
-                  </span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg md:text-xl line-through text-slate-400 dark:text-slate-500 decoration-slate-400">
+                      {originalTotalPrice.toLocaleString()}
+                    </span>
+                    <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full">
+                      {Math.round((savingsAmount / originalTotalPrice) * 100)}% تخفیف
+                    </span>
+                  </div>
                 )}
-                <span className={`text-2xl md:text-3xl font-extrabold ${hasAnyDiscount ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
-                  {totalPrice.toLocaleString()} <span className="text-sm md:text-base font-normal">تومان</span>
-                </span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-2xl md:text-4xl font-extrabold ${hasAnyDiscount ? "text-green-600 dark:text-green-400" : "text-slate-900 dark:text-white"}`}>
+                    {totalPrice.toLocaleString()}
+                  </span>
+                  <span className="text-sm md:text-base font-medium text-slate-500 dark:text-slate-400">تومان</span>
+                </div>
               </div>
             </div>
 
@@ -511,7 +542,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
                 onClick={goToTimeStep}
                 disabled={cartItems.length === 0}
                 className="
-                  w-full h-12 md:h-14 mt-4 md:mt-6 rounded-xl md:rounded-2xl
+                  w-full h-12 md:h-14 mt-6 rounded-xl md:rounded-2xl
                   bg-sky-600 hover:bg-sky-700 active:scale-[0.98]
                   dark:bg-sky-700 dark:hover:bg-sky-600
                   text-white font-bold text-base md:text-lg
@@ -530,30 +561,27 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   );
 }
 
-// تابع تبدیل بهبود یافته برای سازگاری با خروجی جدید __iter__
+// تابع تبدیل داده‌های بک‌اند
 function transformBackendCart(backendItems) {
   if (!Array.isArray(backendItems)) return [];
   
   return backendItems.map((item) => {
-    // استخراج مقادیر از بک‌اند
     const unitPrice = parseInt(item.unit_price || item.price || 0);
     const originalPrice = parseInt(item.original_price || unitPrice);
     const quantity = parseInt(item.quantity || 1);
     
-    // محاسبه جمع کل خط (اگه بک‌اند نفرستاده بود)
     const totalPrice = item.total_price || (unitPrice * quantity);
     const originalTotal = item.original_total || (originalPrice * quantity);
     
     return {
-      id_unique: item.id_unique, // شناسه یکتا برای عملیات‌ها
+      id_unique: item.id_unique,
       name: item.product_name || "محصول",
       qty: quantity,
-      unitPrice: unitPrice,           // قیمت واحد نهایی (با تخفیف)
-      originalUnitPrice: originalPrice, // قیمت واحد اصلی
-      finalLineTotal: totalPrice,     // جمع کل خط نهایی
-      originalLineTotal: originalTotal, // جمع کل خط اصلی
+      unitPrice: unitPrice,           
+      originalUnitPrice: originalPrice, 
+      finalLineTotal: totalPrice,     
+      originalLineTotal: originalTotal, 
       hasDiscount: originalPrice > unitPrice,
-      // موارد اضافی
       sizeDisplay: item.size_display || (item.size ? `سایز ${item.size}` : "-"),
       service: item.service || "-",
       material: item.material || "-",

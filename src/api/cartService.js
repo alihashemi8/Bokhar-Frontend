@@ -128,12 +128,13 @@ export const fetchCart = async () => {
 
 export const addToCart = async (productId, quantity = 1, options = {}) => {
   try {
-    const payload = {
-      quantity: parseInt(quantity),
-      service: options.service || "",
-      material: options.material || "",
-      size: options.size || null,
-    };
+const payload = {
+  quantity: parseInt(quantity),
+  service: options.service || "",
+  material: options.material || "",
+  size: options.size || null
+};
+
     
     console.log("Sending to cart:", { productId, payload });
     
@@ -232,13 +233,12 @@ const transformCartItems = (cartItems) => {
     service_item_id: item.id_unique,
     product_id: item.product_id,
     quantity: item.quantity,
-    unit_price: item.unit_price,
-    original_price: item.original_price || item.unit_price,
     description: `${item.service || ''} - ${item.material || ''}`.trim(),
     size: item.size,
     size_display: item.size_display
   }));
 };
+
 
 export const createOrder = async ({
   cartItems,

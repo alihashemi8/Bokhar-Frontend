@@ -1,27 +1,27 @@
 import { useEffect, useState, useMemo } from "react";
 import { useCart } from "../../context/CartContext";
-import { addToCart as addToCartAPI } from "../../api/cartService"; 
+import { addToCart as addToCartAPI } from "../../api/cartService";
 import BaseModal from "../BaseModal/BaseModal";
-// کتابخانه Toast (react-hot-toast یا هر کدام که استفاده می‌کنید)
-import { toast } from "react-hot-toast"; 
+import { toast } from "react-hot-toast";
 
 export default function ServiceModal({
   isOpen,
   onClose,
-  productId, // integer – اجباری
+  productId,
   itemTitle = "سرویس",
   pricing = {},
 }) {
-  const { addToCart: addToCartContext, refreshCart } = useCart();
+  const { refreshCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("");
   const [quantities, setQuantities] = useState({});
 
-  // نرمال‌سازی قیمت‌ها (بدون تغییر منطق قبلی)
   const normalizedPricing = useMemo(() => {
     const normalized = {};
+
     for (const [tab, tabData] of Object.entries(pricing || {})) {
       let materialPrices = {};
+
       if (Array.isArray(tabData.materialPrices)) {
         materialPrices = Object.fromEntries(
           tabData.materialPrices.map((mp) => [
@@ -31,25 +31,29 @@ export default function ServiceModal({
               product_id: mp.product_id || productId,
               has_discount: mp.has_discount,
               discount_type: mp.discount_type,
-              discount_value: Number(mp.discount_value || 0),
+              discount_value: Number(mp.discount_value ?? 0),
             },
-          ]),
+          ])
         );
       }
+
       normalized[tab] = { ...tabData, materialPrices };
     }
+
     return normalized;
   }, [pricing, productId]);
 
-  // محاسبه قیمت نهایی با تخفیف
   const getEffectivePrice = (item) => {
     if (!item?.has_discount) return item.price;
+
     if (item.discount_type === "percent") {
       return Math.round(item.price * (1 - item.discount_value / 100));
     }
+
     if (item.discount_type === "fixed") {
       return Math.max(0, item.price - item.discount_value);
     }
+
     return item.price;
   };
 
@@ -68,11 +72,12 @@ export default function ServiceModal({
       const tabQuantities = prev[activeTab] || {};
       const currentQty = tabQuantities[material] || 0;
       const nextQty = Math.max(0, currentQty + delta);
+
       const updatedTab = { ...tabQuantities };
-      
+
       if (nextQty === 0) delete updatedTab[material];
       else updatedTab[material] = nextQty;
-      
+
       return { ...prev, [activeTab]: updatedTab };
     });
   };
@@ -80,28 +85,31 @@ export default function ServiceModal({
   const totalPrice = useMemo(() => {
     return Object.entries(quantities).reduce((acc, [tabName, mats]) => {
       const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+
       const tabSum = Object.entries(mats).reduce((sum, [mat, qty]) => {
         const item = tabPriceData[mat];
         return sum + (item ? getEffectivePrice(item) * qty : 0);
       }, 0);
+
       return acc + tabSum;
     }, 0);
   }, [quantities, normalizedPricing]);
 
-  // ✅ تابع اصلی افزودن به سبد
   const handleAdd = async () => {
     if (!productId) {
       toast.error("شناسه محصول نامعتبر است");
       return;
     }
 
-    // ساخت لیست آیتم‌های انتخاب شده
     const selectedItems = [];
+
     Object.entries(quantities).forEach(([tabName, mats]) => {
       const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+
       Object.entries(mats).forEach(([mat, qty]) => {
         if (qty > 0) {
           const item = tabPriceData[mat];
+
           selectedItems.push({
             product_id: item.product_id || productId,
             quantity: qty,
@@ -110,9 +118,7 @@ export default function ServiceModal({
               material: mat,
               size: null,
             },
-            price: getEffectivePrice(item),
-            original_price: item.price,
-            product_name: `${itemTitle} - ${tabName} - ${mat}` // برای ذخیره در session
+            product_name: `${itemTitle} - ${tabName} - ${mat}`,
           });
         }
       });
@@ -127,39 +133,35 @@ export default function ServiceModal({
     const toastId = toast.loading("در حال افزودن به سبد...");
 
     try {
-      // ارسال parallel به API
       const promises = selectedItems.map((item) =>
         addToCartAPI(item.product_id, item.quantity, {
           service: item.options.service,
           material: item.options.material,
           size: item.options.size,
-          price: item.price,
-          original_price: item.original_price,
-          product_name: item.product_name
+          product_name: item.product_name,
         })
       );
 
       const results = await Promise.allSettled(promises);
-      
-      const failedItems = results.filter(r => r.status === 'rejected' || !r.value?.success);
+
+      const failedItems = results.filter(
+        (r) => r.status === "rejected" || !r.value?.success
+      );
+
       const successCount = results.length - failedItems.length;
 
       if (failedItems.length === 0) {
-        // موفقیت کامل
         toast.success(`${successCount} آیتم به سبد اضافه شد`, { id: toastId });
-        
-        // رفرش سبد از بک‌اند (مهم: برای گرفتن id_unique)
+
         await refreshCart();
-        
-        // ریست فرم و بستن مودال
+
         setQuantities({});
         onClose();
       } else {
-        // خطای جزئی
         toast.error(`${failedItems.length} آیتم با خطا مواجه شد`, { id: toastId });
+
         console.error("Failed items:", failedItems);
-        
-        // رفرش کردن برای دریافت آیتم‌های موفق
+
         await refreshCart();
       }
     } catch (error) {
@@ -175,7 +177,6 @@ export default function ServiceModal({
 
   return (
     <BaseModal isOpen={isOpen} onClose={onClose} title={itemTitle} maxWidth="md">
-      {/* تب‌ها */}
       {availableTabs.length > 1 && (
         <div className="flex gap-2 mt-2 mb-4 overflow-x-auto pb-1">
           {availableTabs.map((tab) => (
@@ -194,7 +195,6 @@ export default function ServiceModal({
         </div>
       )}
 
-      {/* لیست متریال‌ها */}
       <div className="space-y-3 max-h-[55vh] overflow-y-auto pb-4 px-1">
         {Object.entries(currentMaterials).map(([mat, item]) => {
           const qty = currentTabQuantities[mat] || 0;
@@ -204,16 +204,19 @@ export default function ServiceModal({
             <div
               key={mat}
               className={`flex justify-between items-center p-4 rounded-xl border transition-all duration-200 ${
-                qty > 0 ? "border-sky-500 bg-sky-50 shadow-sm" : "bg-white border-gray-200"
+                qty > 0
+                  ? "border-sky-500 bg-sky-50 shadow-sm"
+                  : "bg-white border-gray-200"
               }`}
             >
               <div className="text-right">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-bold text-gray-800">{mat}</span>
+
                   {item.has_discount && (
                     <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                      {item.discount_type === "percent" 
-                        ? `${item.discount_value}٪` 
+                      {item.discount_type === "percent"
+                        ? `${item.discount_value}٪`
                         : `${item.discount_value.toLocaleString()} تومان`}
                     </span>
                   )}
@@ -225,7 +228,12 @@ export default function ServiceModal({
                       {item.price.toLocaleString()} تومان
                     </span>
                   )}
-                  <span className={`font-bold ${item.has_discount ? "text-green-600" : "text-gray-700"}`}>
+
+                  <span
+                    className={`font-bold ${
+                      item.has_discount ? "text-green-600" : "text-gray-700"
+                    }`}
+                  >
                     {finalPrice.toLocaleString()} تومان
                   </span>
                 </div>
@@ -236,16 +244,18 @@ export default function ServiceModal({
                   onClick={() => changeQuantity(mat, -1)}
                   disabled={qty === 0 || loading}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors active:scale-95 ${
-                    qty > 0 ? "bg-white text-sky-600 shadow-sm border border-sky-200" : "bg-gray-100 text-gray-300"
+                    qty > 0
+                      ? "bg-white text-sky-600 shadow-sm border border-sky-200"
+                      : "bg-gray-100 text-gray-300"
                   }`}
                 >
                   −
                 </button>
-                
+
                 <span className="w-6 text-center font-bold text-lg text-gray-800">
                   {qty}
                 </span>
-                
+
                 <button
                   onClick={() => changeQuantity(mat, 1)}
                   disabled={loading}
@@ -259,13 +269,15 @@ export default function ServiceModal({
         })}
       </div>
 
-      {/* فوتر */}
       <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500">مبلغ قابل پرداخت:</span>
+
           <span className="font-bold text-xl text-sky-700">
-            {totalPrice.toLocaleString()} 
-            <span className="text-sm font-normal text-gray-500 mr-1">تومان</span>
+            {totalPrice.toLocaleString()}
+            <span className="text-sm font-normal text-gray-500 mr-1">
+              تومان
+            </span>
           </span>
         </div>
 
