@@ -73,7 +73,7 @@ const { logout, user } = useAuth();
       {/* Profile Header */}
       <div
         className="
-          rounded-2xl p-5 flex items-center gap-4 md:mt-12 shadow-md md:max-w-3xl md:mx-auto
+          rounded-2xl p-5 flex items-center gap-4 md:mt-16 shadow-md md:max-w-3xl md:mx-auto
           bg-sky-50 border border-sky-200 shadow-sky-200 dark:shadow-indigo-500
           dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950 dark:border-sky-700
         "
