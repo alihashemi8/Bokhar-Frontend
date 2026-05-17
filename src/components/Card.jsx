@@ -3,18 +3,44 @@ import ServiceModal from "./services_modal/ServiceModal";
 import api from "../api/clientApi";
 import DiscountBadgeClient, { getDiscountStatus } from "./DiscountBadgeClient";
 
-export default function Card({ id, image, title, base_price, category, onDiscountCheck }) {
+export default function Card({ 
+  id, 
+  image, 
+  title, 
+  base_price, 
+  category, 
+  onDiscountCheck,
+  preloadedPricing  // ← این خط اضافه شده
+}) {
   const [open, setOpen] = useState(false);
-  const [pricing, setPricing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  // ↓ اگه دیتا از قبل لود شده باشه، همونو استفاده کن
+  const [pricing, setPricing] = useState(preloadedPricing || null);
+  
+  // ↓ فقط در حالتی لودینگ باش که دیتای اولیه نداشته باشیم
+  const [loading, setLoading] = useState(!preloadedPricing);
 
   useEffect(() => {
+    // اگه pricing از قبل پره (چه از prop اومده باشه چه fetch قبلی)
+    if (preloadedPricing) {
+      setPricing(preloadedPricing);
+      setLoading(false);
+      
+      // چک کردن تخفیف برای والد (اگه callback داده باشه)
+      if (onDiscountCheck) {
+        const productData = { id, title, image, base_price, pricing: preloadedPricing, category };
+        const hasDiscount = getDiscountStatus(productData) !== null;
+        onDiscountCheck(id, hasDiscount);
+      }
+      return;
+    }
+
+    // در غیر این صورت، fetch عادی انجام بده
     const fetchPricing = async () => {
       try {
         const res = await api.getProduct(id);
         setPricing(res.pricing);
         
-        // چک کردن تخفیف و اطلاع به والد
         if (onDiscountCheck) {
           const productData = { id, title, image, base_price, pricing: res.pricing, category };
           const hasDiscount = getDiscountStatus(productData) !== null;
@@ -29,7 +55,9 @@ export default function Card({ id, image, title, base_price, category, onDiscoun
     };
     
     fetchPricing();
-  }, [id]);
+    
+    // وابستگی به preloadedPricing اضافه شده که اگه تغییر کرد، دوباره چک کنه
+  }, [id, preloadedPricing, category]);
 
   const openModal = () => {
     setOpen(true);
