@@ -1,22 +1,237 @@
-import axios from 'axios';
-import moment from 'jalali-moment'; 
+// src/api/cartService.js
 
-const API_BASE = import.meta.env?.VITE_API_URL || process?.env?.REACT_APP_API_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const GUEST_CART_KEY = 'guest_cart';
 
-const api = axios.create({
-  baseURL: API_BASE,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
+// ✅ تشخیص لاگین
+export const checkIsAuthenticated = () => {
+  return !!localStorage.getItem('access_token') || !!localStorage.getItem('is_logged_in');
+};
+
+// ✅ توابع مدیریت سبد مهمان
+export const getGuestCart = () => {
+  try {
+    const cart = localStorage.getItem(GUEST_CART_KEY);
+    return cart ? JSON.parse(cart) : [];
+  } catch {
+    return [];
   }
-});
+};
 
-// ✅ تابع بهبود یافته خواندن کوکی
+export const saveGuestCart = (cart) => {
+  localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+};
+
+const generateGuestId = () => `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// ✅ دریافت سبد
+export const fetchCart = async () => {
+  if (!checkIsAuthenticated()) {
+    const guestCart = getGuestCart();
+    return { 
+      success: true, 
+      data: {
+        items: guestCart.map(item => ({
+          ...item,
+          unit_price: item.price,
+          total_price: (item.price || 0) * (item.quantity || 1)
+        })),
+        cart: guestCart,
+        total: guestCart.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0),
+        is_guest: true
+      }
+    };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/cart/`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.status === 401) {
+      return { success: false, unauthorized: true };
+    }
+    
+    if (!response.ok) throw new Error("API Error");
+    
+    const data = await response.json();
+    return { success: true, data: { ...data, is_guest: false } };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ✅ افزودن به سبد
+export const addToCart = async (productId, quantity = 1, options = {}) => {
+  if (!checkIsAuthenticated()) {
+    const guestCart = getGuestCart();
+    
+    const newItem = {
+      id_unique: generateGuestId(),
+      product_id: productId,
+      product_name: options.product_name || `محصول ${productId}`,
+      service: options.service || "",
+      material: options.material || "",
+      size: options.size || null,
+      quantity: parseInt(quantity),
+      price: options.price || 0,
+      unit_price: options.price || 0,
+      image: options.image || null,
+      added_at: new Date().toISOString()
+    };
+
+    const existingIndex = guestCart.findIndex(item => 
+      item.product_id === productId && 
+      item.service === options.service && 
+      item.material === options.material &&
+      item.size === options.size
+    );
+
+    if (existingIndex >= 0) {
+      guestCart[existingIndex].quantity += parseInt(quantity);
+    } else {
+      guestCart.push(newItem);
+    }
+
+    saveGuestCart(guestCart);
+    
+    return { success: true, data: { message: "به سبد مهمان اضافه شد" }, is_guest: true };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/cart/add/${productId}/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({
+        quantity: parseInt(quantity),
+        service: options.service || "",
+        material: options.material || "",
+        size: options.size || null
+      })
+    });
+    
+    if (response.status === 401) return { success: false, unauthorized: true };
+    
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ✅ حذف آیتم
+export const removeCartItem = async (idUnique) => {
+  if (!checkIsAuthenticated()) {
+    const guestCart = getGuestCart().filter(item => item.id_unique !== idUnique);
+    saveGuestCart(guestCart);
+    return { success: true };
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE}/cart/remove/${encodeURIComponent(idUnique)}/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    return { success: response.ok };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ✅ آپدیت تعداد
+export const updateCartQuantity = async (idUnique, newQuantity) => {
+  if (!checkIsAuthenticated()) {
+    const guestCart = getGuestCart();
+    const index = guestCart.findIndex(item => item.id_unique === idUnique);
+    
+    if (index >= 0) {
+      if (newQuantity <= 0) {
+        guestCart.splice(index, 1);
+      } else {
+        guestCart[index].quantity = newQuantity;
+      }
+      saveGuestCart(guestCart);
+    }
+    return { success: true };
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE}/cart/update/${encodeURIComponent(idUnique)}/`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ quantity: newQuantity })
+    });
+    return { success: response.ok };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ✅ همگام‌سازی با سرور بعد از لاگین
+export const syncGuestCartWithServer = async () => {
+  const guestCart = getGuestCart();
+  if (guestCart.length === 0) return { success: true };
+  
+  try {
+    const promises = guestCart.map(item => 
+      fetch(`${API_BASE}/cart/add/${item.product_id}/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+          quantity: item.quantity,
+          service: item.service,
+          material: item.material,
+          size: item.size
+        })
+      })
+    );
+    
+    await Promise.all(promises);
+    localStorage.removeItem(GUEST_CART_KEY);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// ✅ پاک کردن سبد
+export const clearCart = async () => {
+  if (!checkIsAuthenticated()) {
+    localStorage.removeItem(GUEST_CART_KEY);
+    return { success: true };
+  }
+  
+  try {
+    await fetch(`${API_BASE}/cart/delete/`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Helper
 function getCookie(name) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
     const cookies = document.cookie.split(';');
-    // 🔧 FIX: اضافه کردن let برای i
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
       if (cookie.substring(0, name.length + 1) === (name + '=')) {
@@ -28,280 +243,14 @@ function getCookie(name) {
   return cookieValue;
 }
 
-// ✅ Interceptor برای CSRF
-api.interceptors.request.use((config) => {
-  const token = getCookie('csrftoken');
-  if (token) {
-    config.headers['X-CSRFToken'] = token;
-  }
-  // لاگ برای دیباگ
-  console.log('API Request:', config.method?.toUpperCase(), config.url, config.data);
-  return config;
-}, (error) => {
-  console.error('Request Error:', error);
-  return Promise.reject(error);
-});
-
-// ✅ Interceptor بهبود یافته برای پاسخ
-api.interceptors.response.use(
-  (response) => {
-    console.log('API Response:', response.status, response.config.url);
-    return response;
-  },
-  (error) => {
-    // 🔧 FIX: هندل کردن خطاهای شبکه (وقتی error.response وجود ندارد)
-    if (!error.response) {
-      console.error('Network Error:', error.message);
-      // خطای CORS یا عدم اتصال به سرور
-      if (error.message === 'Network Error') {
-        console.error('سرور در دسترس نیست یا خطای CORS وجود دارد');
-      }
-      return Promise.reject({
-        ...error,
-        isNetworkError: true,
-        userMessage: 'خطای شبکه: لطفاً اتصال اینترنت را بررسی کنید'
-      });
-    }
-
-    console.error('API Error:', {
-      status: error.response?.status,
-      url: error.config?.url,
-      data: error.response?.data,
-      message: error.message
-    });
-
-    if (error.response?.status === 401) {
-      console.error('Authentication required - User not logged in');
-    } else if (error.response?.status === 403) {
-      console.error('CSRF Error or Permission Denied');
-    }
-    return Promise.reject(error);
-  }
-);
-
-// تبدیل تاریخ شمسی به میلادی
-const toGregorian = (shamsiDateStr) => {
-  if (!shamsiDateStr) return null;
-  try {
-    const faToEn = (str) => str.replace(/[۰-۹]/g, w => String.fromCharCode(w.charCodeAt(0) - 1728));
-    const cleanDate = faToEn(shamsiDateStr).replace(/\//g, '-');
-    
-    const m = moment(cleanDate, 'jYYYY-jMM-jDD');
-    if (!m.isValid()) return null;
-    
-    return m.format('YYYY-MM-DD');
-  } catch (e) {
-    console.error("Date conversion error:", e);
-    return null;
-  }
+export default {
+  fetchCart,
+  addToCart,
+  removeCartItem,
+  updateCartQuantity,
+  syncGuestCartWithServer,
+  clearCart,
+  checkIsAuthenticated,
+  getGuestCart,
+  saveGuestCart
 };
-
-const TIME_SLOT_MAP = {
-  "۸ صبح تا ۱۳": "morning",
-  "۱۶ تا ۲۰": "evening"
-};
-
-export const REVERSE_TIME_MAP = {
-  "morning": "۸ صبح تا ۱۳",
-  "evening": "۱۶ تا ۲۰"
-};
-
-// ───────────────────────────────────────────
-// API Functions 
-// ───────────────────────────────────────────
-
-export const fetchCart = async () => {
-  try {
-    const response = await api.get('/cart/');
-    return { success: true, data: response.data };
-  } catch (error) {
-    if (error.response?.status === 401 || error.unauthorized) {
-      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
-    }
-    return { 
-      success: false, 
-      error: error.userMessage || error.response?.data || "خطا در دریافت سبد",
-      isNetworkError: error.isNetworkError 
-    };
-  }
-};
-
-export const addToCart = async (productId, quantity = 1, options = {}) => {
-  try {
-const payload = {
-  quantity: parseInt(quantity),
-  service: options.service || "",
-  material: options.material || "",
-  size: options.size || null
-};
-
-    
-    console.log("Sending to cart:", { productId, payload });
-    
-    const response = await api.post(`/cart/add/${productId}/`, payload);
-    return { success: true, data: response.data };
-  } catch (error) {
-    // 🔧 FIX: لاگ بهتر برای دیباگ
-    console.error("Cart API Error Details:", error);
-    
-    // 🔧 FIX: هندل کردن خطای شبکه
-    if (error.isNetworkError || !error.response) {
-      return { 
-        success: false, 
-        error: "خطای شبکه: اتصال به سرور برقرار نشد",
-        isNetworkError: true
-      };
-    }
-    
-    if (error.response?.status === 401) {
-      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
-    }
-    
-    // 🔧 FIX: استخراج پیام خطای صحیح از پاسخ سرور
-    const errorMessage = typeof error.response?.data === 'string' 
-      ? error.response.data 
-      : error.response?.data?.error 
-      || error.response?.data?.detail 
-      || error.response?.data?.message 
-      || "خطا در افزودن به سبد";
-    
-    return { 
-      success: false, 
-      error: errorMessage,
-      status: error.response?.status
-    };
-  }
-};
-
-export const removeCartItem = async (idUnique) => {
-  try {
-    const encodedId = encodeURIComponent(idUnique);
-    const response = await api.post(`/cart/remove/${encodedId}/`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error('Remove error:', error);
-    if (error.response?.status === 401 || error.unauthorized) {
-      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
-    }
-    if (error.response?.status === 404) {
-      return { success: false, error: "آیتم در سبد یافت نشد" };
-    }
-    return { success: false, error: error.userMessage || error.response?.data || "خطای حذف آیتم" };
-  }
-};
-
-export const decrementCartItem = async (idUnique) => {
-  try {
-    const encodedId = encodeURIComponent(idUnique);
-    const response = await api.post(`/cart/decrement/${encodedId}/`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    return { success: false, error: error.userMessage || error.response?.data || "خطا در کاهش تعداد" };
-  }
-};
-
-export const updateCartQuantity = async (idUnique, newQuantity) => {
-  try {
-    const encodedId = encodeURIComponent(idUnique);
-    const response = await api.patch(`/cart/update/${encodedId}/`, { quantity: newQuantity });
-    return { success: true, data: response.data };
-  } catch (error) {
-    if (error.response?.status === 401 || error.unauthorized) {
-      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
-    }
-    if (error.response?.status === 404) {
-      return { success: false, error: "آیتم در سبد یافت نشد" };
-    }
-    return { success: false, error: error.userMessage || error.response?.data || "خطای بروزرسانی" };
-  }
-};
-
-export const clearCart = async () => {
-  try {
-    await api.post('/cart/delete/');
-    return { success: true };
-  } catch (error) {
-    if (error.response?.status === 401 || error.unauthorized) {
-      return { success: false, error: "لطفاً ابتدا وارد حساب کاربری شوید", unauthorized: true };
-    }
-    return { success: false, error: error.userMessage || error.response?.data || "خطای پاک کردن سبد" };
-  }
-};
-
-const transformCartItems = (cartItems) => {
-  return cartItems.map(item => ({
-    service_item_id: item.id_unique,
-    product_id: item.product_id,
-    quantity: item.quantity,
-    description: `${item.service || ''} - ${item.material || ''}`.trim(),
-    size: item.size,
-    size_display: item.size_display
-  }));
-};
-
-
-export const createOrder = async ({
-  cartItems,
-  datetime,
-  location,
-  discountCode,
-  customerNote = ""
-}) => {
-  const payload = {
-    cart_items: transformCartItems(cartItems),
-    pickup_date: toGregorian(datetime.pickup.date),
-    pickup_shift: TIME_SLOT_MAP[datetime.pickup.time],
-    delivery_date: toGregorian(datetime.delivery.date),
-    delivery_shift: TIME_SLOT_MAP[datetime.delivery.time],
-    address_data: {
-      title: location.title,
-      address: location.address,
-      plaque: location.plaque,
-      unit: location.unit,
-      description: location.description,
-      latitude: location.coords?.lat,
-      longitude: location.coords?.lng
-    },
-    coupon_code: discountCode || null,
-    service_type: datetime.pricing?.type,
-    rush_fee_amount: datetime.pricing?.amount || 0,
-    customer_note: customerNote
-  };
-
-  try {
-    const response = await api.post('/orders/create/', payload);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error("Order creation failed:", error);
-    if (error.response?.status === 401 || error.unauthorized) {
-      return { success: false, errors: { general: "لطفاً ابتدا وارد حساب کاربری شوید" }, unauthorized: true };
-    }
-    
-    // اگر خطای اعتبارسنجی فیلدها باشد
-    if (error.response?.status === 400 && typeof error.response.data === 'object') {
-      return { success: false, errors: error.response.data };
-    }
-    
-    return { 
-      success: false, 
-      errors: { general: error.userMessage || "خطای سرور در ایجاد سفارش" } 
-    };
-  }
-};
-
-export const getTimeCapacity = async (date, shift) => {
-  const gregorianDate = toGregorian(date);
-  if (!gregorianDate) return { available: false, remaining: 0 };
-  
-  try {
-    const response = await api.get('/orders/check-capacity/', {
-      params: { date: gregorianDate, shift: TIME_SLOT_MAP[shift] }
-    });
-    return response.data; 
-  } catch (error) {
-    console.error('Capacity check error:', error);
-    return { available: false, remaining: 0, error: true };
-  }
-};
-
-export default api;

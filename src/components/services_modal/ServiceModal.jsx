@@ -95,82 +95,87 @@ export default function ServiceModal({
     }, 0);
   }, [quantities, normalizedPricing]);
 
-  const handleAdd = async () => {
-    if (!productId) {
-      toast.error("شناسه محصول نامعتبر است");
-      return;
-    }
+const handleAdd = async () => {
+  if (!productId) {
+    toast.error("شناسه محصول نامعتبر است");
+    return;
+  }
 
-    const selectedItems = [];
+  const selectedItems = [];
 
-    Object.entries(quantities).forEach(([tabName, mats]) => {
-      const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+  Object.entries(quantities).forEach(([tabName, mats]) => {
+    const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
 
-      Object.entries(mats).forEach(([mat, qty]) => {
-        if (qty > 0) {
-          const item = tabPriceData[mat];
+    Object.entries(mats).forEach(([mat, qty]) => {
+      if (qty > 0) {
+        const item = tabPriceData[mat];
+        // ✅ محاسبه قیمت نهایی اینجا
+        const finalPrice = getEffectivePrice(item);
 
-          selectedItems.push({
-            product_id: item.product_id || productId,
-            quantity: qty,
-            options: {
-              service: tabName,
-              material: mat,
-              size: null,
-            },
-            product_name: `${itemTitle} - ${tabName} - ${mat}`,
-          });
-        }
-      });
-    });
-
-    if (selectedItems.length === 0) {
-      toast.error("لطفاً حداقل یک مورد را انتخاب کنید");
-      return;
-    }
-
-    setLoading(true);
-    const toastId = toast.loading("در حال افزودن به سبد...");
-
-    try {
-      const promises = selectedItems.map((item) =>
-        addToCartAPI(item.product_id, item.quantity, {
-          service: item.options.service,
-          material: item.options.material,
-          size: item.options.size,
-          product_name: item.product_name,
-        })
-      );
-
-      const results = await Promise.allSettled(promises);
-
-      const failedItems = results.filter(
-        (r) => r.status === "rejected" || !r.value?.success
-      );
-
-      const successCount = results.length - failedItems.length;
-
-      if (failedItems.length === 0) {
-        toast.success(`${successCount} آیتم به سبد اضافه شد`, { id: toastId });
-
-        await refreshCart();
-
-        setQuantities({});
-        onClose();
-      } else {
-        toast.error(`${failedItems.length} آیتم با خطا مواجه شد`, { id: toastId });
-
-        console.error("Failed items:", failedItems);
-
-        await refreshCart();
+        selectedItems.push({
+          product_id: item.product_id || productId,
+          quantity: qty,
+          options: {
+            service: tabName,
+            material: mat,
+            size: null,
+          },
+          product_name: `${itemTitle} - ${tabName} - ${mat}`,
+          price: finalPrice, // ✅ حالا تعریف شده
+        });
       }
-    } catch (error) {
-      toast.error("خطا در ارتباط با سرور", { id: toastId });
-      console.error("Cart Error:", error);
-    } finally {
-      setLoading(false);
+    });
+  });
+
+  if (selectedItems.length === 0) {
+    toast.error("لطفاً حداقل یک مورد را انتخاب کنید");
+    return;
+  }
+
+  setLoading(true);
+  const toastId = toast.loading("در حال افزودن به سبد...");
+
+  try {
+    const promises = selectedItems.map((item) =>
+      addToCartAPI(item.product_id, item.quantity, {
+        service: service,
+        material: item.options.material,
+        size: item.options.size,
+        product_name: item.product_name,
+        price: item.price, // ✅ اصلاح شد (قبلاً item.options.price بود که undefined بود)
+      })
+    );
+
+    const results = await Promise.allSettled(promises);
+
+    const failedItems = results.filter(
+      (r) => r.status === "rejected" || !r.value?.success
+    );
+
+    const successCount = results.length - failedItems.length;
+
+    if (failedItems.length === 0) {
+      toast.success(`${successCount} آیتم به سبد اضافه شد`, { id: toastId });
+
+      await refreshCart();
+
+      setQuantities({});
+      onClose();
+    } else {
+      toast.error(`${failedItems.length} آیتم با خطا مواجه شد`, { id: toastId });
+
+      console.error("Failed items:", failedItems);
+
+      await refreshCart();
     }
-  };
+  } catch (error) {
+    toast.error("خطا در ارتباط با سرور", { id: toastId });
+    console.error("Cart Error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const currentMaterials = normalizedPricing[activeTab]?.materialPrices || {};
   const currentTabQuantities = quantities[activeTab] || {};

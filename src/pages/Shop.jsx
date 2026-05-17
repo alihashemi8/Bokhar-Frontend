@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import CategoryTabs from "../components/CategoryTabs";
 import Card from "../components/Card";
 import Search from "../components/Search";
-import api from "../api/clientApi";
+import clientApi from "../api/clientApi";
 
 // تابع چک کردن تخفیف (کپی از DiscountBadgeClient)
 function checkHasDiscount(product, pricing) {
@@ -41,50 +41,51 @@ export default function Landing() {
   // ذخیره pricing همه محصولات
   const [productsPricing, setProductsPricing] = useState({});
   const [pricingLoaded, setPricingLoaded] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true); // ✅ اضافه شد
 
-const [isLoadingCategories, setIsLoadingCategories] = useState(true); // ← اضافه کنید
-
-// در useEffect مربوط به گرفتن دسته‌بندی‌ها:
-useEffect(() => {
-  const fetchCategories = async () => {
-    setIsLoadingCategories(true); // شروع لودینگ
-    try {
-      const response = await api.get("/categories");
-      setCategories(response.data);
-      if (response.data.length > 0) {
-        setActiveCategory(response.data[0]);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    } finally {
-      setIsLoadingCategories(false); // پایان لودینگ
-    }
-  };
-
-  fetchCategories();
-}, []);
-  // دریافت دسته‌ها
+  // ✅ دریافت دسته‌ها - فقط یکی باشه
   useEffect(() => {
-    async function loadCategories() {
-      const data = await api.getCategories();
-      setCategories(data);
-      if (data.length > 0) setActiveCategory(data[0]);
-    }
-    loadCategories();
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true);
+      try {
+        const data = await clientApi.getCategories(); // ✅ درست
+        setCategories(data);
+        if (data.length > 0) {
+          setActiveCategory(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
-  // دریافت محصولات و pricing همه‌شان
+  // ❌ این useEffect رو کلاً حذف کن (duplicate بود):
+  // useEffect(() => {
+  //   async function loadCategories() {
+  //     const data = await api.getCategories(); // ← undefined api
+  //     ...
+  //   }
+  //   loadCategories();
+  // }, []);
+
+  // ✅ دریافت محصولات - اصلاح شد
   useEffect(() => {
     async function loadAllData() {
+      setIsLoadingProducts(true); // ✅ اضافه شد
       try {
         // اول محصولات رو بگیر
-        const products = await api.getProducts();
+        const products = await clientApi.getProducts(); // ✅ api → clientApi
         setAllProducts(products);
 
         // بعد pricing همه رو موازی بگیر
         const pricingPromises = products.map(async (product) => {
           try {
-            const res = await api.getProduct(product.id);
+            const res = await clientApi.getProduct(product.id); // ✅ api → clientApi
             return { id: product.id, pricing: res.pricing };
           } catch (err) {
             console.error(`Error loading pricing for ${product.id}:`, err);
@@ -103,6 +104,8 @@ useEffect(() => {
         setPricingLoaded(true);
       } catch (err) {
         console.error("Error loading data:", err);
+      } finally {
+        setIsLoadingProducts(false); // ✅ اضافه شد
       }
     }
 
@@ -193,20 +196,27 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* تب دسته‌ها - الان بدون کلیک هم badge رو نشون میده */}
+      {/* تب دسته‌ها */}
       <div className="mt-4 px-4 py-3 overflow-x-auto">
         <CategoryTabs
-  categories={categories}
-  active={activeCategory}
-  onCategoryChange={(c) => {
-    setActiveCategory(c);
-    setSelectedCard(null);
-    setSearchQuery("");
-  }}
-  fullyDiscountedCategories={fullyDiscountedCategories}
-  isLoading={isLoadingCategories}  
-/>
+          categories={categories}
+          active={activeCategory}
+          onCategoryChange={(c) => {
+            setActiveCategory(c);
+            setSelectedCard(null);
+            setSearchQuery("");
+          }}
+          fullyDiscountedCategories={fullyDiscountedCategories}
+          isLoading={isLoadingCategories}  
+        />
       </div>
+
+      {/* ✅ نشانگر لودینگ محصولات */}
+      {isLoadingProducts && (
+        <div className="text-center py-8 text-gray-500">
+          در حال بارگذاری محصولات...
+        </div>
+      )}
 
       {/* کارت‌ها - با pricing از قبل لود شده */}
       <section className="p-8">

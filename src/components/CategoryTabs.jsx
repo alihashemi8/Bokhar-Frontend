@@ -24,7 +24,7 @@ export default function CategoryTabs({
           {skeletonItems.map((i) => (
             <Skeleton
               key={i}
-              className="flex-shrink-0 my-2 mx-0.5 h-9 w-20 rounded-2xl"
+              className="relative flex-shrink-0 whitespace-nowrap px-4 py-2 my-2 mx-0.5 rounded-3xl text-sm font-bold transition-all "
             />
           ))}
         </HorizontalScroller>
@@ -37,7 +37,7 @@ export default function CategoryTabs({
           {skeletonItems.map((i) => (
             <Skeleton
               key={i}
-              className="flex-shrink-0 h-10 w-28 rounded-3xl"
+              className="relative flex-shrink-0 whitespace-nowrap px-6 py-2 mx-1 rounded-3xl text-sm font-bold transition-all"
             />
           ))}
         </HorizontalScroller>
@@ -69,7 +69,7 @@ export default function CategoryTabs({
                 ${isActive 
                   ? "bg-sky-200 scale-105 mx-1" 
                   : isDiscounted 
-                    ? "bg-green-100 text-green-800 border border-green-200 animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
+                    ? "bg-red-100 text-red-800 border border-red-400 animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
                     : "bg-white"
                 }`}
             >
@@ -96,7 +96,7 @@ export default function CategoryTabs({
                 ${isActive 
                   ? "bg-sky-200 scale-105" 
                   : isDiscounted 
-                    ? "bg-green-100 text-green-800 border border-green-200 animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
+                    ? "bg-red-100 text-red-800 border border-red-400 animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
                     : "bg-white"
                 }`}
             >
