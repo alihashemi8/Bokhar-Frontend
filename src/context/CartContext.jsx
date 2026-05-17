@@ -38,6 +38,32 @@ function transformBackendCart(backendItems) {
     };
   });
 }
+function transformGuestCart(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items.map(item => {
+    const qty = Number(item.qty || item.quantity || 1);
+    const unitPrice = Number(item.unitPrice ?? item.price ?? 0);
+    const originalUnitPrice = Number(
+      item.originalUnitPrice ?? item.original_price ?? unitPrice
+    );
+
+    return {
+      id_unique: item.id_unique || `guest-${item.productId}`,
+      name: item.name || item.product_name || "محصول",
+      qty,
+      unitPrice,
+      originalUnitPrice,
+      finalLineTotal: unitPrice * qty,
+      originalLineTotal: originalUnitPrice * qty,
+      hasDiscount: originalUnitPrice > unitPrice,
+      sizeDisplay: item.sizeDisplay || "-",
+      service: item.service || "-",
+      material: item.material || "-",
+      productId: item.productId || item.product_id,
+    };
+  });
+}
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
@@ -45,32 +71,46 @@ export function CartProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isGuest, setIsGuest] = useState(false); // ✅ اضافه شد
 
-  const loadCart = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const result = await fetchCart();
-      
-      if (result.success) {
-        const items = result.data?.cart || result.data?.items || [];
-        setCartItems(transformBackendCart(items));
-        setIsGuest(result.data.is_guest || false); // ✅ حالا تعریف شده
-        setIsAuthenticated(!result.data.is_guest);
-      } else {
-        if (result.unauthorized) {
-          setIsAuthenticated(false);
-          setIsGuest(true); // ✅ اگر لاگین نیست، مهمانه
-          setCartItems([]);
-        } else {
-          setCartItems([]);
-        }
-      }
-    } catch (err) {
-      console.error("Cart load error:", err);
-      setCartItems([]);
-    } finally {
-      if (!silent) setLoading(false);
+const loadCart = useCallback(async (silent = false) => {
+  if (!silent) setLoading(true);
+
+  try {
+    // ✅ اگر guest_cart در localStorage وجود دارد → مستقیم guest بخوان
+    const guestCartRaw = localStorage.getItem("guest_cart");
+
+    if (guestCartRaw) {
+      const guestCart = JSON.parse(guestCartRaw || "[]");
+      setCartItems(transformGuestCart(guestCart));
+      setIsAuthenticated(false);
+      setIsGuest(true);
+      return; // ⛔ مهم → fetchCart اجرا نشود
     }
-  }, []);
+
+    // ✅ در غیر این صورت برو سراغ بک‌اند
+    const result = await fetchCart();
+
+    if (result?.success && !result.data?.is_guest) {
+      const items = result.data?.cart || result.data?.items || [];
+      setCartItems(transformBackendCart(items));
+      setIsAuthenticated(true);
+      setIsGuest(false);
+      return;
+    }
+
+    // fallback خالی
+    setCartItems([]);
+    setIsAuthenticated(false);
+    setIsGuest(true);
+
+  } catch (err) {
+    console.error("Cart load error:", err);
+    setCartItems([]);
+  } finally {
+    if (!silent) setLoading(false);
+  }
+}, []);
+
+
 
   useEffect(() => {
     loadCart();

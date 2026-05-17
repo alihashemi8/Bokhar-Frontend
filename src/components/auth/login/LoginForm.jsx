@@ -33,8 +33,7 @@ async function apiPost(endpoint, body) {
   return data;
 }
 
-
-export default function LoginForm({ onSwitchRegister, onClose }) {
+export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {  // ✅ onSuccess اضافه شد
   const [mode, setMode] = useState("login"); // login | otp-phone | otp-verify
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -61,6 +60,10 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
     try {
       await loginWithPassword({ phone, password });
       toast.success("ورود موفق ✅");
+      
+      // ✅ اضافه شده: callback موفقیت
+      if (onSuccess) onSuccess();
+      
       onClose();
     } catch (err) {
       toast.error(err?.detail || "شماره یا رمز اشتباه است");
@@ -99,18 +102,21 @@ export default function LoginForm({ onSwitchRegister, onClose }) {
     try {
       await loginWithOTP({ phone, otp });
       toast.success("ورود موفق ✅");
+      
+      // ✅ اضافه شده: callback موفقیت
+      if (onSuccess) onSuccess();
+      
       onClose();
     } catch (err) {
-  // اگر fetch معمولیه
-  const message =
-    (err && err.message) || 
-    (err && err.otp) || 
-    (err && err.پیام) ||
-    "کد OTP اشتباه است";
+      // اگر fetch معمولیه
+      const message =
+        (err && err.message) || 
+        (err && err.otp) || 
+        (err && err.پیام) ||
+        "کد OTP اشتباه است";
 
-  toast.error(message);
-}
- finally {
+      toast.error(message);
+    } finally {
       setLoading(false);
     }
   };

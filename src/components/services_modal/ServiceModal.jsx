@@ -3,6 +3,7 @@ import { useCart } from "../../context/CartContext";
 import { addToCart as addToCartAPI } from "../../api/cartService";
 import BaseModal from "../BaseModal/BaseModal";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ServiceModal({
   isOpen,
@@ -15,6 +16,7 @@ export default function ServiceModal({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("");
   const [quantities, setQuantities] = useState({});
+const { isAuthenticated } = useAuth();
 
   const normalizedPricing = useMemo(() => {
     const normalized = {};
@@ -81,7 +83,41 @@ export default function ServiceModal({
       return { ...prev, [activeTab]: updatedTab };
     });
   };
+function addToGuestCart(items) {
+  
+  const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
 
+  const updatedCart = [...guestCart];
+
+  items.forEach(item => {
+    const existing = updatedCart.find(
+      i =>
+        i.productId === item.product_id &&
+        i.service === item.options.service &&
+        i.material === item.options.material
+    );
+
+    if (existing) {
+      existing.qty += item.quantity;
+    } else {
+      updatedCart.push({
+        id_unique: `guest-${item.product_id}-${Date.now()}`,
+        productId: item.product_id,
+        name: item.product_name,
+        qty: item.quantity,
+        unitPrice: item.price,              // ✅ قیمت بعد تخفیف
+        originalUnitPrice: item.original_price, // ✅ قیمت قبل تخفیف
+        service: item.options.service,
+        material: item.options.material,
+        sizeDisplay: "-",
+      });
+    }
+  });
+
+  localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
+}
+
+  // ✅ محاسبه قیمت نهایی (با تخفیف)
   const totalPrice = useMemo(() => {
     return Object.entries(quantities).reduce((acc, [tabName, mats]) => {
       const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
@@ -95,87 +131,108 @@ export default function ServiceModal({
     }, 0);
   }, [quantities, normalizedPricing]);
 
+  // ✅ محاسبه قیمت اصلی (قبل تخفیف)
+  const originalTotalPrice = useMemo(() => {
+    return Object.entries(quantities).reduce((acc, [tabName, mats]) => {
+      const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
+
+      const tabSum = Object.entries(mats).reduce((sum, [mat, qty]) => {
+        const item = tabPriceData[mat];
+        // استفاده از قیمت اولیه (بدون تخفیف)
+        return sum + (item ? item.price * qty : 0);
+      }, 0);
+
+      return acc + tabSum;
+    }, 0);
+  }, [quantities, normalizedPricing]);
+
+  const hasAnyDiscount = originalTotalPrice > totalPrice;
+  const savingsAmount = originalTotalPrice - totalPrice;
+
+  const selectedItems = useMemo(() => {
+  const items = [];
+
+  Object.entries(quantities).forEach(([tabName, mats]) => {
+    const tab = normalizedPricing[tabName]?.materialPrices || {};
+
+    Object.entries(mats).forEach(([mat, qty]) => {
+      const item = tab[mat];
+      if (!item) return;
+
+      const finalPrice = getEffectivePrice(item);
+
+      items.push({
+        product_id: item.product_id,
+        product_name: itemTitle,
+        quantity: qty,
+        price: finalPrice,
+        original_price: item.price,
+        has_discount: item.has_discount,
+        discount_type: item.discount_type,
+        discount_value: item.discount_value,
+        options: {
+          service: tabName,
+          material: mat,
+          size: "-",
+        },
+      });
+    });
+  });
+
+  return items;
+}, [quantities, normalizedPricing]);
+
 const handleAdd = async () => {
   if (!productId) {
     toast.error("شناسه محصول نامعتبر است");
     return;
   }
 
-  const selectedItems = [];
-
-  Object.entries(quantities).forEach(([tabName, mats]) => {
-    const tabPriceData = normalizedPricing[tabName]?.materialPrices || {};
-
-    Object.entries(mats).forEach(([mat, qty]) => {
-      if (qty > 0) {
-        const item = tabPriceData[mat];
-        // ✅ محاسبه قیمت نهایی اینجا
-        const finalPrice = getEffectivePrice(item);
-
-        selectedItems.push({
-          product_id: item.product_id || productId,
-          quantity: qty,
-          options: {
-            service: tabName,
-            material: mat,
-            size: null,
-          },
-          product_name: `${itemTitle} - ${tabName} - ${mat}`,
-          price: finalPrice, // ✅ حالا تعریف شده
-        });
-      }
-    });
-  });
-
   if (selectedItems.length === 0) {
     toast.error("لطفاً حداقل یک مورد را انتخاب کنید");
     return;
   }
 
+  // ✅ اگر کاربر لاگین نیست → Guest Cart
+  if (!isAuthenticated) {
+    addToGuestCart(selectedItems);
+    await refreshCart(true);
+    toast.success("آیتم‌ها به سبد خرید اضافه شدند");
+    setQuantities({});
+    onClose();
+    return;
+  }
+
+  // ✅ اگر لاگین است → API
   setLoading(true);
   const toastId = toast.loading("در حال افزودن به سبد...");
 
   try {
     const promises = selectedItems.map((item) =>
       addToCartAPI(item.product_id, item.quantity, {
-        service: service,
+        service: item.options.service,
         material: item.options.material,
         size: item.options.size,
         product_name: item.product_name,
-        price: item.price, // ✅ اصلاح شد (قبلاً item.options.price بود که undefined بود)
+        price: item.price,
+        original_price: item.original_price,
+        has_discount: item.has_discount,
+        discount_type: item.discount_type,
+        discount_value: item.discount_value,
       })
     );
 
-    const results = await Promise.allSettled(promises);
-
-    const failedItems = results.filter(
-      (r) => r.status === "rejected" || !r.value?.success
-    );
-
-    const successCount = results.length - failedItems.length;
-
-    if (failedItems.length === 0) {
-      toast.success(`${successCount} آیتم به سبد اضافه شد`, { id: toastId });
-
-      await refreshCart();
-
-      setQuantities({});
-      onClose();
-    } else {
-      toast.error(`${failedItems.length} آیتم با خطا مواجه شد`, { id: toastId });
-
-      console.error("Failed items:", failedItems);
-
-      await refreshCart();
-    }
-  } catch (error) {
-    toast.error("خطا در ارتباط با سرور", { id: toastId });
-    console.error("Cart Error:", error);
+    await Promise.all(promises);
+    toast.success("آیتم‌ها به سبد اضافه شدند", { id: toastId });
+    await refreshCart();
+    setQuantities({});
+    onClose();
+  } catch (e) {
+    toast.error("خطا در افزودن به سبد", { id: toastId });
   } finally {
     setLoading(false);
   }
 };
-
 
   const currentMaterials = normalizedPricing[activeTab]?.materialPrices || {};
   const currentTabQuantities = quantities[activeTab] || {};
@@ -274,32 +331,44 @@ const handleAdd = async () => {
         })}
       </div>
 
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-500">مبلغ قابل پرداخت:</span>
+      {/* ✅ بخش فوتر با نمایش سود و تخفیف کلی */}
+      <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-gray-100">
+        {/* نمایش سود کاربر (اگر تخفیف دارد) */}
 
-          <span className="font-bold text-xl text-sky-700">
-            {totalPrice.toLocaleString()}
-            <span className="text-sm font-normal text-gray-500 mr-1">
-              تومان
-            </span>
-          </span>
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-500">مبلغ قابل پرداخت:</span>
+            
+            <div className="flex items-center gap-2">
+              {hasAnyDiscount && (
+                <span className="text-sm line-through text-gray-400 decoration-red-300">
+                  {originalTotalPrice.toLocaleString()}
+                </span>
+              )}
+              <span className={`font-bold text-xl ${hasAnyDiscount ? "text-green-600" : "text-sky-700"}`}>
+                {totalPrice.toLocaleString()}
+                <span className="text-sm font-normal text-gray-500 mr-1">
+                  تومان
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={totalPrice === 0 || loading}
+            className="px-6 py-3 rounded-xl bg-sky-600 text-white font-bold hover:bg-sky-700 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-lg shadow-sky-200 flex items-center gap-2 min-w-[140px] justify-center"
+          >
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>در حال افزودن...</span>
+              </>
+            ) : (
+              "افزودن به سبد"
+            )}
+          </button>
         </div>
-
-        <button
-          onClick={handleAdd}
-          disabled={totalPrice === 0 || loading}
-          className="px-6 py-3 rounded-xl bg-sky-600 text-white font-bold hover:bg-sky-700 disabled:opacity-40 disabled:pointer-events-none transition-all shadow-lg shadow-sky-200 flex items-center gap-2 min-w-[140px] justify-center"
-        >
-          {loading ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>در حال افزودن...</span>
-            </>
-          ) : (
-            "افزودن به سبد"
-          )}
-        </button>
       </div>
     </BaseModal>
   );

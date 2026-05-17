@@ -4,6 +4,7 @@ import { useToast } from "../../context/ToastContext";
 import { useModal } from "../../context/ModalContext";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import AuthModal from "../auth/AuthModal"; 
 import { 
   fetchCart, 
@@ -15,32 +16,34 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
   const { showConfirm } = useModal();
   const { refreshCart } = useCart();
-  
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // ← اضافه شده
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  const loadCart = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await fetchCart();
-      if (result.success) {
-        const items = result.data.cart || [];
-        setCartItems(transformBackendCart(items));
-      } else {
-        if (result.unauthorized) {
-          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-        } else {
-          addToast(result.error || "خطا در بارگذاری سبد خرید", "error");
-        }
-      }
-    } catch (err) {
-      console.error("Cart load error:", err);
-      addToast("خطای شبکه در دریافت سبد خرید", "error");
-    } finally {
-      setLoading(false);
+const loadCart = useCallback(async () => {
+  setLoading(true);
+
+  // ✅ Guest
+  if (!isAuthenticated) {
+    const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+    setCartItems(transformGuestCart(guestCart));
+    setLoading(false);
+    return;
+  }
+
+  // ✅ Authenticated
+  try {
+    const result = await fetchCart();
+    if (result.success) {
+      setCartItems(transformBackendCart(result.data.cart || []));
     }
-  }, [addToast]);
+  } catch (e) {
+    addToast("خطا در دریافت سبد خرید", "error");
+  } finally {
+    setLoading(false);
+  }
+}, [isAuthenticated]);
 
   useEffect(() => {
     loadCart();
@@ -72,133 +75,237 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     }
   }, [totalPrice, originalTotalPrice, onTotalChange]);
 
-  // ← تابع جدید برای چک لاگین
-  const handleGoToTimeStep = () => {
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-    
-    if (!token) {
-      addToast("برای ادامه فرایند خرید باید ورود/ثبت نام بکنید", "error");
-      setIsAuthModalOpen(true);
-      return;
-    }
-    
-    if (goToTimeStep) {
-      goToTimeStep();
-    }
-  };
+const handleGoToTimeStep = () => {
+  if (authLoading) return; // صبر کن auth بررسی شود
 
-  const handleIncreaseQty = async (item) => {
-    const itemKey = item.id_unique;
-    
-    if (!itemKey) {
-      addToast("خطا: شناسه آیتم نامعتبر است", "error");
-      return;
-    }
-    
-    const newQty = (item.qty || 1) + 1;
-    
-    setCartItems(prev => prev.map(i => 
-      i.id_unique === itemKey ? { ...i, qty: newQty } : i
-    ));
-    
-    try {
-      const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) {
-        if (result.unauthorized) {
-          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-        } else {
-          throw new Error(result.error || "خطا در به‌روزرسانی");
-        }
-      }
-      
-      if (result.data?.items) {
-        setCartItems(transformBackendCart(result.data.items));
-      }
-      
-      await refreshCart(); 
-    } catch (error) {
-      addToast(error.message || "خطا در افزایش تعداد", "error");
-      loadCart();
-    }
-  };
+  if (!isAuthenticated) {
+    addToast("برای ادامه فرایند خرید باید ورود/ثبت نام بکنید", "error");
+    setIsAuthModalOpen(true);
+    return;
+  }
 
-  const handleDecreaseQty = async (item) => {
-    if (item.qty <= 1) return;
-    
-    const itemKey = item.id_unique;
-    
-    if (!itemKey) {
-      addToast("خطا: شناسه آیتم نامعتبر است", "error");
-      return;
-    }
-    
-    const newQty = item.qty - 1;
-    
-    setCartItems(prev => prev.map(i => 
-      i.id_unique === itemKey ? { ...i, qty: newQty } : i
-    ));
-    
-    try {
-      const result = await updateCartQuantity(itemKey, newQty);
-      if (!result.success) {
-        if (result.unauthorized) {
-          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-        } else {
-          throw new Error(result.error || "خطا در به‌روزرسانی");
-        }
-      }
-      
-      if (result.data?.items) {
-        setCartItems(transformBackendCart(result.data.items));
-      }
-      
-      await refreshCart();
-    } catch (error) {
-      addToast(error.message || "خطا در کاهش تعداد", "error");
-      loadCart();
-    }
-  };
+  if (goToTimeStep) {
+    goToTimeStep();
+  }
+};
 
-  const handleRemove = (item) => {
-    const name = item.name || "محصول";
-    const itemKey = item.id_unique;
-    
-    if (!itemKey) {
-      addToast("خطا: شناسه آیتم نامعتبر است", "error");
-      return;
-    }
 
-    showConfirm({
-      title: "حذف آیتم",
-      message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
-      confirmText: "بله، حذف کن",
-      cancelText: "انصراف",
-      variant: "danger",
-      onConfirm: async () => {
-        try {
-          const result = await removeCartItem(itemKey);
-          if (result.success) {
-            setCartItems(prev => prev.filter(i => i.id_unique !== itemKey));
-            addToast(`«${name}» حذف شد`, "success");
-            if (result.data?.items) {
-              setCartItems(transformBackendCart(result.data.items));
-            }
-            
-            await refreshCart();
-          } else {
-            if (result.unauthorized) {
-              addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-            } else {
-              throw new Error(result.error || "خطا در حذف");
-            }
+  // ✅ اضافه شده: رفرش سبد بعد از لاگین موفق
+const handleAuthSuccess = async () => {
+  const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+
+  if (guestCart.length > 0) {
+    const payload = guestCart.map(item => ({
+      product_id: item.productId,
+      quantity: item.qty
+    }));
+
+    await mergeGuestCartToServer(payload);
+    localStorage.removeItem("guest_cart");
+  }
+
+  loadCart();
+};
+
+
+const handleIncreaseQty = async (item) => {
+  // ✅ حالت مهمان
+  if (!isAuthenticated) {
+    const updated = cartItems.map(i =>
+      i.id_unique === item.id_unique
+        ? {
+            ...i,
+            qty: i.qty + 1,
+            finalLineTotal: (i.qty + 1) * i.unitPrice,
+            originalLineTotal: (i.qty + 1) * i.originalUnitPrice
           }
-        } catch (error) {
-          addToast(error.message || "خطا در حذف آیتم", "error");
-          loadCart();
+        : i
+    );
+
+    setCartItems(updated);
+    localStorage.setItem("guest_cart", JSON.stringify(updated));
+
+    await refreshCart(true); // ✅ همگام‌سازی با Navbar
+
+    return;
+  }
+
+  // ✅ حالت کاربر لاگین
+  const itemKey = item.id_unique;
+
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+
+  const newQty = (item.qty || 1) + 1;
+
+  // optimistic update
+  setCartItems(prev =>
+    prev.map(i =>
+      i.id_unique === itemKey
+        ? {
+            ...i,
+            qty: newQty,
+            finalLineTotal: newQty * (i.unitPrice || 0),
+            originalLineTotal:
+              newQty * (i.originalUnitPrice || i.unitPrice || 0)
+          }
+        : i
+    )
+  );
+
+  try {
+    const result = await updateCartQuantity(itemKey, newQty);
+
+    if (!result.success) {
+      if (result.unauthorized) {
+        addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+        return;
+      }
+      throw new Error(result.error || "خطا در به‌روزرسانی");
+    }
+
+    if (result.data?.items) {
+      setCartItems(transformBackendCart(result.data.items));
+    }
+
+    await refreshCart(); // sync navbar
+  } catch (error) {
+    addToast(error.message || "خطا در افزایش تعداد", "error");
+    loadCart();
+  }
+};
+
+
+const handleDecreaseQty = async (item) => {
+  if (item.qty <= 1) return;
+
+  // ✅ حالت مهمان
+  if (!isAuthenticated) {
+    const updated = cartItems.map(i =>
+      i.id_unique === item.id_unique
+        ? {
+            ...i,
+            qty: i.qty - 1,
+            finalLineTotal: (i.qty - 1) * i.unitPrice,
+            originalLineTotal: (i.qty - 1) * i.originalUnitPrice
+          }
+        : i
+    );
+
+    setCartItems(updated);
+    localStorage.setItem("guest_cart", JSON.stringify(updated));
+
+    await refreshCart(true); // ✅ همگام‌سازی با CartContext و Navbar
+
+    return;
+  }
+
+  // ✅ حالت کاربر لاگین
+  const itemKey = item.id_unique;
+
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+
+  const newQty = item.qty - 1;
+
+  // optimistic update
+  setCartItems(prev =>
+    prev.map(i =>
+      i.id_unique === itemKey
+        ? {
+            ...i,
+            qty: newQty,
+            finalLineTotal: newQty * (i.unitPrice || 0),
+            originalLineTotal:
+              newQty * (i.originalUnitPrice || i.unitPrice || 0)
+          }
+        : i
+    )
+  );
+
+  try {
+    const result = await updateCartQuantity(itemKey, newQty);
+
+    if (!result.success) {
+      if (result.unauthorized) {
+        addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+        return;
+      }
+      throw new Error(result.error || "خطا در به‌روزرسانی");
+    }
+
+    if (result.data?.items) {
+      setCartItems(transformBackendCart(result.data.items));
+    }
+
+    await refreshCart(); // sync نوبار
+  } catch (error) {
+    addToast(error.message || "خطا در کاهش تعداد", "error");
+    loadCart();
+  }
+};
+
+
+const handleRemove = (item) => {
+  const name = item.name || "محصول";
+  const itemKey = item.id_unique;
+
+  if (!itemKey) {
+    addToast("خطا: شناسه آیتم نامعتبر است", "error");
+    return;
+  }
+
+  // ✅ حالت مهمان
+  if (!isAuthenticated) {
+    const updated = cartItems.filter(i => i.id_unique !== itemKey);
+
+    setCartItems(updated);
+    localStorage.setItem("guest_cart", JSON.stringify(updated));
+    addToast(`«${name}» حذف شد`, "success");
+
+    refreshCart(true); // ✅ همگام‌سازی با CartContext و Navbar
+
+    return;
+  }
+
+  // ✅ حالت کاربر لاگین
+  showConfirm({
+    title: "حذف آیتم",
+    message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
+    confirmText: "بله، حذف کن",
+    cancelText: "انصراف",
+    variant: "danger",
+    onConfirm: async () => {
+      try {
+        const result = await removeCartItem(itemKey);
+
+        if (result.success) {
+          setCartItems(prev => prev.filter(i => i.id_unique !== itemKey));
+          addToast(`«${name}» حذف شد`, "success");
+
+          if (result.data?.items) {
+            setCartItems(transformBackendCart(result.data.items));
+          }
+
+          await refreshCart(); // sync نوبار
+        } else {
+          if (result.unauthorized) {
+            addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+          } else {
+            throw new Error(result.error || "خطا در حذف");
+          }
         }
-      },
-    });
-  };
+      } catch (error) {
+        addToast(error.message || "خطا در حذف آیتم", "error");
+        loadCart();
+      }
+    },
+  });
+};
 
   if (loading) {
     return (
@@ -214,7 +321,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     <>
       <motion.div
         dir="rtl"
-        className="w-full max-w-5xl mx-auto mb-15 md:mb-0"
+        className="w-full max-w-5xl mx-auto mb-20 md:mb-0"
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -224,7 +331,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           </h2>
 
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto min-h-0 pr-1 ">
+          <div className="flex-1 overflow-y-auto min-h-0 pr-1">
             {/* Desktop Table */}
             <div className="hidden md:block">
               <table className="min-w-full text-sm rounded-xl overflow-hidden">
@@ -504,12 +611,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           {/* Fixed Bottom Section */}
           {cartItems.length > 0 && (
             <div className="border border-gray-300 dark:border-slate-700 pt-4 pb-4 mt-5 shrink-0 bg-white/90 dark:bg-slate-900/60 
-                          shadow-lg rounded-2xl backdrop-blur-xl px-4 md:px-6">
+                            shadow-lg rounded-2xl backdrop-blur-xl px-4 md:px-6">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 
                 {/* سمت چپ در دسکتاپ (بخش سود) - در موبایل همون بالا می‌مونه */}
                 <div className="md:order-2 flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                  {/* این لیبل فقط توی موبایل دیده می‌شه (همون چیزی که بود) */}
                   <span className="text-slate-500 dark:text-slate-400 text-xs md:hidden">
                     مبلغ قابل پرداخت:
                   </span>
@@ -526,7 +632,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
                 {/* سمت راست در دسکتاپ (بخش قیمت) - در موبایل همون پایین می‌مونه */}
                 <div className="md:order-1 flex items-center gap-2 flex-wrap justify-center md:justify-end">
-                  {/* این لیبل فقط توی دسکتاپ اضافه می‌شه */}
                   <span className="hidden md:block text-slate-500 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap">
                     مبلغ قابل پرداخت:
                   </span>
@@ -548,7 +653,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
               {goToTimeStep && (
                 <button
-                  onClick={handleGoToTimeStep} // ← تغییر داده شد
+                  onClick={handleGoToTimeStep}
                   disabled={cartItems.length === 0}
                   className="
                     w-full h-11 md:h-12 mt-4 rounded-xl
@@ -568,14 +673,61 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         </div>
       </motion.div>
 
-      {/* مودال احراز هویت */}
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
+      {/* ✅ اضافه کردن onSuccess */}
+<AuthModal 
+  isOpen={isAuthModalOpen} 
+  onClose={() => {
+    console.log("Modal closed");
+    setIsAuthModalOpen(false);
+  }}
+  onSuccess={() => {
+    console.log("✅ SUCCESS CALLBACK FIRED!"); // ← این باید بیاد توی کنسول
+    handleAuthSuccess();
+  goToTimeStep();
+  }}
+/>
+
     </>
   );
 }
+
+function transformGuestCart(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items.map(item => {
+    const unitPrice = Number(
+      item.unitPrice ??
+      item.discount_price ??
+      item.price ??
+      0
+    );
+
+    const originalUnitPrice = Number(
+      item.originalUnitPrice ??
+      item.original_price ??
+      item.price_before_discount ??
+      unitPrice
+    );
+
+    const qty = Number(item.qty || item.quantity || 1);
+
+    return {
+      id_unique: item.id_unique || `guest-${item.productId}`,
+      name: item.name || item.product_name || "محصول",
+      qty,
+      unitPrice,
+      originalUnitPrice,
+      finalLineTotal: unitPrice * qty,
+      originalLineTotal: originalUnitPrice * qty,
+      hasDiscount: originalUnitPrice > unitPrice,
+      sizeDisplay: item.sizeDisplay || "-",
+      service: item.service || "-",
+      material: item.material || "-",
+      productId: item.productId || item.product_id
+    };
+  });
+}
+
 
 // تابع تبدیل داده‌های بک‌اند
 function transformBackendCart(backendItems) {

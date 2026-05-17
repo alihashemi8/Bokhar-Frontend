@@ -6,7 +6,7 @@ import RegisterPhoneForm from "./register/RegisterPhoneForm";
 import RegisterOtpForm from "./register/RegisterOtpForm";
 import LoginForm from "./login/LoginForm";
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, onSuccess }) {
   const [mode, setMode] = useState("register-phone");
 
   const [registerPhone, setRegisterPhone] = useState("");
@@ -57,7 +57,9 @@ export default function AuthModal({ isOpen, onClose }) {
               fullname={registerFullname}
               onBack={() => setMode("register-phone")}
               onSuccess={() => {
-                // ثبت‌نام / لاگین موفق
+                // ✅ ابتدا success callback رو صدا می‌زنیم (برای رفرش سبد)
+                if (onSuccess) onSuccess();
+                // بعد مودال رو می‌بندیم
                 onClose();
               }}
             />
@@ -68,6 +70,7 @@ export default function AuthModal({ isOpen, onClose }) {
             <LoginForm
               onSwitchRegister={() => setMode("register-phone")}
               onClose={onClose}
+              onSuccess={onSuccess}  
             />
           )}
         </div>
