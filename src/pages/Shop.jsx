@@ -42,6 +42,27 @@ export default function Landing() {
   const [productsPricing, setProductsPricing] = useState({});
   const [pricingLoaded, setPricingLoaded] = useState(false);
 
+const [isLoadingCategories, setIsLoadingCategories] = useState(true); // ← اضافه کنید
+
+// در useEffect مربوط به گرفتن دسته‌بندی‌ها:
+useEffect(() => {
+  const fetchCategories = async () => {
+    setIsLoadingCategories(true); // شروع لودینگ
+    try {
+      const response = await api.get("/categories");
+      setCategories(response.data);
+      if (response.data.length > 0) {
+        setActiveCategory(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoadingCategories(false); // پایان لودینگ
+    }
+  };
+
+  fetchCategories();
+}, []);
   // دریافت دسته‌ها
   useEffect(() => {
     async function loadCategories() {
@@ -175,15 +196,16 @@ export default function Landing() {
       {/* تب دسته‌ها - الان بدون کلیک هم badge رو نشون میده */}
       <div className="mt-4 px-4 py-3 overflow-x-auto">
         <CategoryTabs
-          categories={categories}
-          active={activeCategory}
-          onCategoryChange={(c) => {
-            setActiveCategory(c);
-            setSelectedCard(null);
-            setSearchQuery("");
-          }}
-          fullyDiscountedCategories={fullyDiscountedCategories}
-        />
+  categories={categories}
+  active={activeCategory}
+  onCategoryChange={(c) => {
+    setActiveCategory(c);
+    setSelectedCard(null);
+    setSearchQuery("");
+  }}
+  fullyDiscountedCategories={fullyDiscountedCategories}
+  isLoading={isLoadingCategories}  
+/>
       </div>
 
       {/* کارت‌ها - با pricing از قبل لود شده */}

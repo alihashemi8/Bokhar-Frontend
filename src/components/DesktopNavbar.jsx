@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { User, ShoppingCart, MessageSquare, Loader2, Home } from "lucide-react"; // Home اضافه شد
+import { User, ShoppingCart, MessageSquare, Loader2, Home } from "lucide-react";
 import DarkMode from "./DarkMode";
 import AuthModal from "./auth/AuthModal";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import Skeleton from "./Skeleton"; 
 
 export default function DesktopNavbar() {
   const [openModal, setOpenModal] = useState(false);
@@ -19,7 +20,6 @@ export default function DesktopNavbar() {
     }
   }, [user?.isAuthenticated, refreshCart]);
 
-  // تغییر خودکار هر 4 ثانیه
   useEffect(() => {
     const interval = setInterval(() => {
       setShowLogo(prev => !prev);
@@ -27,7 +27,52 @@ export default function DesktopNavbar() {
     return () => clearInterval(interval);
   }, []);
 
-  if (authLoading) return null;
+  // اسکلتون لودینگ برای زمانی که اطلاعات کاربر در حال بارگذاری است
+  if (authLoading) {
+    return (
+      <nav
+        dir="rtl"
+        className="hidden md:flex fixed top-4 left-1/2 -translate-x-1/2 backdrop-blur-md
+          w-[92%] max-w-6xl justify-between items-center px-6 py-2 shadow-lg rounded-full z-50
+          bg-sky-50/60 border border-white/20  
+          dark:bg-sky-50/40 dark:border dark:border-white/80"
+      >
+        {/* بخش راست - اسکلتون */}
+        <div className="flex items-center gap-6">
+          {/* لوگو اسکلتون */}
+          <div className="flex items-center justify-center px-6 h-11">
+            <Skeleton className="h-8 w-24 rounded-lg" />
+          </div>
+
+          {/* پیام‌ها اسکلتون */}
+          <div className="flex items-center gap-2 px-6">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+
+          {/* سبد خرید اسکلتون */}
+          <div className="flex items-center gap-2 px-6 relative">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-4 w-16" />
+            {/* Badge اسکلتون */}
+            <Skeleton className="h-4 w-4 rounded-full absolute -top-1 right-0" />
+          </div>
+        </div>
+
+        {/* بخش چپ - اسکلتون */}
+        <div className="flex items-center gap-6">
+          {/* دارک مود اسکلتون */}
+          <Skeleton className="h-8 w-8 rounded-full" />
+
+          {/* پروفایل/ورود اسکلتون */}
+          <div className="flex items-center gap-2 px-4">
+            <Skeleton className="h-5 w-5 rounded-full" />
+            <Skeleton className="h-4 w-20 hidden lg:block" />
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <>

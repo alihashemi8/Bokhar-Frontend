@@ -1,8 +1,51 @@
 import { useState, useEffect } from "react";
 import api from "../api/clientApi";
-import HorizontalScroller from "./HorizontalScroller"; // مسیر را تنظیم کنید
+import HorizontalScroller from "./HorizontalScroller";
+import Skeleton from "./Skeleton"; 
+export default function CategoryTabs({ 
+  categories, 
+  active, 
+  onCategoryChange, 
+  fullyDiscountedCategories = [],
+  isLoading = false
+}) {
 
-export default function CategoryTabs({ categories, active, onCategoryChange, fullyDiscountedCategories = [] }) {
+  // اگه در حال لود هستیم، اسکلتون شایمر دار نشون بده
+  if (isLoading) {
+    const skeletonItems = Array.from({ length: 8 }, (_, i) => i);
+    
+    return (
+      <div className="w-full">
+        {/* اسکلتون موبایل */}
+        <HorizontalScroller 
+          className="px-2 py-2 scrollbar-hide lg:hidden" 
+          innerClassName="gap-2"
+        >
+          {skeletonItems.map((i) => (
+            <Skeleton
+              key={i}
+              className="flex-shrink-0 my-2 mx-0.5 h-9 w-20 rounded-2xl"
+            />
+          ))}
+        </HorizontalScroller>
+
+        {/* اسکلتون دسکتاپ */}
+        <HorizontalScroller 
+          className="hidden lg:flex justify-center px-1 py-3 scrollbar-hide" 
+          innerClassName="gap-3"
+        >
+          {skeletonItems.map((i) => (
+            <Skeleton
+              key={i}
+              className="flex-shrink-0 h-10 w-28 rounded-3xl"
+            />
+          ))}
+        </HorizontalScroller>
+      </div>
+    );
+  }
+
+  // کد قبلی کتگوری تب...
   const isCategoryFullyDiscounted = (catId) => {
     return fullyDiscountedCategories.includes(catId);
   };
@@ -26,7 +69,7 @@ export default function CategoryTabs({ categories, active, onCategoryChange, ful
                 ${isActive 
                   ? "bg-sky-200 scale-105 mx-1" 
                   : isDiscounted 
-                    ? "bg-green-100 text-green-800 border border-green-200  animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
+                    ? "bg-green-100 text-green-800 border border-green-200 animate-[pulse_2s_ease-in-out_infinite] shadow-sm hover:shadow-md" 
                     : "bg-white"
                 }`}
             >
