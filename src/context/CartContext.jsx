@@ -1,155 +1,162 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
-import { fetchCart } from "../api/cartService";
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import {
+  fetchCart,
+  getGuestCart,
+  saveGuestCart,
+  syncGuestCartWithServer,
+} from "../api/cartService";
+import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within CartProvider");
-  }
-  return context;
-};
+export const CartProvider = ({ children }) => {
+  const { isAuthenticated } = useAuth();
 
-function transformBackendCart(backendItems) {
-  if (!Array.isArray(backendItems)) return [];
-  
-  return backendItems.map((item) => {
-    const unitPrice = parseInt(item.unit_price || item.price || 0);
-    const originalPrice = parseInt(item.original_price || unitPrice);
-    const quantity = parseInt(item.quantity || 1);
-    
-    const finalLineTotal = item.total_price || (unitPrice * quantity);
-    const originalLineTotal = item.original_total || (originalPrice * quantity);
-    
-    return {
-      id_unique: item.id_unique,
-      name: item.product_name || "محصول",
-      qty: quantity,
-      unitPrice: unitPrice,
-      originalUnitPrice: originalPrice,
-      finalLineTotal: finalLineTotal,
-      originalLineTotal: originalLineTotal,
-      hasDiscount: originalPrice > unitPrice,
-      sizeDisplay: item.size_display || (item.size ? `سایز ${item.size}` : "-"),
-      service: item.service || "-",
-      material: item.material || "-",
-      productId: item.product_id
-    };
-  });
-}
-function transformGuestCart(items) {
-  if (!Array.isArray(items)) return [];
-
-  return items.map(item => {
-    const qty = Number(item.qty || item.quantity || 1);
-    const unitPrice = Number(item.unitPrice ?? item.price ?? 0);
-    const originalUnitPrice = Number(
-      item.originalUnitPrice ?? item.original_price ?? unitPrice
-    );
-
-    return {
-      id_unique: item.id_unique || `guest-${item.productId}`,
-      name: item.name || item.product_name || "محصول",
-      qty,
-      unitPrice,
-      originalUnitPrice,
-      finalLineTotal: unitPrice * qty,
-      originalLineTotal: originalUnitPrice * qty,
-      hasDiscount: originalUnitPrice > unitPrice,
-      sizeDisplay: item.sizeDisplay || "-",
-      service: item.service || "-",
-      material: item.material || "-",
-      productId: item.productId || item.product_id,
-    };
-  });
-}
-
-export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [isGuest, setIsGuest] = useState(false); // ✅ اضافه شد
+  const [isGuest, setIsGuest] = useState(true);
 
-const loadCart = useCallback(async (silent = false) => {
-  if (!silent) setLoading(true);
+  // ⭐ تابع اصلی لود کردن سبد خرید
+  const loadCart = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (!isAuthenticated) {
+        const guestItems = getGuestCart();
+        // تبدیل به فرمت یکپارچه
+        setCartItems(transformCartItems(guestItems));
+        setIsGuest(true);
+        return;
+      }
 
-  try {
-    // ✅ اگر guest_cart در localStorage وجود دارد → مستقیم guest بخوان
-    const guestCartRaw = localStorage.getItem("guest_cart");
-
-    if (guestCartRaw) {
-      const guestCart = JSON.parse(guestCartRaw || "[]");
-      setCartItems(transformGuestCart(guestCart));
-      setIsAuthenticated(false);
+      const result = await fetchCart();
+      if (result.success) {
+        // تبدیل داده‌های بک‌اند به فرمت یکپارچه
+        setCartItems(transformCartItems(result.data.items || []));
+        setIsGuest(false);
+      } else {
+        // اگر خطا بود، fallback به guest
+        const guestItems = getGuestCart();
+        setCartItems(transformCartItems(guestItems));
+        setIsGuest(true);
+      }
+    } catch (error) {
+      console.error("Error loading cart:", error);
+      const guestItems = getGuestCart();
+      setCartItems(transformCartItems(guestItems));
       setIsGuest(true);
-      return; // ⛔ مهم → fetchCart اجرا نشود
+    } finally {
+      setLoading(false);
     }
+  }, [isAuthenticated]);
 
-    // ✅ در غیر این صورت برو سراغ بک‌اند
-    const result = await fetchCart();
-
-    if (result?.success && !result.data?.is_guest) {
-      const items = result.data?.cart || result.data?.items || [];
-      setCartItems(transformBackendCart(items));
-      setIsAuthenticated(true);
-      setIsGuest(false);
-      return;
-    }
-
-    // fallback خالی
-    setCartItems([]);
-    setIsAuthenticated(false);
-    setIsGuest(true);
-
-  } catch (err) {
-    console.error("Cart load error:", err);
-    setCartItems([]);
-  } finally {
-    if (!silent) setLoading(false);
-  }
-}, []);
-
-
+  // ⭐ رفرش کردن سبد خرید (برای استفاده در Factor)
+  const refreshCart = useCallback(async () => {
+    await loadCart();
+  }, [loadCart]);
 
   useEffect(() => {
     loadCart();
   }, [loadCart]);
 
-  const totalItems = useMemo(() => 
-    cartItems.reduce((sum, item) => sum + (item.qty || 1), 0),
-  [cartItems]);
+  // ⭐ تابع تبدیل یکپارچه سازی ساختار داده
+  const transformCartItems = (items) => {
+    if (!Array.isArray(items)) return [];
+    
+    return items.map((item) => {
+      // بررسی اینکه آیتم از بک‌اند آمده یا لوکال
+      const isFromBackend = item.id_unique && !item.id_unique.startsWith('guest-');
+      
+      const qty = Number(item.qty || item.quantity || 1);
+      const unitPrice = Number(
+        item.unitPrice || 
+        item.unit_price || 
+        item.price || 
+        item.discount_price || 
+        0
+      );
+      const originalUnitPrice = Number(
+        item.originalUnitPrice || 
+        item.original_price || 
+        item.price_before_discount || 
+        unitPrice
+      );
+      
+      return {
+        id_unique: item.id_unique || `guest-${item.product_id || item.productId}-${Date.now()}`,
+        productId: item.productId || item.product_id,
+        name: item.name || item.product_name || "محصول",
+        qty: qty,
+        unitPrice: unitPrice,
+        originalUnitPrice: originalUnitPrice,
+        finalLineTotal: unitPrice * qty,
+        originalLineTotal: originalUnitPrice * qty,
+        hasDiscount: originalUnitPrice > unitPrice,
+        sizeDisplay: item.sizeDisplay || item.size || "-",
+        service: item.service || "-",
+        material: item.material || "-",
+        image: item.image || null,
+      };
+    });
+  };
 
-  const totalPrice = useMemo(() => 
-    cartItems.reduce((sum, item) => sum + (item.finalLineTotal || 0), 0),
-  [cartItems]);
+  // ⭐ آپدیت لوکال (سریع) - برای استفاده در Factor
+  const updateCartLocal = useCallback((newItems) => {
+    setCartItems(transformCartItems(newItems));
+    if (isGuest) {
+      // اگر مهمان است، در localStorage هم ذخیره کن
+      const storageFormat = newItems.map(item => ({
+        id_unique: item.id_unique,
+        product_id: item.productId || item.product_id,
+        product_name: item.name,
+        quantity: item.qty,
+        qty: item.qty,
+        price: item.unitPrice,
+        unit_price: item.unitPrice,
+        original_price: item.originalUnitPrice,
+        service: item.service,
+        material: item.material,
+        size: item.sizeDisplay,
+        image: item.image,
+      }));
+      saveGuestCart(storageFormat);
+    }
+  }, [isGuest]);
 
-  const originalTotalPrice = useMemo(() => 
-    cartItems.reduce((sum, item) => sum + (item.originalLineTotal || 0), 0),
-  [cartItems]);
+  // ⭐ محاسبه تعداد آیتم‌ها (برای Badge نوبار)
+  const totalItems = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + (item.qty || 0), 0);
+  }, [cartItems]);
 
-  const hasAnyDiscount = originalTotalPrice > totalPrice;
-  const savingsAmount = originalTotalPrice - totalPrice;
-  const uniqueItemsCount = useMemo(() => cartItems.length, [cartItems]);
+  // ⭐ محاسبه قیمت کل
+  const totalPrice = useMemo(() => {
+    return cartItems.reduce(
+      (sum, item) => sum + ((item.finalLineTotal || item.unitPrice * item.qty) || 0),
+      0
+    );
+  }, [cartItems]);
+
+  const value = {
+    cartItems,
+    loading,
+    isGuest,
+    totalItems,       // برای نمایش در Badge
+    totalPrice,
+    loadCart,
+    refreshCart,      // ⭐ اضافه شده
+    updateCartLocal,  // ⭐ اضافه شده
+  };
 
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        totalItems,
-        uniqueItemsCount,
-        totalPrice,
-        originalTotalPrice,
-        hasAnyDiscount,
-        savingsAmount,
-        loading,
-        isAuthenticated,
-        isGuest,           // ✅ export شد
-        setIsGuest,        // ✅ export شد (اگه لازم داری)
-        refreshCart: loadCart,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );
-}
+};
+
+export const useCart = () => {
+  const ctx = useContext(CartContext);
+  if (!ctx) {
+    throw new Error("useCart must be used inside CartProvider");
+  }
+  return ctx;
+};

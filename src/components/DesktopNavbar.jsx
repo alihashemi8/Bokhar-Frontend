@@ -12,13 +12,9 @@ export default function DesktopNavbar() {
   const [showLogo, setShowLogo] = useState(true); 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { totalItems, loading: cartLoading, refreshCart } = useCart();
+const { totalItems, loading: cartLoading } = useCart();
 
-  useEffect(() => {
-    if (user?.isAuthenticated) {
-      refreshCart();
-    }
-  }, [user?.isAuthenticated, refreshCart]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {

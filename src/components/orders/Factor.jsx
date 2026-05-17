@@ -10,40 +10,45 @@ import {
   fetchCart, 
   removeCartItem, 
   updateCartQuantity,
+  syncGuestCartWithServer,  // ⭐ import اضافه شده
 } from "../../api/cartService";
 
 export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
   const { showConfirm } = useModal();
-  const { refreshCart } = useCart();
+  const { refreshCart, updateCartLocal } = useCart();  // ⭐ استفاده صحیح از Context
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-const loadCart = useCallback(async () => {
-  setLoading(true);
+  const loadCart = useCallback(async () => {
+    setLoading(true);
 
-  // ✅ Guest
-  if (!isAuthenticated) {
-    const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
-    setCartItems(transformGuestCart(guestCart));
-    setLoading(false);
-    return;
-  }
-
-  // ✅ Authenticated
-  try {
-    const result = await fetchCart();
-    if (result.success) {
-      setCartItems(transformBackendCart(result.data.cart || []));
+    // ✅ Guest
+    if (!isAuthenticated) {
+      const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+      const transformed = transformGuestCart(guestCart);
+      setCartItems(transformed);
+      updateCartLocal(transformed);  // ⭐ همگام‌سازی با Context
+      setLoading(false);
+      return;
     }
-  } catch (e) {
-    addToast("خطا در دریافت سبد خرید", "error");
-  } finally {
-    setLoading(false);
-  }
-}, [isAuthenticated]);
+
+    // ✅ Authenticated
+    try {
+      const result = await fetchCart();
+      if (result.success) {
+        const transformed = transformBackendCart(result.data.cart || result.data.items || []);
+        setCartItems(transformed);
+        updateCartLocal(transformed);  // ⭐ همگام‌سازی با Context
+      }
+    } catch (e) {
+      addToast("خطا در دریافت سبد خرید", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, updateCartLocal, addToast]);
 
   useEffect(() => {
     loadCart();
@@ -75,237 +80,233 @@ const loadCart = useCallback(async () => {
     }
   }, [totalPrice, originalTotalPrice, onTotalChange]);
 
-const handleGoToTimeStep = () => {
-  if (authLoading) return; // صبر کن auth بررسی شود
+  const handleGoToTimeStep = () => {
+    if (authLoading) return;
 
-  if (!isAuthenticated) {
-    addToast("برای ادامه فرایند خرید باید ورود/ثبت نام بکنید", "error");
-    setIsAuthModalOpen(true);
-    return;
-  }
+    if (!isAuthenticated) {
+      addToast("برای ادامه فرایند خرید باید ورود/ثبت نام بکنید", "error");
+      setIsAuthModalOpen(true);
+      return;
+    }
 
-  if (goToTimeStep) {
-    goToTimeStep();
-  }
-};
+    if (goToTimeStep) {
+      goToTimeStep();
+    }
+  };
 
+  // ✅ اصلاح شده: رفرش سبد بعد از لاگین موفق
+  const handleAuthSuccess = async () => {
+    setIsAuthModalOpen(false);
+    
+    if (cartItems.length > 0) {
+      const payload = cartItems.map(item => ({
+        productId: item.productId,
+        qty: item.qty,
+        service: item.service,
+        material: item.material,
+        size: item.sizeDisplay !== "-" ? item.sizeDisplay : null,
+        name: item.name,
+        unitPrice: item.unitPrice,
+        originalUnitPrice: item.originalUnitPrice,
+        hasDiscount: item.hasDiscount
+      }));
 
-  // ✅ اضافه شده: رفرش سبد بعد از لاگین موفق
-const handleAuthSuccess = async () => {
-  const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+      await syncGuestCartWithServer(payload);
+    }
 
-  if (guestCart.length > 0) {
-    const payload = guestCart.map(item => ({
-      product_id: item.productId,
-      quantity: item.qty
-    }));
+    await refreshCart();  // ⭐ رفرش کامل از سرور
+    loadCart();           // ⭐ رفرش محلی
+    
+    // حذف duplicate call
+    if (goToTimeStep) {
+      goToTimeStep();
+    }
+  };
 
-    await mergeGuestCartToServer(payload);
-    localStorage.removeItem("guest_cart");
-  }
+  const handleIncreaseQty = async (item) => {
+    const newQty = item.qty + 1;
+    
+    // ✅ حالت مهمان
+    if (!isAuthenticated) {
+      const updated = cartItems.map(i =>
+        i.id_unique === item.id_unique
+          ? {
+              ...i,
+              qty: newQty,
+              finalLineTotal: newQty * i.unitPrice,
+              originalLineTotal: newQty * i.originalUnitPrice
+            }
+          : i
+      );
 
-  loadCart();
-};
+      setCartItems(updated);
+      localStorage.setItem("guest_cart", JSON.stringify(updated));
+      updateCartLocal(updated);  // ⭐ آپدیت Context
+      return;
+    }
 
+    // ✅ حالت کاربر لاگین
+    if (!item.id_unique) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
+    }
 
-const handleIncreaseQty = async (item) => {
-  // ✅ حالت مهمان
-  if (!isAuthenticated) {
-    const updated = cartItems.map(i =>
+    // optimistic update
+    const optimisticUpdate = cartItems.map(i =>
       i.id_unique === item.id_unique
-        ? {
-            ...i,
-            qty: i.qty + 1,
-            finalLineTotal: (i.qty + 1) * i.unitPrice,
-            originalLineTotal: (i.qty + 1) * i.originalUnitPrice
-          }
-        : i
-    );
-
-    setCartItems(updated);
-    localStorage.setItem("guest_cart", JSON.stringify(updated));
-
-    await refreshCart(true); // ✅ همگام‌سازی با Navbar
-
-    return;
-  }
-
-  // ✅ حالت کاربر لاگین
-  const itemKey = item.id_unique;
-
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-
-  const newQty = (item.qty || 1) + 1;
-
-  // optimistic update
-  setCartItems(prev =>
-    prev.map(i =>
-      i.id_unique === itemKey
         ? {
             ...i,
             qty: newQty,
             finalLineTotal: newQty * (i.unitPrice || 0),
-            originalLineTotal:
-              newQty * (i.originalUnitPrice || i.unitPrice || 0)
-          }
-        : i
-    )
-  );
-
-  try {
-    const result = await updateCartQuantity(itemKey, newQty);
-
-    if (!result.success) {
-      if (result.unauthorized) {
-        addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-        return;
-      }
-      throw new Error(result.error || "خطا در به‌روزرسانی");
-    }
-
-    if (result.data?.items) {
-      setCartItems(transformBackendCart(result.data.items));
-    }
-
-    await refreshCart(); // sync navbar
-  } catch (error) {
-    addToast(error.message || "خطا در افزایش تعداد", "error");
-    loadCart();
-  }
-};
-
-
-const handleDecreaseQty = async (item) => {
-  if (item.qty <= 1) return;
-
-  // ✅ حالت مهمان
-  if (!isAuthenticated) {
-    const updated = cartItems.map(i =>
-      i.id_unique === item.id_unique
-        ? {
-            ...i,
-            qty: i.qty - 1,
-            finalLineTotal: (i.qty - 1) * i.unitPrice,
-            originalLineTotal: (i.qty - 1) * i.originalUnitPrice
+            originalLineTotal: newQty * (i.originalUnitPrice || i.unitPrice || 0)
           }
         : i
     );
+    setCartItems(optimisticUpdate);
+    updateCartLocal(optimisticUpdate);  // ⭐ آپدیت Context
 
-    setCartItems(updated);
-    localStorage.setItem("guest_cart", JSON.stringify(updated));
+    try {
+      const result = await updateCartQuantity(item.id_unique, newQty);
 
-    await refreshCart(true); // ✅ همگام‌سازی با CartContext و Navbar
-
-    return;
-  }
-
-  // ✅ حالت کاربر لاگین
-  const itemKey = item.id_unique;
-
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-
-  const newQty = item.qty - 1;
-
-  // optimistic update
-  setCartItems(prev =>
-    prev.map(i =>
-      i.id_unique === itemKey
-        ? {
-            ...i,
-            qty: newQty,
-            finalLineTotal: newQty * (i.unitPrice || 0),
-            originalLineTotal:
-              newQty * (i.originalUnitPrice || i.unitPrice || 0)
-          }
-        : i
-    )
-  );
-
-  try {
-    const result = await updateCartQuantity(itemKey, newQty);
-
-    if (!result.success) {
-      if (result.unauthorized) {
-        addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-        return;
-      }
-      throw new Error(result.error || "خطا در به‌روزرسانی");
-    }
-
-    if (result.data?.items) {
-      setCartItems(transformBackendCart(result.data.items));
-    }
-
-    await refreshCart(); // sync نوبار
-  } catch (error) {
-    addToast(error.message || "خطا در کاهش تعداد", "error");
-    loadCart();
-  }
-};
-
-
-const handleRemove = (item) => {
-  const name = item.name || "محصول";
-  const itemKey = item.id_unique;
-
-  if (!itemKey) {
-    addToast("خطا: شناسه آیتم نامعتبر است", "error");
-    return;
-  }
-
-  // ✅ حالت مهمان
-  if (!isAuthenticated) {
-    const updated = cartItems.filter(i => i.id_unique !== itemKey);
-
-    setCartItems(updated);
-    localStorage.setItem("guest_cart", JSON.stringify(updated));
-    addToast(`«${name}» حذف شد`, "success");
-
-    refreshCart(true); // ✅ همگام‌سازی با CartContext و Navbar
-
-    return;
-  }
-
-  // ✅ حالت کاربر لاگین
-  showConfirm({
-    title: "حذف آیتم",
-    message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
-    confirmText: "بله، حذف کن",
-    cancelText: "انصراف",
-    variant: "danger",
-    onConfirm: async () => {
-      try {
-        const result = await removeCartItem(itemKey);
-
-        if (result.success) {
-          setCartItems(prev => prev.filter(i => i.id_unique !== itemKey));
-          addToast(`«${name}» حذف شد`, "success");
-
-          if (result.data?.items) {
-            setCartItems(transformBackendCart(result.data.items));
-          }
-
-          await refreshCart(); // sync نوبار
-        } else {
-          if (result.unauthorized) {
-            addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
-          } else {
-            throw new Error(result.error || "خطا در حذف");
-          }
+      if (!result.success) {
+        if (result.unauthorized) {
+          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+          return;
         }
-      } catch (error) {
-        addToast(error.message || "خطا در حذف آیتم", "error");
-        loadCart();
+        throw new Error(result.error || "خطا در به‌روزرسانی");
       }
-    },
-  });
-};
+
+      if (result.data?.items || result.data?.cart) {
+        const fresh = transformBackendCart(result.data.items || result.data.cart);
+        setCartItems(fresh);
+        updateCartLocal(fresh);  // ⭐ آپدیت Context
+      }
+    } catch (error) {
+      addToast(error.message || "خطا در افزایش تعداد", "error");
+      loadCart();  // rollback
+    }
+  };
+
+  const handleDecreaseQty = async (item) => {
+    if (item.qty <= 1) return;
+    const newQty = item.qty - 1;
+
+    // ✅ حالت مهمان
+    if (!isAuthenticated) {
+      const updated = cartItems.map(i =>
+        i.id_unique === item.id_unique
+          ? {
+              ...i,
+              qty: newQty,
+              finalLineTotal: newQty * i.unitPrice,
+              originalLineTotal: newQty * i.originalUnitPrice
+            }
+          : i
+      );
+
+      setCartItems(updated);
+      localStorage.setItem("guest_cart", JSON.stringify(updated));
+      updateCartLocal(updated);  // ⭐ آپدیت Context
+      return;
+    }
+
+    // ✅ حالت کاربر لاگین
+    if (!item.id_unique) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
+    }
+
+    // optimistic update
+    const optimisticUpdate = cartItems.map(i =>
+      i.id_unique === item.id_unique
+        ? {
+            ...i,
+            qty: newQty,
+            finalLineTotal: newQty * (i.unitPrice || 0),
+            originalLineTotal: newQty * (i.originalUnitPrice || i.unitPrice || 0)
+          }
+        : i
+    );
+    setCartItems(optimisticUpdate);
+    updateCartLocal(optimisticUpdate);  // ⭐ آپدیت Context
+
+    try {
+      const result = await updateCartQuantity(item.id_unique, newQty);
+
+      if (!result.success) {
+        if (result.unauthorized) {
+          addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+          return;
+        }
+        throw new Error(result.error || "خطا در به‌روزرسانی");
+      }
+
+      if (result.data?.items || result.data?.cart) {
+        const fresh = transformBackendCart(result.data.items || result.data.cart);
+        setCartItems(fresh);
+        updateCartLocal(fresh);  // ⭐ آپدیت Context
+      }
+    } catch (error) {
+      addToast(error.message || "خطا در کاهش تعداد", "error");
+      loadCart();
+    }
+  };
+
+  const handleRemove = (item) => {
+    const name = item.name || "محصول";
+    const itemKey = item.id_unique;
+
+    if (!itemKey) {
+      addToast("خطا: شناسه آیتم نامعتبر است", "error");
+      return;
+    }
+
+    // ✅ حالت مهمان
+    if (!isAuthenticated) {
+      const updated = cartItems.filter(i => i.id_unique !== itemKey);
+      setCartItems(updated);
+      localStorage.setItem("guest_cart", JSON.stringify(updated));
+      updateCartLocal(updated);  // ⭐ آپدیت Context
+      addToast(`«${name}» حذف شد`, "success");
+      return;
+    }
+
+    // ✅ حالت کاربر لاگین
+    showConfirm({
+      title: "حذف آیتم",
+      message: `می‌خوای «${name}» رو از سبد حذف کنی؟`,
+      confirmText: "بله، حذف کن",
+      cancelText: "انصراف",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const result = await removeCartItem(itemKey);
+
+          if (result.success) {
+            const updated = cartItems.filter(i => i.id_unique !== itemKey);
+            setCartItems(updated);
+            updateCartLocal(updated);  // ⭐ آپدیت Context
+            addToast(`«${name}» حذف شد`, "success");
+
+            if (result.data?.items || result.data?.cart) {
+              const fresh = transformBackendCart(result.data.items || result.data.cart);
+              setCartItems(fresh);
+              updateCartLocal(fresh);
+            }
+          } else {
+            if (result.unauthorized) {
+              addToast("لطفاً ابتدا وارد حساب کاربری شوید", "error");
+            } else {
+              throw new Error(result.error || "خطا در حذف");
+            }
+          }
+        } catch (error) {
+          addToast(error.message || "خطا در حذف آیتم", "error");
+          loadCart();
+        }
+      },
+    });
+  };
 
   if (loading) {
     return (
@@ -512,7 +513,7 @@ const handleRemove = (item) => {
                               تخفیف دار
                             </span>
                           )}
-                          {item.sizeDisplay && (
+                          {item.sizeDisplay && item.sizeDisplay !== "-" && (
                             <span className="text-xs text-slate-500 mt-1">
                               سایز: {item.sizeDisplay}
                             </span>
@@ -614,7 +615,7 @@ const handleRemove = (item) => {
                             shadow-lg rounded-2xl backdrop-blur-xl px-4 md:px-6">
               <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 
-                {/* سمت چپ در دسکتاپ (بخش سود) - در موبایل همون بالا می‌مونه */}
+                {/* سمت چپ در دسکتاپ (بخش سود) */}
                 <div className="md:order-2 flex items-center gap-2 flex-wrap justify-center md:justify-start">
                   <span className="text-slate-500 dark:text-slate-400 text-xs md:hidden">
                     مبلغ قابل پرداخت:
@@ -630,7 +631,7 @@ const handleRemove = (item) => {
                   )}
                 </div>
 
-                {/* سمت راست در دسکتاپ (بخش قیمت) - در موبایل همون پایین می‌مونه */}
+                {/* سمت راست در دسکتاپ (بخش قیمت) */}
                 <div className="md:order-1 flex items-center gap-2 flex-wrap justify-center md:justify-end">
                   <span className="hidden md:block text-slate-500 dark:text-slate-400 text-xs md:text-sm whitespace-nowrap">
                     مبلغ قابل پرداخت:
@@ -673,20 +674,12 @@ const handleRemove = (item) => {
         </div>
       </motion.div>
 
-      {/* ✅ اضافه کردن onSuccess */}
-<AuthModal 
-  isOpen={isAuthModalOpen} 
-  onClose={() => {
-    console.log("Modal closed");
-    setIsAuthModalOpen(false);
-  }}
-  onSuccess={() => {
-    console.log("✅ SUCCESS CALLBACK FIRED!"); // ← این باید بیاد توی کنسول
-    handleAuthSuccess();
-  goToTimeStep();
-  }}
-/>
-
+      {/* اصلاح شده: حذف goToTimeStep از onSuccess چون در handleAuthSuccess هست */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+      />
     </>
   );
 }
@@ -712,7 +705,8 @@ function transformGuestCart(items) {
     const qty = Number(item.qty || item.quantity || 1);
 
     return {
-      id_unique: item.id_unique || `guest-${item.productId}`,
+      id_unique: item.id_unique || `guest-${item.productId || item.product_id}-${Date.now()}`,
+      productId: item.productId || item.product_id,
       name: item.name || item.product_name || "محصول",
       qty,
       unitPrice,
@@ -720,29 +714,27 @@ function transformGuestCart(items) {
       finalLineTotal: unitPrice * qty,
       originalLineTotal: originalUnitPrice * qty,
       hasDiscount: originalUnitPrice > unitPrice,
-      sizeDisplay: item.sizeDisplay || "-",
+      sizeDisplay: item.sizeDisplay || item.size || "-",
       service: item.service || "-",
       material: item.material || "-",
-      productId: item.productId || item.product_id
     };
   });
 }
 
-
-// تابع تبدیل داده‌های بک‌اند
 function transformBackendCart(backendItems) {
   if (!Array.isArray(backendItems)) return [];
   
   return backendItems.map((item) => {
     const unitPrice = parseInt(item.unit_price || item.price || 0);
     const originalPrice = parseInt(item.original_price || unitPrice);
-    const quantity = parseInt(item.quantity || 1);
+    const quantity = parseInt(item.quantity || item.qty || 1);
     
     const totalPrice = item.total_price || (unitPrice * quantity);
     const originalTotal = item.original_total || (originalPrice * quantity);
     
     return {
       id_unique: item.id_unique,
+      productId: item.product_id,
       name: item.product_name || "محصول",
       qty: quantity,
       unitPrice: unitPrice,           
@@ -753,7 +745,6 @@ function transformBackendCart(backendItems) {
       sizeDisplay: item.size_display || (item.size ? `سایز ${item.size}` : "-"),
       service: item.service || "-",
       material: item.material || "-",
-      productId: item.product_id
     };
   });
 }
