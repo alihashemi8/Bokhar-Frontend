@@ -374,59 +374,68 @@ export default function DateTimeRangePicker({
         {rushSettings.free_after_hours}+ ساعت: رایگان
       </p>
       
-      <div className="flex flex-col gap-6 md:gap-8">
-        {/* Delivery Section */}
-        <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">📦</span>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-              تحویل دادن
-            </h3>
-            {deliveryDate && deliveryTime && (
-              <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2">
-                <span className="font-medium">{formatSafe(deliveryDate)}</span>
-                <span className="opacity-60">|</span>
-                <span>{deliveryTime}</span>
-              </span>
-            )}
-          </div>
-          <TimeSelector
-            selectedDate={deliveryDate}
-            setSelectedDate={handleDeliveryDateChange}
-            selectedTime={deliveryTime}
-            setSelectedTime={handleDeliveryTimeChange}
-            disabledDates={disabledDates}
-            isLoading={isLoadingSettings}
-          />
-        </div>
+{/* ✅ تغییر اصلی: items-stretch برای یکسان کردن ارتفاع */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+  {/* Delivery Section */}
+  {/* ✅ حذف h-fit و اضافه کردن h-full flex flex-col */}
+  <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col h-full">
+    {/* ✅ min-h-[48px] برای ثابت نگه داشتن ارتفاع header */}
+    <div className="flex items-center gap-2 mb-4 min-h-[48px]">
+      <span className="text-2xl">📦</span>
+      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+        تحویل دادن
+      </h3>
+      {deliveryDate && deliveryTime && (
+        <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2 whitespace-nowrap">
+          <span className="font-medium">{formatSafe(deliveryDate)}</span>
+          <span className="opacity-60">|</span>
+          <span>{deliveryTime}</span>
+        </span>
+      )}
+    </div>
+    {/* ✅ flex-1 برای پر کردن فضای باقیمانده */}
+    <div className="flex-1">
+      <TimeSelector
+        selectedDate={deliveryDate}
+        setSelectedDate={handleDeliveryDateChange}
+        selectedTime={deliveryTime}
+        setSelectedTime={handleDeliveryTimeChange}
+        disabledDates={disabledDates}
+        isLoading={isLoadingSettings}
+      />
+    </div>
+  </div>
 
-        {/* Pickup Section */}
-        <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">🕒</span>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-              تحویل گرفتن
-            </h3>
-            {pickupDate && pickupTime && (
-              <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2">
-                <span className="font-medium">{formatSafe(pickupDate)}</span>
-                <span className="opacity-60">|</span>
-                <span>{pickupTime}</span>
-              </span>
-            )}
-          </div>
-          <TimeSelector
-            selectedDate={pickupDate}
-            setSelectedDate={handlePickupDateChange}
-            selectedTime={pickupTime}
-            setSelectedTime={handlePickupTimeChange}
-            minDate={pickupMinDate}
-            disabledTimeSlots={disabledPickupSlots}
-            disabledDates={disabledDates} // ✅ اعمال تاریخ‌های غیرفعال برای تحویل گرفتن هم
-            isLoading={isLoadingSettings}
-          />
-        </div>
-      </div>
+  {/* Pickup Section */}
+  <div className="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col h-full">
+    <div className="flex items-center gap-2 mb-4 min-h-[48px]">
+      <span className="text-2xl">🕒</span>
+      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+        تحویل گرفتن
+      </h3>
+      {pickupDate && pickupTime && (
+        <span className="mr-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-3 py-1.5 rounded-full flex items-center gap-2 whitespace-nowrap">
+          <span className="font-medium">{formatSafe(pickupDate)}</span>
+          <span className="opacity-60">|</span>
+          <span>{pickupTime}</span>
+        </span>
+      )}
+    </div>
+    <div className="flex-1">
+      <TimeSelector
+        selectedDate={pickupDate}
+        setSelectedDate={handlePickupDateChange}
+        selectedTime={pickupTime}
+        setSelectedTime={handlePickupTimeChange}
+        minDate={pickupMinDate}
+        disabledTimeSlots={disabledPickupSlots}
+        disabledDates={disabledDates}
+        isLoading={isLoadingSettings}
+      />
+    </div>
+  </div>
+</div>
+
 
       {/* Pricing Summary */}
       {isComplete && priceInfo && (
