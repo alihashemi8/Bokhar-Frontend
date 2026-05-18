@@ -211,12 +211,6 @@ export default function Landing() {
         />
       </div>
 
-      {/* ✅ نشانگر لودینگ محصولات */}
-      {isLoadingProducts && (
-        <div className="text-center py-8 text-gray-500">
-          در حال بارگذاری محصولات...
-        </div>
-      )}
 
       {/* کارت‌ها - با pricing از قبل لود شده */}
       <section className="p-8">

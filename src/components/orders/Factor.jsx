@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiTrash2, FiTag } from "react-icons/fi";
 import { useToast } from "../../context/ToastContext";
 import { useModal } from "../../context/ModalContext";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import AuthModal from "../auth/AuthModal"; 
@@ -10,49 +10,24 @@ import {
   fetchCart, 
   removeCartItem, 
   updateCartQuantity,
-  syncGuestCartWithServer,  // ⭐ import اضافه شده
+  syncGuestCartWithServer  // ⭐ اضافه شد
 } from "../../api/cartService";
 
 export default function Factor({ onTotalChange, goToTimeStep }) {
   const { addToast } = useToast();
   const { showConfirm } = useModal();
-  const { refreshCart, updateCartLocal } = useCart();  // ⭐ استفاده صحیح از Context
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    cartItems,
+    loading,
+    refreshCart,
+    updateCartLocal
+  } = useCart();
+
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  const loadCart = useCallback(async () => {
-    setLoading(true);
-
-    // ✅ Guest
-    if (!isAuthenticated) {
-      const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
-      const transformed = transformGuestCart(guestCart);
-      setCartItems(transformed);
-      updateCartLocal(transformed);  // ⭐ همگام‌سازی با Context
-      setLoading(false);
-      return;
-    }
-
-    // ✅ Authenticated
-    try {
-      const result = await fetchCart();
-      if (result.success) {
-        const transformed = transformBackendCart(result.data.cart || result.data.items || []);
-        setCartItems(transformed);
-        updateCartLocal(transformed);  // ⭐ همگام‌سازی با Context
-      }
-    } catch (e) {
-      addToast("خطا در دریافت سبد خرید", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated, updateCartLocal, addToast]);
-
-  useEffect(() => {
-    loadCart();
-  }, [loadCart]);
+  
+  // ⭐ ذخیره snapshot سبد مهمان قبل از باز شدن مودال ورود
+  const guestCartSnapshot = useRef([]);
 
   const totalPrice = useMemo(() => {
     return cartItems?.reduce(
@@ -85,6 +60,10 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
     if (!isAuthenticated) {
       addToast("برای ادامه فرایند خرید باید ورود/ثبت نام بکنید", "error");
+      
+      // ⭐ ذخیره snapshot سبد فعلی قبل از باز شدن مودال
+      guestCartSnapshot.current = [...cartItems];
+      
       setIsAuthModalOpen(true);
       return;
     }
@@ -94,33 +73,30 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     }
   };
 
-  // ✅ اصلاح شده: رفرش سبد بعد از لاگین موفق
+  // ✅ اصلاح شده: استفاده از snapshot به جای cartItems فعلی
   const handleAuthSuccess = async () => {
     setIsAuthModalOpen(false);
+
+    // ⭐ استفاده از snapshot ذخیره شده به جای cartItems (که ممکنه خالی شده باشه)
+    const itemsToSync = guestCartSnapshot.current;
     
-    if (cartItems.length > 0) {
-      const payload = cartItems.map(item => ({
+    if (itemsToSync.length > 0) {
+      const payload = itemsToSync.map(item => ({
         productId: item.productId,
         qty: item.qty,
         service: item.service,
         material: item.material,
         size: item.sizeDisplay !== "-" ? item.sizeDisplay : null,
-        name: item.name,
-        unitPrice: item.unitPrice,
-        originalUnitPrice: item.originalUnitPrice,
-        hasDiscount: item.hasDiscount
       }));
 
       await syncGuestCartWithServer(payload);
     }
 
-    await refreshCart();  // ⭐ رفرش کامل از سرور
-    loadCart();           // ⭐ رفرش محلی
+    await refreshCart(true); // ✅ فقط از Context
+    goToTimeStep?.();
     
-    // حذف duplicate call
-    if (goToTimeStep) {
-      goToTimeStep();
-    }
+    // پاک کردن snapshot بعد از استفاده
+    guestCartSnapshot.current = [];
   };
 
   const handleIncreaseQty = async (item) => {
@@ -139,9 +115,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           : i
       );
 
-      setCartItems(updated);
-      localStorage.setItem("guest_cart", JSON.stringify(updated));
-      updateCartLocal(updated);  // ⭐ آپدیت Context
+      updateCartLocal(updated);
       return;
     }
 
@@ -162,8 +136,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           }
         : i
     );
-    setCartItems(optimisticUpdate);
-    updateCartLocal(optimisticUpdate);  // ⭐ آپدیت Context
+    updateCartLocal(optimisticUpdate);
 
     try {
       const result = await updateCartQuantity(item.id_unique, newQty);
@@ -178,12 +151,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
       if (result.data?.items || result.data?.cart) {
         const fresh = transformBackendCart(result.data.items || result.data.cart);
-        setCartItems(fresh);
-        updateCartLocal(fresh);  // ⭐ آپدیت Context
+        updateCartLocal(fresh);
       }
     } catch (error) {
       addToast(error.message || "خطا در افزایش تعداد", "error");
-      loadCart();  // rollback
+      refreshCart();  // rollback
     }
   };
 
@@ -204,9 +176,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           : i
       );
 
-      setCartItems(updated);
-      localStorage.setItem("guest_cart", JSON.stringify(updated));
-      updateCartLocal(updated);  // ⭐ آپدیت Context
+      updateCartLocal(updated);
       return;
     }
 
@@ -227,8 +197,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           }
         : i
     );
-    setCartItems(optimisticUpdate);
-    updateCartLocal(optimisticUpdate);  // ⭐ آپدیت Context
+    updateCartLocal(optimisticUpdate);
 
     try {
       const result = await updateCartQuantity(item.id_unique, newQty);
@@ -243,12 +212,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
       if (result.data?.items || result.data?.cart) {
         const fresh = transformBackendCart(result.data.items || result.data.cart);
-        setCartItems(fresh);
-        updateCartLocal(fresh);  // ⭐ آپدیت Context
+        updateCartLocal(fresh);
       }
     } catch (error) {
       addToast(error.message || "خطا در کاهش تعداد", "error");
-      loadCart();
+      refreshCart();
     }
   };
 
@@ -264,9 +232,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
     // ✅ حالت مهمان
     if (!isAuthenticated) {
       const updated = cartItems.filter(i => i.id_unique !== itemKey);
-      setCartItems(updated);
-      localStorage.setItem("guest_cart", JSON.stringify(updated));
-      updateCartLocal(updated);  // ⭐ آپدیت Context
+      updateCartLocal(updated);
       addToast(`«${name}» حذف شد`, "success");
       return;
     }
@@ -284,13 +250,11 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
 
           if (result.success) {
             const updated = cartItems.filter(i => i.id_unique !== itemKey);
-            setCartItems(updated);
-            updateCartLocal(updated);  // ⭐ آپدیت Context
+            updateCartLocal(updated);
             addToast(`«${name}» حذف شد`, "success");
 
             if (result.data?.items || result.data?.cart) {
               const fresh = transformBackendCart(result.data.items || result.data.cart);
-              setCartItems(fresh);
               updateCartLocal(fresh);
             }
           } else {
@@ -302,7 +266,7 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
           }
         } catch (error) {
           addToast(error.message || "خطا در حذف آیتم", "error");
-          loadCart();
+          refreshCart();
         }
       },
     });
@@ -674,7 +638,6 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
         </div>
       </motion.div>
 
-      {/* اصلاح شده: حذف goToTimeStep از onSuccess چون در handleAuthSuccess هست */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)}

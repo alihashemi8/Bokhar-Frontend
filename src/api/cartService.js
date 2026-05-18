@@ -4,6 +4,23 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 const GUEST_CART_KEY = "guest_cart";
 
 /* ======================= */
+/*  Cart Key Generator     */
+/* ======================= */
+
+/**
+ * ساخت کلید یکتا برای آیتم سبد خرید
+ * این کلید برای شناسایی آیتم‌های یکسان با سرویس/متریال/سایز متفاوت استفاده می‌شود
+ */
+export const buildCartKey = (productId, service, material, size) => {
+  // تبدیل null/undefined به رشته استاندارد برای سازگاری
+  const svc = service || "-";
+  const mat = material || "-";
+  const sz = size === null || size === undefined || size === "-" ? "null" : String(size);
+  
+  return `${productId}_${svc}_${mat}_${sz}`;
+};
+
+/* ======================= */
 /*  Guest Cart Helpers     */
 /* ======================= */
 
@@ -29,7 +46,7 @@ const generateGuestId = () =>
 
 export const fetchCart = async () => {
   try {
-    const res = await fetch(`${API_BASE}/cart/`, {
+     const res = await fetch(`${API_BASE}/cart/?_t=${Date.now()}`, {
       method: "GET",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -343,4 +360,5 @@ export default {
   syncGuestCartWithServer,
   getGuestCart,
   saveGuestCart,
+  buildCartKey,  // ⭐ اضافه شد
 };

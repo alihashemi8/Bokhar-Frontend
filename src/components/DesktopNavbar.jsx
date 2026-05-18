@@ -12,9 +12,17 @@ export default function DesktopNavbar() {
   const [showLogo, setShowLogo] = useState(true); 
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-const { totalItems, loading: cartLoading } = useCart();
+const { totalItems, loading: cartLoading,cartItems } = useCart();
 
-
+  const [, forceUpdate] = useState();
+  useEffect(() => {
+    console.log("Cart changed:", totalItems); // برای دیباگ
+    forceUpdate({});
+  }, [totalItems, cartItems.length]);
+  
+  useEffect(() => {
+    console.log("Cart updated:", { totalItems, cartItems: cartItems.length });
+  }, [totalItems, cartItems]);
 
   useEffect(() => {
     const interval = setInterval(() => {

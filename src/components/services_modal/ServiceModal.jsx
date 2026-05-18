@@ -27,9 +27,9 @@ export default function ServiceModal({
   itemTitle = "سرویس",
   pricing = {},
 }) {
-  const { refreshCart, updateCartLocal } = useCart();  // ⭐ اضافه کردن updateCartLocal
+  const { refreshCart, updateCartLocal } = useCart();
   const { isAuthenticated } = useAuth();
-  
+
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("");
   const [quantities, setQuantities] = useState({});
@@ -63,10 +63,12 @@ export default function ServiceModal({
   }, [pricing, productId]);
 
   // ✅ تب‌های موجود
-  const availableTabs = useMemo(() => 
-    Object.keys(normalizedPricing).filter(
-      (tab) => Object.keys(normalizedPricing[tab].materialPrices || {}).length > 0
-    ), 
+  const availableTabs = useMemo(
+    () =>
+      Object.keys(normalizedPricing).filter(
+        (tab) =>
+          Object.keys(normalizedPricing[tab].materialPrices || {}).length > 0
+      ),
     [normalizedPricing]
   );
 
@@ -78,97 +80,113 @@ export default function ServiceModal({
   }, [availableTabs, activeTab]);
 
   // ✅ تغییر تعداد
-  const changeQuantity = useCallback((material, delta) => {
-    setQuantities((prev) => {
-      const tabQuantities = prev[activeTab] || {};
-      const currentQty = tabQuantities[material] || 0;
-      const nextQty = Math.max(0, currentQty + delta);
+  const changeQuantity = useCallback(
+    (material, delta) => {
+      setQuantities((prev) => {
+        const tabQuantities = prev[activeTab] || {};
+        const currentQty = tabQuantities[material] || 0;
+        const nextQty = Math.max(0, currentQty + delta);
 
-      const updatedTab = { ...tabQuantities };
+        const updatedTab = { ...tabQuantities };
 
-      if (nextQty === 0) {
-        delete updatedTab[material];
-      } else {
-        updatedTab[material] = nextQty;
-      }
+        if (nextQty === 0) {
+          delete updatedTab[material];
+        } else {
+          updatedTab[material] = nextQty;
+        }
 
-      // اگر تب خالی شد، کلید تب را هم حذف کن
-      if (Object.keys(updatedTab).length === 0) {
-        const { [activeTab]: _, ...rest } = prev;
-        return rest;
-      }
+        // اگر تب خالی شد، کلید تب را هم حذف کن
+        if (Object.keys(updatedTab).length === 0) {
+          const { [activeTab]: _, ...rest } = prev;
+          return rest;
+        }
 
-      return { ...prev, [activeTab]: updatedTab };
-    });
-  }, [activeTab]);
+        return { ...prev, [activeTab]: updatedTab };
+      });
+    },
+    [activeTab]
+  );
 
-  // ✅ افزودن به سبد مهمان (Guest Cart) - ⭐ کاملاً هماهنگ با Factor.jsx
-  const addToGuestCart = useCallback((items) => {
-    try {
-      // خواندن سبد فعلی
-      const guestCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
-      const updatedCart = [...guestCart];
-
-      items.forEach((item) => {
-        // ⭐ تولید id_unique یکتا
-        const idUnique = `guest-${item.product_id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // ⭐ محاسبه قیمت‌ها
-        const finalPrice = item.price;
-        const originalPrice = item.original_price || finalPrice;
-        const qty = Number(item.quantity);
-
-        // ⭐ بررسی وجود آیتم مشابه (بر اساس product_id, service, material)
-        const existingIndex = updatedCart.findIndex(
-          (i) =>
-            i.product_id === item.product_id &&
-            i.service === item.options.service &&
-            i.material === item.options.material &&
-            (i.size === item.options.size || (!i.size && !item.options.size))
+  // ✅ افزودن به سبد مهمان (Guest Cart)
+  const addToGuestCart = useCallback(
+    (items) => {
+      try {
+        const guestCart = JSON.parse(
+          localStorage.getItem("guest_cart") || "[]"
         );
 
-        if (existingIndex >= 0) {
-          // بروزرسانی تعداد و قیمت‌ها
-          const existing = updatedCart[existingIndex];
-          existing.qty = (existing.qty || existing.quantity || 0) + qty;
-          existing.finalLineTotal = existing.qty * (existing.unitPrice || existing.price || finalPrice);
-          existing.originalLineTotal = existing.qty * (existing.originalUnitPrice || existing.original_price || originalPrice);
-        } else {
-          // ⭐ اضافه کردن آیتم جدید با ساختار کاملاً هماهنگ با Factor.jsx
-          updatedCart.push({
-            id_unique: idUnique,
-            productId: item.product_id,              // ⭐ productId (نه product_id)
-            name: item.product_name,                 // ⭐ name (نه product_name)
-            qty: qty,                                // ⭐ qty (نه quantity)
-            unitPrice: finalPrice,                   // ⭐ unitPrice (نه price)
-            originalUnitPrice: originalPrice,        // ⭐ originalUnitPrice
-            finalLineTotal: finalPrice * qty,        // ⭐ finalLineTotal
-            originalLineTotal: originalPrice * qty,  // ⭐ originalLineTotal
-            hasDiscount: item.has_discount && originalPrice > finalPrice,
-            sizeDisplay: item.options.size || "-",   // ⭐ sizeDisplay (نه size)
-            service: item.options.service || "-",
-            material: item.options.material || "-",
-            // نگهداری فیلدهای اضافی برای سازگاری با سرویس‌های قدیمی
-            product_id: item.product_id,
-            price: finalPrice,
-            original_price: originalPrice,
-            quantity: qty,
-            size: item.options.size,
-          });
-        }
-      });
+        const updatedCart = [...guestCart];
 
-      localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
-      
-      // ⭐ آپدیت فوری Context برای نمایش در Badge نوبار
-      updateCartLocal(updatedCart);
-      
-      return true;
-    } catch (error) {
-      console.error("Error saving to guest cart:", error);
-      return false;
-    }
-  }, [updateCartLocal]);
+        items.forEach((item) => {
+          const qty = Number(item.quantity);
+          const finalPrice = item.price;
+          const originalPrice = item.original_price || finalPrice;
+
+          const service = item.options?.service || "-";
+          const material = item.options?.material || "-";
+          const size = item.options?.size ?? null;
+
+          // ✅ ساخت cart_key یکسان با Auth
+          const cartKey = `${item.product_id}-${service}-${material}-${size ?? "null"}`;
+
+          const existingIndex = updatedCart.findIndex(
+            (i) => i.cart_key === cartKey
+          );
+
+          if (existingIndex >= 0) {
+            const existing = updatedCart[existingIndex];
+            existing.qty += qty;
+            existing.finalLineTotal = existing.qty * existing.unitPrice;
+            existing.originalLineTotal =
+              existing.qty * existing.originalUnitPrice;
+          } else {
+            updatedCart.push({
+              cart_key: cartKey,
+              id_unique: `guest-${cartKey}-${Date.now()}`,
+
+              // ✅ ساختار واحد با Auth
+              productId: item.product_id,
+              product_id: item.product_id,
+              name: item.product_name,
+              product_name: item.product_name,
+
+              qty,
+              quantity: qty,
+
+              unitPrice: finalPrice,
+              price: finalPrice,
+              unit_price: finalPrice,
+
+              originalUnitPrice: originalPrice,
+              original_price: originalPrice,
+
+              finalLineTotal: finalPrice * qty,
+              originalLineTotal: originalPrice * qty,
+
+              hasDiscount: item.has_discount && originalPrice > finalPrice,
+              has_discount: item.has_discount,
+
+              service,
+              material,
+              size,
+              sizeDisplay: size || "-",
+            });
+          }
+        });
+
+        localStorage.setItem("guest_cart", JSON.stringify(updatedCart));
+
+        // ✅ sync فوری با CartContext
+        updateCartLocal(updatedCart);
+
+        return true;
+      } catch (err) {
+        console.error("Error saving guest cart:", err);
+        return false;
+      }
+    },
+    [updateCartLocal]
+  );
 
   // ✅ محاسبه قیمت نهایی (با تخفیف)
   const totalPrice = useMemo(() => {
@@ -201,7 +219,7 @@ export default function ServiceModal({
   const hasAnyDiscount = originalTotalPrice > totalPrice;
   const savingsAmount = originalTotalPrice - totalPrice;
 
-  // ✅ آیتم‌های انتخاب شده - ⭐ ساختار هماهنگ با CartContext
+  // ✅ آیتم‌های انتخاب شده
   const selectedItems = useMemo(() => {
     const items = [];
 
@@ -250,26 +268,20 @@ export default function ServiceModal({
     setLoading(true);
 
     try {
-      // 🔴 حالت اول: کاربر لاگین نیست (Guest Mode)
       if (!isAuthenticated) {
         const success = addToGuestCart(selectedItems);
-        
         if (success) {
-          // ⭐ refreshCart برای اطمینان از همگام‌سازی کامل
           await refreshCart();
           toast.success("آیتم‌ها به سبد خرید اضافه شدند");
           setQuantities({});
           onClose();
-        } else {
-          toast.error("خطا در ذخیره سبد خرید");
         }
         return;
       }
 
-      // 🔵 حالت دوم: کاربر لاگین است (API Mode)
+      // 🔵 حالت لاگین شده
       const toastId = toast.loading("در حال افزودن به سبد...");
 
-      // ارسال یکی‌یکی با Promise.all
       const promises = selectedItems.map((item) =>
         addToCartAPI(item.product_id, item.quantity, {
           service: item.options.service,
@@ -285,25 +297,91 @@ export default function ServiceModal({
       );
 
       const results = await Promise.all(promises);
-      
-      // بررسی خطا در نتایج
-      const hasError = results.some(r => !r.success);
+
+      const hasError = results.some((r) => !r.success);
       if (hasError) {
         throw new Error("خطا در افزودن برخی آیتم‌ها");
       }
-      
+
+      // ⭐ ساخت آیتم‌های جدید از پاسخ سرور
+      const newCartItems = selectedItems.map((item, index) => {
+        const serverItem = results[index]?.data?.item || results[index]?.data;
+        
+        // ✅ ساخت cart_key یکسان
+        const cartKey = `${item.product_id}-${item.options.service}-${item.options.material}-null`;
+        
+        return {
+          cart_key: cartKey,
+          id_unique: serverItem?.id_unique || `temp-${cartKey}`,
+
+          productId: item.product_id,
+          product_id: item.product_id,
+          name: item.product_name,
+          product_name: item.product_name,
+
+          qty: Number(item.quantity),
+          quantity: Number(item.quantity),
+
+          unitPrice: item.price,
+          price: item.price,
+          unit_price: item.price,
+
+          originalUnitPrice: item.original_price,
+          original_price: item.original_price,
+
+          finalLineTotal: item.price * item.quantity,
+          originalLineTotal: item.original_price * item.quantity,
+
+          hasDiscount: item.has_discount && item.original_price > item.price,
+          has_discount: item.has_discount,
+
+          service: item.options.service,
+          material: item.options.material,
+          size: item.options.size,
+          sizeDisplay: item.options.size || "-",
+          image: item.image || null,
+        };
+      });
+
+      // ✅ merge درست با استفاده از cart_key
+      updateCartLocal((prev) => {
+        const updated = [...prev];
+
+        newCartItems.forEach((item) => {
+          const index = updated.findIndex((i) => i.cart_key === item.cart_key);
+
+          if (index >= 0) {
+            updated[index].qty += item.qty;
+            updated[index].finalLineTotal =
+              updated[index].qty * updated[index].unitPrice;
+          } else {
+            updated.push(item);
+          }
+        });
+
+        return updated;
+      });
+
       toast.success("آیتم‌ها به سبد اضافه شدند", { id: toastId });
-      await refreshCart();  // ⭐ رفرش Context و نوبار
+
+      // ⭐ پاک کردن فرم و بستن مودال
       setQuantities({});
       onClose();
-      
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error(error.message || "خطا در افزودن به سبد");
     } finally {
       setLoading(false);
     }
-  }, [productId, selectedItems, isAuthenticated, addToGuestCart, refreshCart, onClose]);
+  }, [
+    productId,
+    selectedItems,
+    isAuthenticated,
+    addToGuestCart,
+    refreshCart,
+    updateCartLocal,
+    onClose,
+  ]);
 
   const currentMaterials = normalizedPricing[activeTab]?.materialPrices || {};
   const currentTabQuantities = quantities[activeTab] || {};
@@ -421,14 +499,18 @@ export default function ServiceModal({
         <div className="flex justify-between items-center">
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">مبلغ قابل پرداخت:</span>
-            
+
             <div className="flex items-center gap-2">
               {hasAnyDiscount && (
                 <span className="text-sm line-through text-gray-400 decoration-red-300">
                   {originalTotalPrice.toLocaleString()}
                 </span>
               )}
-              <span className={`font-bold text-xl ${hasAnyDiscount ? "text-green-600" : "text-sky-700"}`}>
+              <span
+                className={`font-bold text-xl ${
+                  hasAnyDiscount ? "text-green-600" : "text-sky-700"
+                }`}
+              >
                 {totalPrice.toLocaleString()}
                 <span className="text-sm font-normal text-gray-500 mr-1">
                   تومان

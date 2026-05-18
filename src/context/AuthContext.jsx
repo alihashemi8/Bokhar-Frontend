@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import {
   createContext,
   useContext,
@@ -29,7 +30,7 @@ export async function ensureCSRFToken() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // null = هنوز معلوم نیست
   const [loading, setLoading] = useState(true);
 
   const isRefreshing = useRef(false);
@@ -98,8 +99,10 @@ export function AuthProvider({ children }) {
 
       throw new Error("Verify failed");
     } catch (err) {
+      console.error("verifyAuth error:", err);
       if (lastVerify.current === currentVerify) {
-        setUser({ isAuthenticated: false });
+        // اینجا به جای false، وضعیت "نامشخص" نگه می‌داریم
+        setUser((prev) => prev ?? { isAuthenticated: null });
       }
     } finally {
       clearTimeout(timeout);
@@ -158,7 +161,7 @@ export function AuthProvider({ children }) {
   // ================= effects =================
   useEffect(() => {
     verifyAuth();
-  }, []);
+  }, [verifyAuth]);
 
   useEffect(() => {
     if (!user?.isAuthenticated) return;
@@ -174,6 +177,7 @@ export function AuthProvider({ children }) {
         user,
         setUser,
         loading,
+        // فقط وقتی واقعاً true است، لاگین حساب می‌کنیم
         isAuthenticated: user?.isAuthenticated === true,
         loginWithPassword,
         loginWithOTP,
@@ -194,14 +198,10 @@ export const useAuth = () => {
 };
 
 export async function fetchCustomers() {
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/customers/`,
-    {
-      credentials: "include",
-    }
-  );
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/customers/`, {
+    credentials: "include",
+  });
 
   if (!res.ok) throw new Error("Failed to fetch customers");
   return res.json();
 }
-
