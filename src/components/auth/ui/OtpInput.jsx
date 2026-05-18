@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-export default function OtpInput({ value, onChange, length = 6 }) {
+export default function OtpInput({ value, onChange, length = 5 }) {
   const inputsRef = useRef([]);
 
   const digits = value.split("");
