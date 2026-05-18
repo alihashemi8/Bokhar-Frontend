@@ -4,56 +4,45 @@ import api from "./servicesApi";
 export const ServicesContext = createContext();
 
 export function ServicesProvider({ children }) {
-  const getCategories = () => {
-    try {
-      const data = localStorage.getItem("categories");
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const getServices = () => {
-    try {
-      const data = localStorage.getItem("services");
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  const [categories, setCategoriesState] = useState(getCategories());
-  const [services, setServicesState] = useState(getServices());
-
-  const setCategories = (cats) => {
-    setCategoriesState(cats);
-    localStorage.setItem("categories", JSON.stringify(cats));
-  };
-
-  const setServices = (svcs) => {
-    setServicesState(svcs);
-    localStorage.setItem("services", JSON.stringify(svcs));
-  };
+  const [categories, setCategories] = useState([]);
+  const [services, setServices] = useState([]);
+  const [initialized, setInitialized] = useState(false);
 
   const refreshData = async () => {
     try {
-      const cats = await api.getCategories();
-      const products = await api.getProducts();
-      // آبجکت کامل { id, name } نگه می‌داریم
+      const [cats, products] = await Promise.all([
+        api.getCategories(),
+        api.getProducts(),
+      ]);
+
       setCategories(cats);
       setServices(products);
+
+      // ✅ فقط بعد از دریافت موفق
+      localStorage.setItem("categories", JSON.stringify(cats));
+      localStorage.setItem("services", JSON.stringify(products));
     } catch (err) {
       console.error("خطا در ری‌فرش داده‌ها:", err);
     }
   };
 
   useEffect(() => {
-    refreshData();
+    // ✅ فقط برای load اولیه
+    try {
+      const cats = JSON.parse(localStorage.getItem("categories") || "[]");
+      const svcs = JSON.parse(localStorage.getItem("services") || "[]");
+      setCategories(cats);
+      setServices(svcs);
+    } catch {}
+
+    refreshData().finally(() => setInitialized(true));
   }, []);
+
+  if (!initialized) return null; // یا loader
 
   return (
     <ServicesContext.Provider
-      value={{ categories, services, setCategories, setServices, refreshData }}
+      value={{ categories, services, refreshData }}
     >
       {children}
     </ServicesContext.Provider>

@@ -2,15 +2,15 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
 async function fetchWithAuth(url, options = {}) {
   const isFormData = options.body instanceof FormData;
-  
+
   const response = await fetch(`${API_BASE}${url}`, {
-    credentials: "include",  
+    credentials: "include",
     ...options,
-    headers: isFormData 
-      ? { ...options.headers }  // Browser خودش Content-Type رو با boundary تنظیم می‌کنه
+    headers: isFormData
+      ? { ...options.headers }
       : {
           "Content-Type": "application/json",
-          ...options.headers,      
+          ...options.headers,
         },
   });
 
@@ -20,8 +20,20 @@ async function fetchWithAuth(url, options = {}) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
 
+  // ✅ اگر پاسخ body نداشت (DELETE / 204)
+  if (response.status === 204) {
+    return null;
+  }
+
+  // ✅ اگر content-type JSON نبود
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    return null;
+  }
+
   return response.json();
 }
+
 
 const api = {
   getCategories: () => fetchWithAuth("/categories/"),
