@@ -74,30 +74,34 @@ export default function Factor({ onTotalChange, goToTimeStep }) {
   };
 
   // ✅ اصلاح شده: استفاده از snapshot به جای cartItems فعلی
-  const handleAuthSuccess = async () => {
-    setIsAuthModalOpen(false);
+const handleAuthSuccess = async () => {
+  setIsAuthModalOpen(false);
 
-    // ⭐ استفاده از snapshot ذخیره شده به جای cartItems (که ممکنه خالی شده باشه)
-    const itemsToSync = guestCartSnapshot.current;
-    
-    if (itemsToSync.length > 0) {
-      const payload = itemsToSync.map(item => ({
-        productId: item.productId,
-        qty: item.qty,
-        service: item.service,
-        material: item.material,
-        size: item.sizeDisplay !== "-" ? item.sizeDisplay : null,
-      }));
+  // ✅ استفاده از snapshot ذخیره شده
+  const itemsToSync = guestCartSnapshot.current;
 
-      await syncGuestCartWithServer(payload);
-    }
+  if (itemsToSync.length > 0) {
+    const payload = itemsToSync.map(item => ({
+      productId: item.productId,
+      qty: item.qty,
+      service: item.service,
+      material: item.material,
+      size: item.sizeDisplay !== "-" ? item.sizeDisplay : null,
+    }));
 
-    await refreshCart(true); // ✅ فقط از Context
-    goToTimeStep?.();
-    
-    // پاک کردن snapshot بعد از استفاده
-    guestCartSnapshot.current = [];
-  };
+    await syncGuestCartWithServer(payload);
+  }
+
+  // ✅ فقط بعد از sync اجازه loadCart داده می‌شود
+  markCartSyncedAfterLogin();
+
+  // ✅ ادامه فرایند (انتخاب مکان)
+  goToTimeStep?.();
+
+  // ✅ پاک کردن snapshot
+  guestCartSnapshot.current = [];
+};
+
 
   const handleIncreaseQty = async (item) => {
     const newQty = item.qty + 1;
