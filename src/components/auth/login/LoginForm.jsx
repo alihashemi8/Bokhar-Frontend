@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";  // ← useEffect اضافه شد
+import { useState, useEffect } from "react"; // ← useEffect اضافه شد
 import PhoneInputBoxes from "../ui/PhoneInputBoxes";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
@@ -39,7 +39,7 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
-  
+
   // ← استیت‌های جدید برای تایمر
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -146,8 +146,8 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
       onClose();
     } catch (err) {
       const message =
-        (err && err.message) || 
-        (err && err.otp) || 
+        (err && err.message) ||
+        (err && err.otp) ||
         (err && err.پیام) ||
         "کد OTP اشتباه است";
       toast.error(message);
@@ -218,7 +218,7 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
               onClick={() => setMode("otp-phone")}
               className="text-blue-600 hover:underline dark:text-purple-400"
             >
-             ورود با رمز یک بار مصرف
+              ورود با رمز یک بار مصرف
             </button>
             <span className="text-gray-600 dark:text-gray-200">
               حساب ندارید؟{" "}
@@ -226,7 +226,7 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
                 onClick={onSwitchRegister}
                 className="text-blue-600 hover:underline dark:text-purple-400"
               >
-               ثبت نام
+                ثبت نام
               </button>
             </span>
           </div>
@@ -236,7 +236,9 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
       {/* ==================== فرم شماره برای OTP ==================== */}
       {mode === "otp-phone" && (
         <>
-          <h2 className="text-xl font-bold mb-4 text-center">ورود با رمز یک بار مصرف</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">
+            ورود با رمز یک بار مصرف
+          </h2>
 
           <div className="flex items-center gap-2 mb-1">
             <PhoneIcon className="w-5 h-5 text-gray-500 dark:text-gray-300" />
@@ -274,10 +276,16 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
       {/* ==================== تایید OTP ==================== */}
       {mode === "otp-verify" && (
         <>
-          <h2 className="text-xl font-bold my-4 text-center">کد ارسال شده را وارد کنید</h2>
-          
+          <h2 className="text-xl font-bold my-4 text-center">
+            کد ارسال شده را وارد کنید
+          </h2>
+
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-4">
-            کد ۵ رقمی به شماره <span className="font-bold text-gray-800 dark:text-gray-200">{phone}</span> ارسال شد
+            کد ۵ رقمی به شماره{" "}
+            <span className="font-bold text-gray-800 dark:text-gray-200">
+              {phone}
+            </span>{" "}
+            ارسال شد
           </p>
 
           <OtpInput value={otp} onChange={setOtp} />
@@ -314,13 +322,17 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
               </button>
             )}
           </div>
-
-          <button
-            onClick={() => setMode("otp-phone")}
-            className="mt-4 w-full text-center text-blue-600 hover:underline text-sm"
-          >
-            تغییر شماره موبایل
-          </button>
+          <div className="flex items-center justify-center mt-4">
+            <span className="text-gray-600 dark:text-gray-400 text-sm px-1">
+              شماره موبایل اشتباه است؟
+            </span>
+            <button
+              onClick={() => setMode("otp-phone")}
+              className="text-blue-600 hover:underline dark:text-purple-400 text-sm"
+            >
+              تغییر شماره موبایل
+            </button>
+          </div>
         </>
       )}
     </div>

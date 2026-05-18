@@ -9,11 +9,24 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // تابع کمکی برای چک کردن فارسی بودن متن
+  const isPersianText = (text) => {
+    // اجازه حروف فارسی (unicode: \u0600-\u06FF)، فاصله و نیم‌فاصله (ZWNJ)
+    return /^[\u0600-\u06FF\s‌]+$/.test(text);
+  };
+
   const handleNext = async () => {
     if (loading) return;
 
-    if (!fullname.trim()) {
+    const trimmedName = fullname.trim();
+    
+    if (!trimmedName) {
       return toast.error("نام و نام خانوادگی را وارد کنید");
+    }
+
+    // اعتبارسنجی فارسی بودن
+    if (!isPersianText(trimmedName)) {
+      return toast.error("نام و نام خانوادگی باید فارسی باشد");
     }
 
     if (!/^09\d{9}$/.test(phone)) {
@@ -28,12 +41,27 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
 
       onNext({
         phone,
-        fullname,
+        fullname: trimmedName,
       });
     } catch (err) {
       toast.error(err?.message || "خطا در ارسال کد");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // فیلتر کردن ورودی کاربر (جلوگیری از تایپ کاراکترهای غیرفارسی)
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    // فقط حروف فارسی، فاصله و نیم‌فاصله مجاز است
+    if (value === '' || /^[\u0600-\u06FF\s‌]*$/.test(value)) {
+      setFullname(value);
+    } else {
+      // اگر کاراکتر غیرمجاز وارد شد، به کاربر اطلاع بده (اختیاری)
+      toast.error("لطفاً فقط از حروف فارسی استفاده کنید", { 
+        id: 'persian-error',
+        duration: 1000 
+      });
     }
   };
 
@@ -53,7 +81,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
       {/* Fullname */}
       <input
         value={fullname}
-        onChange={(e) => setFullname(e.target.value)}
+        onChange={handleNameChange}
         placeholder="نام و نام خانوادگی"
         className="
           w-full border-b p-2 mb-6
@@ -70,7 +98,7 @@ export default function RegisterPhoneForm({ onNext, onSwitchLogin }) {
       />
 
       <p className="text-gray-400 dark:text-gray-500 text-xs mt-2 text-center">
-    شماره همراه خود را وارد بفرمایید
+        شماره همراه خود را وارد بفرمایید
       </p>
 
       <button

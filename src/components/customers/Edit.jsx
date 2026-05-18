@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useProfile } from "../../context/ProfileContext";
+import toast from "react-hot-toast"; // اگر دارید، یا می‌تونید از setError استفاده کنید
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { user, verifyAuth, loading } = useAuth(); // فقط auth-related
-  const { editFullName } = useProfile(); // فقط profile-related
+  const { user, verifyAuth, loading } = useAuth();
+  const { editFullName } = useProfile();
 
   const [fullname, setFullname] = useState("");
   const [saving, setSaving] = useState(false);
@@ -32,9 +33,37 @@ export default function EditProfile() {
     if (user?.fullname) setFullname(user.fullname);
   }, [user]);
 
+  // تابع کمکی برای چک کردن فارسی بودن متن
+  const isPersianText = (text) => {
+    // اجازه حروف فارسی (unicode: \u0600-\u06FF)، فاصله و نیم‌فاصله (ZWNJ)
+    return /^[\u0600-\u06FF\s‌]+$/.test(text);
+  };
+
+  // فیلتر کردن ورودی کاربر (جلوگیری از تایپ کاراکترهای غیرفارسی)
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    // فقط حروف فارسی، فاصله و نیم‌فاصله مجاز است
+    if (value === '' || /^[\u0600-\u06FF\s‌]*$/.test(value)) {
+      setFullname(value);
+      setError(null); // پاک کردن خطا هنگام تایپ صحیح
+    } else {
+      setError("لطفاً فقط از حروف فارسی استفاده کنید");
+      // یا می‌توانید از toast استفاده کنید:
+      // toast.error("لطفاً فقط از حروف فارسی استفاده کنید", { id: 'persian-error', duration: 2000 });
+    }
+  };
+
   const handleSave = async () => {
-    if (!fullname.trim()) {
+    const trimmedName = fullname.trim();
+    
+    if (!trimmedName) {
       setError("نام و نام خانوادگی نمی‌تواند خالی باشد");
+      return;
+    }
+
+    // اعتبارسنجی فارسی بودن
+    if (!isPersianText(trimmedName)) {
+      setError("نام و نام خانوادگی باید فارسی باشد");
       return;
     }
 
@@ -42,11 +71,11 @@ export default function EditProfile() {
       setSaving(true);
       setError(null);
 
-      // 1️⃣ ادیت fullname
-      await editFullName(fullname.trim());
+      await editFullName(trimmedName);
 
-      // 2️⃣ آپدیت کل context با verifyAuth تا نوبار و داشبورد هم آپدیت شوند
       if (verifyAuth) await verifyAuth();
+      
+      toast.success("اطلاعات با موفقیت ذخیره شد"); // اگر toast دارید
     } catch (err) {
       setError(err?.message || "خطا در ذخیره اطلاعات");
     } finally {
@@ -101,11 +130,14 @@ export default function EditProfile() {
             </label>
             <input
               value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
+              onChange={handleNameChange}
+              placeholder="مثال: علی احمدی"
               className="
                 w-full p-3 border rounded-xl
                 bg-white dark:bg-sky-900/60 text-gray-800 dark:text-white
                 border-sky-300 dark:border-sky-700
+                focus:ring-2 focus:ring-sky-500 dark:focus:ring-purple-500 focus:border-transparent
+                placeholder:text-gray-400 dark:placeholder:text-gray-500
               "
             />
           </div>
@@ -127,7 +159,11 @@ export default function EditProfile() {
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="text-sm text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg">
+              {error}
+            </p>
+          )}
 
           <p className="text-xs text-gray-400 dark:text-gray-300">
             تغییر شماره تلفن در حال حاضر امکان‌پذیر نیست
@@ -138,12 +174,13 @@ export default function EditProfile() {
         <div className="mt-6">
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !fullname.trim()}
             className="
               w-full bg-sky-600 hover:bg-sky-700
               dark:bg-purple-700 dark:hover:bg-purple-800
               text-white rounded-xl p-3 font-medium
-              disabled:opacity-50
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-colors
             "
           >
             {saving ? "در حال ذخیره..." : "ذخیره تغییرات"}
