@@ -14,7 +14,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import EditProfile from "./components/customers/Edit";
 import WalletPage from "./components/customers/Wallet";
 import OrderTracking from "./components/customers/OrderTracking";
-import SecurityPrivacy from "./components/customers/Privacy";
+import SecurityPrivacy from "./components/customers/privacy/SecurityPrivacy";
 import Support from "./components/customers/Support";
 
 import Landing from "./pages/Landing";
@@ -48,12 +48,15 @@ function AppContent() {
   }, [location]);
 
   // مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
-const hideNavbar = currentPath === "/" || currentPath.startsWith("/admin-dashboard");
+  const hideNavbar =
+    currentPath === "/" || currentPath.startsWith("/admin-dashboard");
 
   return (
-    <div className="bg-gradient-to-bl from-sky-200/80 via-pink-100/60 to-sky-200/80
+    <div
+      className="bg-gradient-to-bl from-sky-200/80 via-pink-100/60 to-sky-200/80
                     dark:from-sky-950 dark:via-purple-900/70 dark:to-sky-900
-                    min-h-screen">
+                    min-h-screen"
+    >
       {/* Navbarها فقط اگر در مسیر مخفی نباشیم */}
       {!hideNavbar && (
         <>
@@ -65,7 +68,7 @@ const hideNavbar = currentPath === "/" || currentPath.startsWith("/admin-dashboa
 
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/shop"element={<Shop />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/order" element={<Order />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
