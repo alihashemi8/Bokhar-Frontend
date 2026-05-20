@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import {
   createContext,
   useContext,
@@ -170,6 +169,20 @@ export function AuthProvider({ children }) {
     }, 25 * 60 * 1000);
     return () => clearInterval(interval);
   }, [user?.isAuthenticated, tryRefreshToken]);
+const refreshUser = useCallback(async () => {
+  try {
+    const res = await fetch(`${API_BASE}/verify/`, {
+      credentials: "include",
+    });
+    if (res.ok) {
+      const result = await res.json();
+      setUser(prev => ({ ...prev, ...result }));
+    }
+  } catch (e) {
+    console.error("refresh user error:", e);
+  }
+}, []);
+
 
   return (
     <AuthContext.Provider
@@ -184,6 +197,7 @@ export function AuthProvider({ children }) {
         registerWithOTP,
         logout,
         verifyAuth,
+        refreshUser,
       }}
     >
       {children}

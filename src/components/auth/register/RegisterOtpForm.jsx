@@ -55,7 +55,7 @@ export default function RegisterOtpForm({ phone, fullname, onBack, onSuccess }) 
     setResendLoading(true);
     try {
       // ارسال مجدد OTP از همان API
-      await fetch(`${import.meta.env.VITE_API_URL}/sent/otp/`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/send/otp/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

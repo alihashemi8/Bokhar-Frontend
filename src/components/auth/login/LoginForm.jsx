@@ -102,7 +102,7 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      await apiPost("/sent/otp/", { phone });
+      await apiPost("/send/otp/", { phone });
       toast.success("کد OTP ارسال شد");
       setMode("otp-verify");
       // تایمر در useEffect بالا خودکار ریست می‌شود
@@ -119,7 +119,7 @@ export default function LoginForm({ onSwitchRegister, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      await apiPost("/sent/otp/", { phone });
+      await apiPost("/send/otp/", { phone });
       toast.success("کد جدید ارسال شد");
       setTimer(60);
       setCanResend(false);

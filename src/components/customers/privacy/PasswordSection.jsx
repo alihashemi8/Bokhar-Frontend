@@ -10,7 +10,13 @@ import {
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 
-/* ================= Password Input with Instant Persian Block ================= */
+const API_BASE = import.meta.env.VITE_API_URL;
+
+function getCSRFToken() {
+  const match = document.cookie.match(/csrftoken=([\w-]+)/);
+  return match ? match[1] : "";
+}
+
 function PasswordInput({ 
   placeholder, 
   value, 
@@ -24,7 +30,6 @@ function PasswordInput({
   const handleKeyDown = (e) => {
     if (/[\u0600-\u06FF]/.test(e.key)) {
       e.preventDefault();
-      return;
     }
   };
 
@@ -39,7 +44,7 @@ function PasswordInput({
   return (
     <div className="relative">
       {showRules && isFocused && (
-        <div className="absolute bottom-full mb-2 right-0 md:left-0 md:right-auto w-72 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-20 text-sm animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="absolute bottom-full mb-2 right-0 md:left-0 md:right-auto w-72 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-20 text-sm">
           <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100 dark:border-gray-700">
             <Info size={16} className="text-blue-500" />
             <p className="font-semibold text-gray-900 dark:text-gray-100">برای قوی‌تر شدن رمز عبورتون:</p>
@@ -48,23 +53,22 @@ function PasswordInput({
             <li className="flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full ${/[!@#$%^&*()_+\-=\\\[\\\]{};':"\\|,.<>\/?]/.test(value) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
               <span className={/[!@#$%^&*()_+\-=\\\[\\\]{};':"\\|,.<>\/?]/.test(value) ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
-                استفاده از کاراکتر خاص مثل (@,#,$,%,...)
+                استفاده از کاراکتر خاص
               </span>
             </li>
             <li className="flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full ${/[a-z]/.test(value) && /[A-Z]/.test(value) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
               <span className={/[a-z]/.test(value) && /[A-Z]/.test(value) ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
-                ترکیب حروف بزرگ و کوچک انگلیسی (a-z, A-Z)
+                ترکیب حروف بزرگ و کوچک
               </span>
             </li>
             <li className="flex items-center gap-2">
               <span className={`w-1.5 h-1.5 rounded-full ${/[0-9]/.test(value) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
               <span className={/[0-9]/.test(value) ? 'text-green-600 dark:text-green-400 font-medium' : ''}>
-                استفاده از اعداد (0-9)
+                استفاده از اعداد
               </span>
             </li>
           </ul>
-          <div className="absolute -bottom-1.5 right-4 md:left-4 md:right-auto w-3 h-3 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 transform rotate-45"></div>
         </div>
       )}
 
@@ -77,11 +81,7 @@ function PasswordInput({
         onPaste={handlePaste}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="
-          w-full p-3 pr-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition
-          bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 text-gray-900 dark:text-white
-          placeholder:text-gray-400 dark:placeholder:text-gray-300
-        "
+        className="w-full p-3 pr-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-300"
         {...props}
       />
       <button
@@ -95,7 +95,6 @@ function PasswordInput({
   );
 }
 
-/* ================= Password Strength (100% only with A, a, 0-9, @# and 8+ chars) ================= */
 function getPasswordStrength(password) {
   if (!password || password.length === 0) return null;
   
@@ -105,39 +104,30 @@ function getPasswordStrength(password) {
   const hasSpecial = /[#@!$%^&*]/.test(password);
   const hasLength = password.length >= 8;
   
-  // Count how many character types are present
   let criteriaCount = 0;
   if (hasLower) criteriaCount++;
   if (hasUpper) criteriaCount++;
   if (hasNumber) criteriaCount++;
   if (hasSpecial) criteriaCount++;
   
-  // If length is less than 8 or fewer than 2 criteria: Weak
   if (!hasLength || criteriaCount < 2) {
     return { label: "ضعیف", color: "bg-red-500", percent: 25 };
   }
-  
-  // 2 criteria met: Medium
   if (criteriaCount === 2) {
     return { label: "متوسط", color: "bg-yellow-500", percent: 50 };
   }
-  
-  // 3 criteria met: Good
   if (criteriaCount === 3) {
     return { label: "خوب", color: "bg-blue-500", percent: 75 };
   }
-  
-  // All 4 criteria + length >= 8: Strong (100%)
   if (criteriaCount === 4 && hasLength) {
     return { label: "قوی", color: "bg-green-500", percent: 100 };
   }
-  
-  // Fallback (shouldn't reach here if logic is correct)
   return { label: "خوب", color: "bg-blue-500", percent: 75 };
 }
 
 export default function PasswordSection() {
   const { user, refreshUser } = useAuth();
+  // استفاده صحیح از has_password که از UserSerializer می‌آید
   const hasPassword = Boolean(user?.has_password);
 
   const [password, setPassword] = useState({
@@ -146,7 +136,6 @@ export default function PasswordSection() {
     confirm: "",
   });
 
-  // OTP States (for users who have password but want to use OTP instead of current password)
   const [useOtp, setUseOtp] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -158,85 +147,74 @@ export default function PasswordSection() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Timer countdown
   useEffect(() => {
     if (otpTimer > 0) {
-      const interval = setInterval(() => {
-        setOtpTimer((prev) => prev - 1);
-      }, 1000);
+      const interval = setInterval(() => setOtpTimer((prev) => prev - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [otpTimer]);
-
-  function getCSRFToken() {
-    const match = document.cookie.match(/csrftoken=([\w-]+)/);
-    return match ? match[1] : "";
-  }
 
   const sendOTP = async () => {
     setOtpLoading(true);
     setError("");
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/send-otp/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCSRFToken(),
-          },
-          credentials: "include",
-          body: JSON.stringify({ 
-            phone: user?.phone || user?.mobile 
-          }),
-        }
-      );
+      // اصلاح: استفاده از send/otp/ (بدون auth/ اضافی چون VITE_API_URL باید شامل مسیر اصلی باشد)
+      // اگر VITE_API_URL=http://localhost:8000/api/users باشد:
+      const res = await fetch(`${API_BASE}/send/otp/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ phone: user?.phone }),
+      });
 
-      if (!res.ok) throw new Error("خطا در ارسال کد");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "خطا در ارسال کد");
 
       setOtpSent(true);
-      setOtpTimer(120); // 2 minutes
+      setOtpTimer(120);
       setSuccess("کد تایید به شماره موبایل شما ارسال شد");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message || "خطا در ارسال کد تایید");
+      setError(err.message);
     } finally {
       setOtpLoading(false);
     }
   };
 
   const verifyOTP = async () => {
-    if (!otp.trim()) {
-      setError("لطفاً کد را وارد کنید");
+    if (!otp.trim() || otp.length !== 5) {
+      setError("کد ۵ رقمی را کامل وارد کنید");
       return;
     }
     
     setOtpLoading(true);
     setError("");
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/verify-otp/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCSRFToken(),
-          },
-          credentials: "include",
-          body: JSON.stringify({ 
-            phone: user?.phone || user?.mobile,
-            code: otp 
-          }),
-        }
-      );
+      // استفاده از verify/otp/ برای چک کردن بدون consume
+      const res = await fetch(`${API_BASE}/verify/otp/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ 
+          phone: user?.phone,
+          code: otp 
+        }),
+      });
 
-      if (!res.ok) throw new Error("کد وارد شده صحیح نیست");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "کد وارد شده صحیح نیست");
 
       setOtpVerified(true);
-      setSuccess("کد تایید شد");
-      setTimeout(() => setSuccess(""), 2000);
+      setSuccess("کد تایید شد. اکنون رمز جدید را ثبت کنید.");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message || "کد وارد شده صحیح نیست");
+      setError(err.message);
     } finally {
       setOtpLoading(false);
     }
@@ -244,20 +222,16 @@ export default function PasswordSection() {
 
   const isPasswordFormValid = hasPassword
     ? useOtp
-      ? otpVerified && password.new.trim() !== "" && password.new === password.confirm
-      : password.current.trim() !== "" && password.new.trim() !== "" && password.new === password.confirm
-    : password.new.trim() !== "" && password.new === password.confirm;
+      ? otpVerified && password.new.trim().length >= 8 && password.new === password.confirm
+      : password.current.trim() !== "" && password.new.trim().length >= 8 && password.new === password.confirm
+    : password.new.trim().length >= 8 && password.new === password.confirm;
 
   const handlePasswordChange = async () => {
     setError("");
     setSuccess("");
 
     if (!isPasswordFormValid) {
-      setError(
-        useOtp 
-          ? "لطفاً کد تایید را وارد و تایید کنید، سپس رمز جدید را تکمیل نمایید"
-          : "لطفاً تمام فیلدها را پر کنید و مطمئن شوید رمز عبور و تکرار آن یکسان هستند."
-      );
+      setError("لطفاً تمام فیلدها را پر کنید و مطمئن شوید رمز عبور شرایط لازم را دارد.");
       return;
     }
 
@@ -281,30 +255,27 @@ export default function PasswordSection() {
         };
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/edit/password/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCSRFToken(),
-          },
-          credentials: "include",
-          body: JSON.stringify(data),
-        }
-      );
+      const res = await fetch(`${API_BASE}/edit/password/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
 
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(
-          result?.old_password?.[0] ||
-            result?.password?.[0] ||
-            result?.password2?.[0] ||
-            result?.detail ||
-            result?.otp_code?.[0] ||
-            "خطای اعتبارسنجی"
-        );
+        // پردازش خطاهای مختلف
+        const msg = result.detail || 
+                   result.old_password?.[0] || 
+                   result.password?.[0] || 
+                   result.password2?.[0] || 
+                   result.otp_code?.[0] || 
+                   "خطای اعتبارسنجی";
+        throw new Error(msg);
       }
 
       setSuccess("رمز عبور با موفقیت تغییر کرد!");
@@ -313,7 +284,7 @@ export default function PasswordSection() {
       setOtpSent(false);
       setOtpVerified(false);
       setUseOtp(false);
-      refreshUser?.();
+      refreshUser?.();  // بروزرسانی اطلاعات کاربر (باید has_password را آپدیت کند)
     } catch (err) {
       setError(err.message);
     } finally {
@@ -345,7 +316,6 @@ export default function PasswordSection() {
           </p>
         )}
 
-        {/* If user has password, show verification method selection */}
         {hasPassword && (
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 mb-3">
             <p className="text-sm text-blue-800 dark:text-blue-300 mb-2 font-medium">
@@ -390,21 +360,16 @@ export default function PasswordSection() {
           </div>
         )}
 
-        {/* Current password input (only if hasPassword and not using OTP) */}
         {hasPassword && !useOtp && (
           <PasswordInput
             placeholder="رمز فعلی"
             value={password.current}
             onChange={(e) =>
-              setPassword((prev) => ({
-                ...prev,
-                current: e.target.value,
-              }))
+              setPassword((prev) => ({ ...prev, current: e.target.value }))
             }
           />
         )}
 
-        {/* OTP Section (only if hasPassword and using OTP) */}
         {hasPassword && useOtp && (
           <div className="space-y-3">
             {!otpVerified ? (
@@ -420,7 +385,7 @@ export default function PasswordSection() {
                     ) : (
                       <>
                         <Shield size={20} />
-                        ارسال کد تایید به {user?.phone || "شماره موبایل"}
+                        ارسال کد تایید به {user?.phone}
                       </>
                     )}
                   </button>
@@ -429,14 +394,14 @@ export default function PasswordSection() {
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        placeholder="کد ۶ رقمی را وارد کنید"
+                        placeholder="کد ۵ رقمی را وارد کنید"
                         value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 5))}
                         className="flex-1 p-3 border rounded-xl text-center tracking-widest font-mono text-lg bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <button
                         onClick={verifyOTP}
-                        disabled={otpLoading || otp.length !== 6}
+                        disabled={otpLoading || otp.length !== 5}
                         className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-xl font-medium transition"
                       >
                         {otpLoading ? <RefreshCw className="animate-spin" size={20} /> : "تایید"}
@@ -469,7 +434,6 @@ export default function PasswordSection() {
           </div>
         )}
 
-        {/* New Password with Rules Tooltip */}
         <PasswordInput
           placeholder="رمز جدید (حداقل ۸ کاراکتر)"
           value={password.new}
@@ -479,7 +443,6 @@ export default function PasswordSection() {
           showRules={true}
         />
 
-        {/* Password Strength Meter */}
         {strength && (
           <div className="mt-1">
             <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -502,44 +465,34 @@ export default function PasswordSection() {
           </div>
         )}
 
-        {/* Confirm New Password */}
         <PasswordInput
           placeholder="تایید رمز جدید"
           value={password.confirm}
           onChange={(e) =>
-            setPassword((prev) => ({
-              ...prev,
-              confirm: e.target.value,
-            }))
+            setPassword((prev) => ({ ...prev, confirm: e.target.value }))
           }
         />
 
-        {/* Password Mismatch Warning */}
         {password.confirm && password.new !== password.confirm && (
           <p className="text-red-500 text-xs mt-1">
             رمز عبور و تایید آن مطابقت ندارند
           </p>
         )}
 
-        {/* Submit Button */}
         <button
           onClick={handlePasswordChange}
           disabled={!isPasswordFormValid || loading}
           className={`w-full mt-3 rounded-xl p-3 font-medium transition disabled:opacity-50
-            ${
-              isPasswordFormValid && !loading
-                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-purple-700 dark:hover:bg-purple-800"
-                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            ${isPasswordFormValid && !loading
+              ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-purple-700 dark:hover:bg-purple-800"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }
           `}
         >
-          {loading
-            ? "در حال ارسال..."
-            : hasPassword
-            ? "ذخیره تغییرات"
-            : "تنظیم رمز عبور"}
+          {loading ? "در حال ارسال..." : hasPassword ? "ذخیره تغییرات" : "تنظیم رمز عبور"}
         </button>
       </div>
     </div>
   );
 }
+ 
