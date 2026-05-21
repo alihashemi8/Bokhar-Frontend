@@ -14,7 +14,9 @@ export default function WalletPage() {
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) return savedTheme;
-    return document.documentElement.classList.contains("dark") ? "dark" : "light";
+    return document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light";
   });
 
   useEffect(() => {
@@ -28,55 +30,75 @@ export default function WalletPage() {
     <div dir="rtl" className="min-h-screen p-4 md:p-8">
       <div
         className="
-          rounded-2xl shadow p-4 md:max-w-3xl md:mx-auto mt-5 md:mt-15 mb-20 md:mb-0
+          rounded-2xl shadow-md p-5 md:max-w-3xl md:mx-auto mt-5 md:mt-16 mb-20 md:mb-0
           bg-sky-50 dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
           border border-sky-200 dark:border-sky-700
+          shadow-sky-200 dark:shadow-indigo-500
           transition
         "
       >
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center">
-            <Wallet className="text-green-600 dark:text-green-300" size={22} />
+          <div className="w-12 h-12 rounded-full bg-sky-100 dark:bg-sky-700 flex items-center justify-center">
+            <Wallet className="text-sky-600 dark:text-sky-300" size={22} />
           </div>
           <div>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">کیف پول</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              کیف پول
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-300">
               افزایش موجودی کیف پول
             </p>
           </div>
 
-          {/* Back Button */}
+          {/* Back Button - استایل مشابه دکمه ویرایش در داشبورد */}
           <button
             onClick={() => navigate("/customer-dashboard")}
-            className="ms-auto w-10 h-10 rounded-full shadow-sm hover:shadow-md border
-              bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
-               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500  flex items-center justify-center transition"
+            className="ms-auto w-10 h-10 rounded-full shadow-sm hover:shadow-md cursor-pointer
+                          bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
+                           dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500 flex items-center justify-center transition"
           >
             <ArrowLeft size={20} className="text-gray-700 dark:text-gray-200" />
           </button>
         </div>
 
-        {/* Balance */}
-        <div className="bg-sky-50 dark:bg-sky-900/60 border border-sky-200 dark:border-sky-700 rounded-2xl p-4 mb-6 transition">
-          <p className="text-sm text-gray-500 dark:text-gray-300">موجودی فعلی</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">125,000 تومان</p>
+        {/* Balance - استایل مشابه کارت کیف پول در داشبورد */}
+        <div
+          className="
+          bg-white dark:bg-sky-900/60 
+          border border-sky-200 dark:border-sky-700 
+          rounded-2xl p-4 mb-6 transition
+        "
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-300">
+              <Wallet size={18} />
+              <span className="text-sm">موجودی فعلی</span>
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2 mr-1">
+            125,000 تومان
+          </p>
         </div>
 
         {/* Quick amounts */}
-        <div className="mb-4">
-          <p className="text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">انتخاب سریع مبلغ</p>
-          <div className="grid grid-cols-3 gap-2">
+        <div className="mb-6">
+          <p className="text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">
+            انتخاب سریع مبلغ
+          </p>
+          <div className="grid grid-cols-3 gap-3">
             {quickAmounts.map((a) => (
               <button
                 key={a}
                 onClick={() => setAmount(a)}
-                className={`rounded-xl p-3 text-sm border transition
+                className={`
+                  rounded-xl p-3 text-sm font-medium border transition cursor-pointer
                   ${
                     Number(amount) === a
-                      ? "border-green-600 bg-green-50 dark:bg-green-800 dark:text-green-300 text-green-700"
-                      : "bg-sky-50 dark:bg-sky-900/60 text-gray-900 dark:text-gray-100 hover:bg-sky-100 dark:hover:bg-sky-800"
-                  }`}
+                      ? "bg-sky-600 text-white border-sky-600 dark:bg-purple-700 dark:border-purple-700"
+                      : "bg-white dark:bg-sky-900/60 text-gray-900 dark:text-gray-100 border-sky-200 dark:border-sky-700 hover:bg-sky-50 dark:hover:bg-sky-800"
+                  }
+                `}
               >
                 {a.toLocaleString()} تومان
               </button>
@@ -86,7 +108,7 @@ export default function WalletPage() {
 
         {/* Manual input */}
         <div className="mb-6">
-          <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">
+          <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
             مبلغ دلخواه
           </label>
           <input
@@ -101,21 +123,27 @@ export default function WalletPage() {
             }}
             placeholder="مثلاً 75000"
             className="
-              w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 transition
-              bg-white dark:bg-sky-900/60 border-sky-300 dark:border-sky-700 text-gray-900 dark:text-white
-              placeholder:text-gray-400 dark:placeholder:text-gray-300
+              w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 transition
+              bg-white dark:bg-sky-900/60 border-sky-200 dark:border-sky-700 
+              text-gray-900 dark:text-white
+              placeholder:text-gray-400 dark:placeholder:text-gray-400
             "
           />
         </div>
 
-        {/* Pay */}
+        {/* Pay - استایل مشابه دکمه افزایش موجودی در داشبورد */}
         <button
           disabled={!amount}
-          className={`w-full rounded-xl p-3 transition font-medium
+          onClick={() => {
+            // منطق پرداخت اینجا قرار می‌گیرد
+            console.log("پرداخت:", amount);
+          }}
+          className={`
+            w-full rounded-xl p-3 transition font-medium
             ${
               amount
-                ? "bg-green-600 hover:bg-green-700 text-white dark:bg-purple-700 dark:hover:bg-purple-800"
-                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                ? "bg-sky-600 hover:bg-sky-700 text-white dark:bg-purple-700 dark:hover:bg-purple-800 cursor-pointer"
+                : "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-sky-800 dark:text-gray-500"
             }
           `}
         >

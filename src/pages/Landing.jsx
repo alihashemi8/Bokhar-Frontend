@@ -213,21 +213,32 @@ export default function Landing() {
       </div>
 
       
-      <div className="flex flex-col items-end gap-1 sm:gap-3 pr-6 sm:pr-10 md:pr-20 mt-5 sm:mt-0 relative z-10">
-        <button
-          onClick={() => navigate("/shop")}
-          className=" px-10 py-3 sm:px-14 sm:py-6 md:px-18 md:py-7 rounded-full bg-purple-50 text-[#202374] text-md sm:text-lg md:text-2xl font-semibold hover:bg-white transition duration-300 shadow-lg cursor-pointer"
-        >
-          ثبت سفارش
-        </button>
+<div className="flex flex-col items-end gap-3 pr-6 sm:pr-10 md:pr-20 mt-5 sm:mt-0 relative z-10">
+  {/* دکمه اصلی */}
+  <button
+    onClick={() => navigate("/shop")}
+    className="px-10 py-3 sm:px-14 sm:py-6 md:px-18 md:py-7 rounded-full bg-purple-50 text-[#202374] text-md sm:text-lg md:text-2xl font-semibold hover:bg-white transition duration-300 shadow-lg cursor-pointer"
+  >
+    ثبت سفارش
+  </button>
 
-        <button
-          onClick={() => navigate("/about")}
-          className="px-8 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md"
-        >
-          تماس با ما
-        </button>
-      </div>
+  {/* ردیف دکمه‌های فرعی */}
+  <div className="flex flex-row mt-4 gap-2 sm:gap-3 w-full justify-end">
+    <button
+      onClick={() => navigate("/about")}
+      className="px-6 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md text-sm sm:text-base whitespace-nowrap"
+    >
+      درباره خشکشویی
+    </button>
+    <button
+      onClick={() => navigate("/about")}
+      className="px-6 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md text-sm sm:text-base whitespace-nowrap"
+    >
+      درباره ما
+    </button>
+  </div>
+</div>
+
 
       <div ref={aboutRef} className="relative z-10 mt-20 px-4 sm:px-6 md:px-20">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-10">

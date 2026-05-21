@@ -55,7 +55,7 @@ export default function Devices() {
             
             <button
               onClick={() => navigate("/customer-dashboard")}
-              className="ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md
+              className="ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md cursor-pointer
               bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500
               dark:shadow-indigo-500 flex items-center justify-center transition"

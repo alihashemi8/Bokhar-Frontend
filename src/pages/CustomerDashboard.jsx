@@ -21,7 +21,7 @@ function QuickCard({ title, icon, onClick }) {
       onClick={onClick}
       className="
         flex flex-col items-center gap-2 p-4 rounded-2xl transition w-full shadow-md hover:shadow-lg
-        bg-sky-50
+        bg-sky-50 cursor-pointer
         dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
         border border-sky-200 dark:border-sky-700 shadow-sky-200 dark:shadow-indigo-500
       "
@@ -38,7 +38,7 @@ function SettingItem({ title, icon, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex justify-between items-center py-3 px-4 rounded-xl hover:bg-sky-200 dark:hover:bg-sky-700 transition group"
+      className="w-full flex justify-between items-center py-3 px-4 rounded-xl hover:bg-sky-200 dark:hover:bg-sky-700 cursor-pointer transition group"
     >
       <div className="flex items-center gap-3">
         <span className="text-gray-600 dark:text-gray-300 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition">
@@ -99,7 +99,7 @@ export default function CustomersDashboard() {
         </div>
         <button
           onClick={() => navigate("/customer-dashboard/edit")}
-          className="text-sky-600 dark:text-gray-200 dark:hover:text-gray-100 font-medium"
+          className="text-sky-600 dark:text-gray-200 dark:hover:text-gray-100 cursor-pointer font-medium"
         >
           <PencilSquareIcon className="w-6 h-6" />
         </button>
@@ -125,7 +125,7 @@ export default function CustomersDashboard() {
         </div>
         <button
           onClick={() => navigate("/customer-dashboard/wallet")}
-          className="mt-3 w-full bg-sky-600 hover:bg-sky-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white py-2 rounded-xl transition font-medium"
+          className="mt-3 w-full bg-sky-600 hover:bg-sky-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white py-2 rounded-xl cursor-pointer transition font-medium"
         >
           افزایش موجودی
         </button>
@@ -177,7 +177,7 @@ export default function CustomersDashboard() {
           await logout();
           navigate("/");
         }}
-        className="mt-8 mb-20 md:mb-0 hidden md:flex w-full items-center justify-center gap-2 text-red-600 md:max-w-3xl md:mx-auto font-medium"
+        className="mt-8 mb-20 md:mb-0 hidden md:flex w-full items-center justify-center gap-2 text-red-600 md:max-w-3xl md:mx-auto cursor-pointer font-medium"
       >
         <LogOut size={20} />
         خروج از حساب

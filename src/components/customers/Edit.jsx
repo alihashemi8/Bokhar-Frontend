@@ -112,7 +112,7 @@ export default function EditProfile() {
           <button
             onClick={() => navigate("/customer-dashboard")}
             className="
-              ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md
+              ms-auto w-10 h-10 rounded-full border shadow-sm hover:shadow-md cursor-pointer
               bg-white/80 hover:bg-gray-200 border-sky-300 shadow-sky-200
               dark:bg-purple-800 dark:hover:bg-purple-900 dark:border-indigo-500 dark:shadow-indigo-500 flex items-center justify-center transition
             "
@@ -176,7 +176,7 @@ export default function EditProfile() {
             onClick={handleSave}
             disabled={saving || !fullname.trim()}
             className="
-              w-full bg-sky-600 hover:bg-sky-700
+              w-full bg-sky-600 hover:bg-sky-700 cursor-pointer
               dark:bg-purple-700 dark:hover:bg-purple-800
               text-white rounded-xl p-3 font-medium
               disabled:opacity-50 disabled:cursor-not-allowed
