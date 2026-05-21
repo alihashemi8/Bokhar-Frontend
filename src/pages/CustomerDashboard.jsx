@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Wallet, Package } from "lucide-react";
+import { 
+  LogOut, 
+  Wallet, 
+  Package, 
+  Shield, 
+  Headphones, 
+  Info, 
+  Smartphone,
+  ChevronLeft, 
+  ChevronRight
+} from "lucide-react";
 import { FiSun, FiMoon } from "react-icons/fi";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
 import { useAuth } from "../context/AuthContext";
@@ -24,30 +34,28 @@ function QuickCard({ title, icon, onClick }) {
   );
 }
 
-function SettingItem({ title, onClick }) {
+function SettingItem({ title, icon, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="w-full flex justify-between items-center py-3 px-4 rounded-xl hover:bg-sky-200 dark:hover:bg-sky-700 transition"
+      className="w-full flex justify-between items-center py-3 px-4 rounded-xl hover:bg-sky-200 dark:hover:bg-sky-700 transition group"
     >
-      <span className="text-gray-800 dark:text-gray-100">{title}</span>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5 text-gray-400 rtl:rotate-180"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
+      <div className="flex items-center gap-3">
+        <span className="text-gray-600 dark:text-gray-300 group-hover:text-sky-600 dark:group-hover:text-sky-300 transition">
+          {icon}
+        </span>
+        <span className="text-gray-800 dark:text-gray-100">{title}</span>
+      </div>
+      <ChevronRight 
+        className="w-5 h-5 text-gray-400 rtl:rotate-180" 
+      />
     </button>
   );
 }
 
 export default function CustomersDashboard() {
   const navigate = useNavigate();
-const { logout, user } = useAuth();
+  const { logout, user } = useAuth();
 
   // حالت اولیه را از localStorage یا کلاس dark روی <html> می‌خوانیم
   const [theme, setTheme] = useState(() => {
@@ -82,15 +90,12 @@ const { logout, user } = useAuth();
           👤
         </div>
         <div className="flex-1">
-<p className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-  {user?.fullname || "—"}
-</p>
-
-<p className="text-sm text-gray-500 dark:text-gray-400">
-  {user?.phone || ""}
-
-</p>
-
+          <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+            {user?.fullname || "—"}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {user?.phone || ""}
+          </p>
         </div>
         <button
           onClick={() => navigate("/customer-dashboard/edit")}
@@ -138,7 +143,7 @@ const { logout, user } = useAuth();
       {/* Settings */}
       <div
         className="
-          mt-5 rounded-2xl p-5 shadow-md space-y-3 md:max-w-3xl md:mx-auto
+          mt-5 rounded-2xl p-5 shadow-md space-y-1 md:max-w-3xl md:mx-auto
           bg-sky-50
           dark:bg-gradient-to-br dark:from-sky-800 dark:via-sky-900 dark:to-sky-950
           border border-sky-200 dark:border-sky-700 shadow-sky-200 dark:shadow-indigo-500
@@ -146,13 +151,24 @@ const { logout, user } = useAuth();
       >
         <SettingItem
           title="امنیت و حریم خصوصی"
+          icon={<Shield size={20} />}
           onClick={() => navigate("/customer-dashboard/privacy")}
         />
         <SettingItem
+          title="دستگاه‌ها"
+          icon={<Smartphone size={20} />}
+          onClick={() => navigate("/customer-dashboard/devices")}
+        />
+        <SettingItem
           title="پشتیبانی"
+          icon={<Headphones size={20} />}
           onClick={() => navigate("/customer-dashboard/support")}
         />
-        <SettingItem title="درباره ما" onClick={() => navigate("/about")} />
+        <SettingItem 
+          title="درباره ما" 
+          icon={<Info size={20} />}
+          onClick={() => navigate("/about")} 
+        />
       </div>
 
       {/* Logout Desktop */}

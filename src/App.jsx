@@ -16,6 +16,7 @@ import WalletPage from "./components/customers/Wallet";
 import OrderTracking from "./components/customers/OrderTracking";
 import SecurityPrivacy from "./components/customers/privacy/SecurityPrivacy";
 import Support from "./components/customers/Support";
+import Devices from "./components/customers/Devices";
 
 import Landing from "./pages/Landing";
 import Shop from "./pages/Shop";
@@ -74,6 +75,7 @@ function AppContent() {
         <Route path="/customer-dashboard" element={<CustomerDashboard />} />
         <Route path="/customer-dashboard/edit" element={<EditProfile />} />
         <Route path="/customer-dashboard/wallet" element={<WalletPage />} />
+        <Route path="/customer-dashboard/devices" element={<Devices />} />
         <Route
           path="/customer-dashboard/orders-tracking"
           element={<OrderTracking />}

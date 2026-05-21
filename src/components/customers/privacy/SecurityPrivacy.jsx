@@ -2,7 +2,6 @@ import { Lock, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import PasswordSection from "./PasswordSection";
-import SessionsSection from "./SessionsSection";
 
 export default function SecurityPrivacy() {
   const navigate = useNavigate();
@@ -34,7 +33,6 @@ export default function SecurityPrivacy() {
         </div>
 
         <PasswordSection />
-        <SessionsSection />
 
       </div>
     </div>
