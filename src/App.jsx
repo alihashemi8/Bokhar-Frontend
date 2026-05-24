@@ -27,8 +27,8 @@ import AdminOrders from "./components/admin/orders/AdminOrders";
 import AdminCustomers from "./components/admin/customers/AdminCustomers";
 import CustomerTransactions from "./components/admin/customers/CustomerTransactions";
 import AdminReports from "./components/admin/reports/AdminReports";
-import PickupPage from "./pages/About";
-
+import AboutDryCleaning from "./pages/AboutDryCleaning";
+import AboutUs from "./pages/AboutUs"
 // Context برای خدمات و تخفیف
 import { ServicesProvider } from "./components/admin/services/ServicesContext";
 import AdminServices from "./components/admin/services/AdminServices";
@@ -50,7 +50,7 @@ function AppContent() {
 
   // مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
   const hideNavbar =
-    currentPath === "/" || currentPath.startsWith("/admin-dashboard");
+    currentPath === "/" || currentPath.startsWith("/admin-dashboard") || currentPath === "/aboutUs";
 
   return (
     <div
@@ -117,7 +117,8 @@ function AppContent() {
           }
         />
         <Route path="/admin-dashboard/reports" element={<AdminReports />} />
-        <Route path="/about" element={<PickupPage />} />
+        <Route path="/aboutDryCleaning" element={<AboutDryCleaning />} />
+        <Route path="/aboutUs" element={<AboutUs />} />
       </Routes>
     </div>
   );

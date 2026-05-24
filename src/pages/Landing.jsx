@@ -225,13 +225,13 @@ export default function Landing() {
   {/* ردیف دکمه‌های فرعی */}
   <div className="flex flex-row mt-4 gap-2 sm:gap-3 w-full justify-end">
     <button
-      onClick={() => navigate("/about")}
+      onClick={() => navigate("/aboutDryCleaning")}
       className="px-6 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md text-sm sm:text-base whitespace-nowrap"
     >
       درباره خشکشویی
     </button>
     <button
-      onClick={() => navigate("/about")}
+      onClick={() => navigate("/aboutUs")}
       className="px-6 py-3 sm:px-12 sm:py-5 md:px-16 md:py-6 rounded-full bg-[#D2D9ED] hover:bg-[#e5e8f0] text-[#6B7EB7] font-semibold border border-[#2949A9] transition duration-300 shadow-md text-sm sm:text-base whitespace-nowrap"
     >
       درباره ما
