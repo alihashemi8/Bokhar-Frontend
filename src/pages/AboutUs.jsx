@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import laptop from "../../public/AboutUs/laptop.png";
 import delivery from "../../public/AboutUs/delivery.svg";
 import storyImage from "../../public/AboutUs/StoryImage.png";
@@ -13,13 +13,13 @@ import {
   FaXTwitter,
   FaEnvelope,
 } from "react-icons/fa6";
+
 const socialLinks = [
   {
     name: "Instagram",
     href: "#",
     icon: <FaInstagram />,
   },
-
   {
     name: "Whatsapp",
     href: "#",
@@ -48,6 +48,29 @@ const socialLinks = [
 ];
 
 const AboutUs = () => {
+  const [showCollaboration, setShowCollaboration] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowCollaboration(true);
+        }
+      },
+      {
+        threshold: 0.2,
+        rootMargin: "0px 0px -50px 0px",
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section className="w-full relative overflow-x-hidden">
       {/* لوگو بالا سمت راست */}
@@ -143,7 +166,7 @@ const AboutUs = () => {
       {/* ارتباط و همکاری - پاراگراف */}
       <div
         dir="rtl"
-        className="w-full flex justify-center sm:mt-16 md:mt-24  px-6 sm:px-8"
+        className="w-full flex justify-center sm:mt-16 md:mt-24 px-6 sm:px-8"
       >
         <p className="text-gray-700 text-start text-sm sm:text-base md:text-lg leading-relaxed w-full sm:w-4/5 md:w-1/2">
           تیم برنامه‌نویسی ما با نام{" "}
@@ -156,46 +179,52 @@ const AboutUs = () => {
         </p>
       </div>
 
-{/* بخش شبکه‌های اجتماعی */}
-<div className="w-full flex flex-col justify-center">
-  {/* باکس بالا - متن ارتباط و همکاری */}
-  <div
-    className="flex flex-col mx-6 sm:mx-12 md:mx-20 bg-white justify-center items-center gap-1
-               px-2 sm:px-8 py-2 sm:py-8 mt-2 sm:mt-12 md:mt-16 rounded-t-4xl shadow-sm border border-gray-100"
-  >
-    <h2 className="text-gray-800 text-center text-base sm:text-lg md:text-xl font-bold">
-      ارتباط و همکاری
-    </h2>
-    <span className="p-4 text-center text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl">
-      تیم استارتاپی رایبان برای اولین بار، اپلیکیشن جامع خشکشویی های آنلاین را
-      راهی بازار کرده است، اگر شما نیز قصد همکاری با ما را دارید کافی است از
-      طریق راه های ارتباطی زیر تماس برقرار کنید.
-    </span>
-  </div>
+      {/* بخش شبکه‌های اجتماعی - با انیمیشن اسکرول */}
+      <div
+        ref={sectionRef}
+        className="w-full flex flex-col justify-center relative overflow-hidden mt-8 sm:mt-12"
+      >
+        <div className="flex flex-col-reverse w-full">
+          
+          {/* باکس پایینی (در نمایش): راه‌های ارتباط - z-index بالاتر */}
+          <div
+            className="w-full bg-sky-50 justify-center rounded-t-4xl shadow-md border border-gray-100
+                       px-4 sm:px-8 py-6 sm:py-8 relative z-20"
+          >
+            <h3 className="text-gray-800 text-center text-lg sm:text-xl md:text-2xl font-bold mb-6">
+              راه‌های ارتباط با ما
+            </h3>
 
-  {/* باکس پایین - راه‌های ارتباط + آیکون‌ها */}
-  <div
-    className="w-full bg-sky-50 justify-center rounded-t-4xl shadow-md border border-gray-100
-               px-4 sm:px-8 py-6 sm:py-8 -mt-5"
-  >
-    <h3 className="text-gray-800 text-center text-lg sm:text-xl md:text-2xl font-bold mb-6">
-      راه‌های ارتباط با ما
-    </h3>
-
-    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-5 justify-items-center">
-      {socialLinks.map((item) => (
-        <a
-          key={item.name}
-          href={item.href}
-          aria-label={item.name}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F3EEF9] text-gray-800 flex items-center justify-center text-xl sm:text-2xl transition-all duration-300 hover:bg-[#C1B2DD] hover:-translate-y-1 hover:shadow-md"
-        >
-          {item.icon}
-        </a>
-      ))}
-    </div>
-  </div>
-</div>
+            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-5 justify-items-center">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  aria-label={item.name}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#F3EEF9] text-gray-800 flex items-center justify-center text-xl sm:text-2xl transition-all duration-300 hover:bg-[#C1B2DD] hover:-translate-y-1 hover:shadow-md"
+                >
+                  {item.icon}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div
+            className={`flex flex-col mx-6 sm:mx-12 md:mx-20 bg-white justify-center items-center gap-1
+                       px-2 sm:px-8 py-2 sm:py-8 rounded-t-4xl shadow-sm border border-gray-100
+                       relative z-10 transition-all duration-1200 ease-out transform
+                       ${showCollaboration ? 'translate-y-0 opacity-100' : 'translate-y-[100%] opacity-0'}`}
+          >
+            <h2 className="text-gray-800 text-center text-base sm:text-lg md:text-xl font-bold">
+              ارتباط و همکاری
+            </h2>
+            <span className="p-4 text-center text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl">
+              تیم استارتاپی رایبان برای اولین بار، اپلیکیشن جامع خشکشویی های آنلاین را
+              راهی بازار کرده است، اگر شما نیز قصد همکاری با ما را دارید کافی است از
+              طریق راه های ارتباطی زیر تماس برقرار کنید.
+            </span>
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
