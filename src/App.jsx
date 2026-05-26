@@ -50,7 +50,7 @@ function AppContent() {
 
   // مسیرهای /admin-dashboard و زیرمسیرها نوبار ندارند
   const hideNavbar =
-    currentPath === "/" || currentPath.startsWith("/admin-dashboard") || currentPath === "/aboutUs";
+    currentPath === "/" || currentPath.startsWith("/admin-dashboard");
 
   return (
     <div

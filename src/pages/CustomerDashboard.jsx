@@ -165,10 +165,22 @@ export default function CustomersDashboard() {
           onClick={() => navigate("/customer-dashboard/support")}
         />
         <SettingItem 
-          title="درباره ما" 
+          title="درباره خشکشویی افشار" 
           icon={<Info size={20} />}
-          onClick={() => navigate("/about")} 
+          onClick={() => navigate("/aboutDryCleaning")} 
         />
+<SettingItem 
+  title="درباره رایبان"
+  icon={
+    <img
+      src="/Logo.png"
+      alt="Logo"
+      className="h-7 w-7 object-contain"
+    />
+  }
+  onClick={() => navigate("/aboutUs")}
+/>
+
       </div>
 
       {/* Logout Desktop */}

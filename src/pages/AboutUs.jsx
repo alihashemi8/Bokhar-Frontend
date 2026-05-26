@@ -73,15 +73,6 @@ const AboutUs = () => {
 
   return (
     <section className="w-full relative overflow-x-hidden">
-      {/* لوگو بالا سمت راست */}
-      <div className="absolute top-2 right-4 sm:top-4 sm:right-8 md:top-6 md:right-16 z-10">
-        <img
-          src="/Logo.png"
-          alt="Logo"
-          className="h-10 sm:h-14 md:h-20 w-auto object-contain"
-        />
-      </div>
-
       {/* بخش اول: لپ‌تاپ و دلیوری */}
       <div className="relative overflow-hidden">
         <div className="flex flex-row items-start pt-6 sm:pt-10 md:pt-14 mb-8">
