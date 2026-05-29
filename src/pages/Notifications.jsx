@@ -22,10 +22,12 @@ export default function Notifications() {
       setError(null);
       try {
         const res = await fetch(`${API_BASE_URL}/notifications/`, {
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-        });
-
+  headers: {
+    "Content-Type": "application/json",
+  },
+  credentials: "include",
+  signal: controller.signal,
+});
         if (!res.ok) {
           const text = await res.text();
           throw new Error(`Server returned ${res.status}: ${text}`);
