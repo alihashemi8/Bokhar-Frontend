@@ -272,3 +272,15 @@
     left: 100%;
   }
 }
+
+.leaflet-control-container {
+  display: none !important;
+}
+
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}

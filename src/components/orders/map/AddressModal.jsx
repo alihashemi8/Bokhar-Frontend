@@ -1,116 +1,356 @@
-import { useState, useEffect } from "react";
-import MobileModal from "../../basemodal/MobileModal";
+import { useEffect, useState } from "react";
+import BaseModal from "../../basemodal/BaseModal";
 
 export default function AddressModal({
   isOpen,
   onClose,
   onSubmit,
+
   plaque,
-  setPlaque,
   unit,
-  setUnit,
-  address,
   title,
-  setTitle,
+  address,
+
+  onSelectDifferentDestination,
 }) {
-  const [description, setDescription] = useState("");
   const [localPlaque, setLocalPlaque] = useState(plaque || "");
   const [localUnit, setLocalUnit] = useState(unit || "");
   const [localTitle, setLocalTitle] = useState(title || "");
-  const [ready, setReady] = useState(false);
+  const [description, setDescription] = useState("");
+
+  const [differentDestination, setDifferentDestination] =
+    useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      setLocalPlaque(plaque || "");
-      setLocalUnit(unit || "");
-      setLocalTitle(title || "");
-      setDescription("");
+    setLocalPlaque(plaque || "");
+    setLocalUnit(unit || "");
+    setLocalTitle(title || "");
+  }, [plaque, unit, title]);
 
-      const id = setTimeout(() => setReady(true), 10);
-      return () => {
-        clearTimeout(id);
-        setReady(false);
-      };
-    } else {
-      setReady(false);
-    }
-  }, [isOpen, plaque, unit, title]);
+  // ---------------- validation ----------------
 
-  const isPlaqueValid = /^\d+$/.test(localPlaque);
-  const isUnitValid = /^\d+$/.test(localUnit);
-  const isFormValid = isPlaqueValid && isUnitValid;
+  const plaqueValid =
+    localPlaque.trim() !== "" &&
+    /^\d+$/.test(localPlaque);
+
+  const unitValid =
+    localUnit.trim() !== "" &&
+    /^\d+$/.test(localUnit);
+
+  const formValid = plaqueValid && unitValid;
+
+  // ---------------- submit ----------------
 
   const handleSubmit = () => {
-    if (!isFormValid) return;
+    if (!formValid) return;
+
     onSubmit({
       plaque: localPlaque,
       unit: localUnit,
       title: localTitle,
       description,
+      differentDestination,
     });
-    onClose();
   };
 
-  if (!ready) return null;
+  // ---------------- different destination ----------------
 
-  const inputBaseClasses =
-    "border rounded-xl px-3 py-2 shadow-md font-bold focus:outline-none focus:ring-2 transition-all duration-300";
+  const handleDifferentDestination = () => {
+    if (!formValid) return;
+
+    onSelectDifferentDestination?.({
+      plaque: localPlaque,
+      unit: localUnit,
+      title: localTitle,
+      description,
+    });
+  };
 
   return (
-    <MobileModal isOpen={isOpen} onClose={onClose} title="📍 اطلاعات تکمیلی">
-      {address && <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">{address}</p>}
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="lg"
+      title="اطلاعات آدرس"
+    >
+      <div className="flex flex-col">
+        {/* ADDRESS */}
+        <div
+          className="
+          mb-5
 
-      <div className="flex gap-4 justify-center mb-4">
-        <input
-          type="number"
-          placeholder="پلاک"
-          value={localPlaque}
-          onChange={(e) => setLocalPlaque(e.target.value)}
-          className={`${inputBaseClasses} w-[45%] bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
-        />
-        <input
-          type="number"
-          placeholder="واحد"
-          value={localUnit}
-          onChange={(e) => setLocalUnit(e.target.value)}
-          className={`${inputBaseClasses} w-[45%] bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
-        />
+          rounded-3xl
+
+          bg-gray-100
+          dark:bg-zinc-800
+
+          p-4
+        "
+        >
+          <p
+            className="
+            text-sm
+            leading-7
+
+            text-gray-700
+            dark:text-gray-200
+          "
+          >
+            {address || "آدرسی انتخاب نشده"}
+          </p>
+        </div>
+
+        {/* PLAQUE + UNIT */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="flex flex-col">
+            <label className="text-xs mb-1 text-gray-500">
+              پلاک
+            </label>
+
+            <input
+              type="number"
+              placeholder="مثلاً ۱۲"
+              value={localPlaque}
+              onChange={(e) =>
+                setLocalPlaque(e.target.value)
+              }
+              className={`
+                h-12
+                rounded-2xl
+                border
+                px-4
+                outline-none
+                transition
+
+                ${
+                  localPlaque && !plaqueValid
+                    ? "border-red-400 focus:ring-red-300"
+                    : "border-gray-200 dark:border-zinc-700 focus:ring-sky-300"
+                }
+
+                bg-white
+                dark:bg-zinc-800
+              `}
+            />
+
+            {localPlaque && !plaqueValid && (
+              <span className="text-red-500 text-xs mt-1">
+                پلاک معتبر وارد کنید
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-xs mb-1 text-gray-500">
+              واحد
+            </label>
+
+            <input
+              type="number"
+              placeholder="مثلاً ۳"
+              value={localUnit}
+              onChange={(e) =>
+                setLocalUnit(e.target.value)
+              }
+              className={`
+                h-12
+                rounded-2xl
+                border
+                px-4
+                outline-none
+                transition
+
+                ${
+                  localUnit && !unitValid
+                    ? "border-red-400 focus:ring-red-300"
+                    : "border-gray-200 dark:border-zinc-700 focus:ring-sky-300"
+                }
+
+                bg-white
+                dark:bg-zinc-800
+              `}
+            />
+
+            {localUnit && !unitValid && (
+              <span className="text-red-500 text-xs mt-1">
+                واحد معتبر وارد کنید
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* TITLE */}
+        <div className="mb-4">
+          <label className="text-xs mb-1 block text-gray-500">
+            عنوان آدرس
+          </label>
+
+          <input
+            placeholder="خانه، محل کار ..."
+            value={localTitle}
+            onChange={(e) =>
+              setLocalTitle(e.target.value)
+            }
+            className="
+            w-full
+            h-12
+
+            rounded-2xl
+
+            border
+            border-gray-200
+            dark:border-zinc-700
+
+            bg-white
+            dark:bg-zinc-800
+
+            px-4
+
+            outline-none
+
+            focus:ring-2
+            focus:ring-sky-300
+
+            transition
+          "
+          />
+        </div>
+
+        {/* DESCRIPTION */}
+        <div className="mb-5">
+          <label className="text-xs mb-1 block text-gray-500">
+            توضیحات اضافی
+          </label>
+
+          <textarea
+            rows={4}
+            placeholder="مثلاً زنگ خراب است، طبقه دوم ..."
+            value={description}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
+            className="
+            w-full
+
+            rounded-2xl
+
+            border
+            border-gray-200
+            dark:border-zinc-700
+
+            bg-white
+            dark:bg-zinc-800
+
+            px-4
+            py-3
+
+            outline-none
+
+            focus:ring-2
+            focus:ring-sky-300
+
+            transition
+
+            resize-none
+          "
+          />
+        </div>
+
+        {/* DIFFERENT DESTINATION */}
+        <button
+          type="button"
+          onClick={handleDifferentDestination}
+          disabled={!formValid}
+          className={`
+            w-full
+            h-12
+
+            rounded-2xl
+
+            border-2
+            border-dashed
+
+            mb-4
+
+            font-bold
+
+            transition
+
+            ${
+              formValid
+                ? `
+                  border-sky-400
+                  text-sky-600
+                  hover:bg-sky-50
+                  dark:hover:bg-zinc-800
+                `
+                : `
+                  border-gray-300
+                  text-gray-400
+                  cursor-not-allowed
+                `
+            }
+          `}
+        >
+          مقصد تحویل گرفتن فرق می‌کند
+        </button>
+
+        {/* ACTIONS */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="
+            flex-1
+            h-12
+
+            rounded-2xl
+
+            bg-gray-100
+            dark:bg-zinc-800
+
+            text-gray-700
+            dark:text-gray-200
+
+            font-bold
+
+            transition
+            hover:opacity-80
+          "
+          >
+            انصراف
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            disabled={!formValid}
+            className={`
+              flex-1
+              h-12
+
+              rounded-2xl
+
+              text-white
+              font-bold
+
+              transition
+
+              ${
+                formValid
+                  ? `
+                    bg-green-500
+                    hover:bg-green-600
+                  `
+                  : `
+                    bg-gray-300
+                    cursor-not-allowed
+                  `
+              }
+            `}
+          >
+            ثبت آدرس
+          </button>
+        </div>
       </div>
-
-      <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">عنوان آدرس</label>
-        <input
-          placeholder="مثلاً خانه، محل کار"
-          value={localTitle}
-          onChange={(e) => setLocalTitle(e.target.value)}
-          className={`${inputBaseClasses} bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100`}
-        />
-      </div>
-
-      <div className="flex flex-col mb-4">
-        <label className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-          توضیحات اضافی (اختیاری)
-        </label>
-        <textarea
-          placeholder="مثلاً زنگ خراب است، طبقه دوم..."
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className={`${inputBaseClasses} bg-white/80 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-100 resize-none`}
-        />
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={!isFormValid}
-        className={`block mt-6 px-6 py-2 rounded-xl mx-auto text-gray-800 dark:text-white transition-all duration-300 font-bold ${
-          isFormValid
-            ? "bg-gradient-to-r from-sky-100 to-sky-200 dark:from-purple-700 dark:to-purple-800 shadow-md shadow-indigo-300 hover:scale-105"
-            : "bg-gray-300 cursor-not-allowed"
-        }`}
-      >
-        ثبت اطلاعات
-      </button>
-    </MobileModal>
+    </BaseModal>
   );
 }
