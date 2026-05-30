@@ -5,16 +5,16 @@ import {
   useMapEvents,
 } from "react-leaflet";
 
-import "leaflet/dist/leaflet.css";
-
 import {
   memo,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
+
 import { MapPin } from "lucide-react";
+
+import "leaflet/dist/leaflet.css";
 
 // ---------------- DARK MODE ----------------
 
@@ -109,30 +109,13 @@ const MapEvents = memo(function MapEvents({
 export default function MapView({
   position,
   onPositionChange,
-    onMarkerClick,
+  onMarkerClick,
+
 
 }) {
   const isDark = useDarkMode();
-
-  // ---------------- TILE CONFIG ----------------
-
-  const tileConfig = useMemo(() => {
-    if (isDark) {
-      return {
-        url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-
-        attribution:
-          '&copy; OpenStreetMap &copy; CARTO',
-      };
-    }
-
-    return {
-      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-      attribution: "&copy; OpenStreetMap",
-    };
-  }, [isDark]);
-
+ const apiKey = import.meta.env.VITE_NESHAN_API_KEY;
+ console.log("Neshan Key:", apiKey);
   // ---------------- RENDER ----------------
 
   return (
@@ -144,6 +127,7 @@ export default function MapView({
         minZoom={5}
         maxZoom={19}
 
+        
         zoomControl={false}
 
         scrollWheelZoom
@@ -165,18 +149,11 @@ export default function MapView({
           [&_.leaflet-control-container]:hidden
         "
       >
-        <TileLayer
-          url={tileConfig.url}
-          attribution={tileConfig.attribution}
-
-          updateWhenIdle
-          updateWhenZooming={false}
-
-          keepBuffer={4}
-        />
-
         <ChangeCenter position={position} />
-
+<TileLayer
+  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+  attribution="&copy; OpenStreetMap"
+/>
         <MapEvents
           onPositionChange={onPositionChange}
         />

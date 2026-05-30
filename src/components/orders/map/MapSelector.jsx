@@ -14,6 +14,8 @@ import MapView from "./MapView";
 import SearchLocation from "./SearchLocation";
 import AddressModal from "./AddressModal";
 
+const NESHAN_API_KEY = import.meta.env.VITE_NESHAN_API_KEY;
+
 export default function MapSelector({
   initialPosition,
   initialAddress,
@@ -82,40 +84,50 @@ export default function MapSelector({
   );
 
   // ---------------- REVERSE GEOCODE ----------------
+useEffect(() => {
+  if (!coords) return;
 
-  useEffect(() => {
-    if (!coords) return;
+  const controller = new AbortController();
 
-    const controller = new AbortController();
+  const timeout = setTimeout(async () => {
+    try {
+      setLoadingAddress(true);
 
-    const timeout = setTimeout(async () => {
-      try {
-        setLoadingAddress(true);
-
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`,
-          {
-            signal: controller.signal,
+      const res = await fetch(
+        `https://api.neshan.org/v5/reverse?lat=${coords.lat}&lng=${coords.lng}`,
+        {
+          headers: {
+            "Api-Key": NESHAN_API_KEY,
           },
-        );
-
-        const data = await res.json();
-
-        setAddress(data.display_name || "آدرس پیدا نشد");
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error(err);
+          signal: controller.signal,
         }
-      } finally {
-        setLoadingAddress(false);
-      }
-    }, 400);
+      );
 
-    return () => {
-      controller.abort();
-      clearTimeout(timeout);
-    };
-  }, [coords]);
+      if (!res.ok) {
+        throw new Error("Reverse geocode failed");
+      }
+
+      const data = await res.json();
+
+      setAddress(
+        data.formatted_address ||
+          data.route_name ||
+          "آدرس پیدا نشد"
+      );
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error(err);
+      }
+    } finally {
+      setLoadingAddress(false);
+    }
+  }, 700);
+
+  return () => {
+    controller.abort();
+    clearTimeout(timeout);
+  };
+}, [coords]);
 
   // ---------------- CURRENT LOCATION ----------------
 
@@ -288,6 +300,35 @@ export default function MapSelector({
             p-4
           "
         >
+          <div
+  className="
+    mb-3
+    flex
+    items-start
+    gap-2
+    rounded-xl
+    bg-sky-50
+    px-3
+    py-2
+  "
+>
+  <MapPin
+    size={16}
+    className="text-sky-500 mt-1 shrink-0"
+  />
+
+  <div className="min-w-0 flex-1">
+    <p className="text-xs text-gray-500">
+      آدرس انتخاب شده
+    </p>
+
+    <p className="text-sm truncate">
+      {loadingAddress
+        ? "در حال دریافت آدرس..."
+        : address}
+    </p>
+  </div>
+</div>
           {/* SEARCH - به داخل باکس سفید منتقل شد */}
           <div className="pointer-events-auto mb-4">
             <SearchLocation
