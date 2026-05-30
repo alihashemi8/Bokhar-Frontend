@@ -14,7 +14,7 @@ export default function StepProgress({ steps, step, maxStep, onStepClick }) {
         return (
           <div
             key={item.id}
-            className={`flex flex-col items-center w-full transition-all relative z-10
+            className={`flex flex-col items-center w-full transition-all relative z-15
               ${
                 isClickable
                   ? "cursor-pointer hover:opacity-90"

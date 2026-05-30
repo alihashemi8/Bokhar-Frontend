@@ -1,10 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-} from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { toast } from "react-hot-toast";
 
@@ -32,21 +26,17 @@ export default function MapSelector({
     initialPosition || {
       lat: 35.6892,
       lng: 51.389,
-    }
+    },
   );
 
-  const [address, setAddress] = useState(
-    initialAddress || ""
-  );
+  const [address, setAddress] = useState(initialAddress || "");
 
-  const [loadingAddress, setLoadingAddress] =
-    useState(false);
+  const [loadingAddress, setLoadingAddress] = useState(false);
 
   const [plaque, setPlaque] = useState("");
   const [unit, setUnit] = useState("");
   const [title, setTitle] = useState("");
-  const [description, setDescription] =
-    useState("");
+  const [description, setDescription] = useState("");
 
   const [open, setOpen] = useState(false);
 
@@ -88,7 +78,7 @@ export default function MapSelector({
         },
       },
     ],
-    []
+    [],
   );
 
   // ---------------- REVERSE GEOCODE ----------------
@@ -106,14 +96,12 @@ export default function MapSelector({
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`,
           {
             signal: controller.signal,
-          }
+          },
         );
 
         const data = await res.json();
 
-        setAddress(
-          data.display_name || "آدرس پیدا نشد"
-        );
+        setAddress(data.display_name || "آدرس پیدا نشد");
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error(err);
@@ -148,15 +136,13 @@ export default function MapSelector({
       },
 
       () => {
-        toast.error(
-          "دسترسی به موقعیت مکانی رد شد"
-        );
+        toast.error("دسترسی به موقعیت مکانی رد شد");
       },
 
       {
         enableHighAccuracy: true,
         timeout: 10000,
-      }
+      },
     );
   }, []);
 
@@ -164,31 +150,21 @@ export default function MapSelector({
 
   const handleSelectSaved = useCallback((item) => {
     setCoords(item.coords);
-
     setAddress(item.address);
-
     setPlaque(item.plaque);
-
     setUnit(item.unit);
-
     setTitle(item.title);
+    // با انتخاب آدرس ذخیره شده، مستقیماً مودال باز می‌شود (چون دکمه تایید حذف شده)
+    setOpen(true);
   }, []);
 
   // ---------------- SUBMIT ----------------
 
   const handleSubmit = useCallback(
-    ({
-      plaque,
-      unit,
-      title,
-      description,
-    }) => {
+    ({ plaque, unit, title, description }) => {
       setPlaque(plaque);
-
       setUnit(unit);
-
       setTitle(title);
-
       setDescription(description);
 
       onLocationSelect({
@@ -201,48 +177,30 @@ export default function MapSelector({
       });
 
       setOpen(false);
-
       goToNextStep?.();
     },
-
-    [
-      coords,
-      address,
-      onLocationSelect,
-      goToNextStep,
-    ]
+    [coords, address, onLocationSelect, goToNextStep],
   );
 
   // ---------------- BACK BUTTON ----------------
 
   useEffect(() => {
     if (open && !historyLock.current) {
-      window.history.pushState(
-        { modal: true },
-        ""
-      );
-
+      window.history.pushState({ modal: true }, "");
       historyLock.current = true;
     }
 
     const onPopState = () => {
       if (open) {
         setOpen(false);
-
         historyLock.current = false;
       }
     };
 
-    window.addEventListener(
-      "popstate",
-      onPopState
-    );
+    window.addEventListener("popstate", onPopState);
 
     return () => {
-      window.removeEventListener(
-        "popstate",
-        onPopState
-      );
+      window.removeEventListener("popstate", onPopState);
     };
   }, [open]);
 
@@ -251,403 +209,143 @@ export default function MapSelector({
   return (
     <div
       className="
-      fixed
-      inset-0
+        fixed
+        inset-0
+  
+        z-10
+        pt-[145px]
+        md:pt-[90px]
 
-      z-50
+        pb-[88px]
+        md:pb-0
 
-      overflow-hidden
+        overflow-hidden
 
-      bg-white
-      dark:bg-zinc-950
-    "
+        bg-white
+        dark:bg-zinc-950
+      "
     >
       {/* MAP */}
-      <MapView
-        position={coords}
-        onPositionChange={setCoords}
-      />
+      <div className="absolute inset-0">
+<MapView
+  position={coords}
+  onPositionChange={setCoords}
+  onMarkerClick={() => {
+    onLocationSelect({
+      coords,
+      address,
+    });
 
-      {/* TOP OVERLAY */}
-      <div
-        className="
-        absolute
-        inset-x-0
-        top-0
-
-        z-[1000]
-
-        px-4
-        pt-[max(env(safe-area-inset-top),20px)]
-
-        pointer-events-none
-      "
-      >
-        {/* SEARCH */}
-        <div className="pointer-events-auto">
-          <SearchLocation
-            onSelect={(loc) => {
-              setCoords({
-                lat: loc.lat,
-                lng: loc.lng,
-              });
-
-              setAddress(loc.address);
-            }}
-          />
-        </div>
+    goToNextStep?.();
+  }}
+/>
       </div>
+
+      {/* TOP OVERLAY - حذف شد (سرچ به پایین منتقل شد) */}
 
       {/* LOCATION BUTTON */}
       <button
         onClick={handleCurrentLocation}
         className="
-        absolute
-
-        left-4
-        bottom-[240px]
-
-        z-[1000]
-
-        flex
-        items-center
-        justify-center
-
-        w-14
-        h-14
-
-        rounded-2xl
-
-        bg-white/95
-        dark:bg-zinc-900/95
-
-        backdrop-blur-xl
-
-        shadow-2xl
-
-        border
-        border-white/30
-        dark:border-zinc-700
-
-        active:scale-95
-
-        transition
-      "
+          absolute
+          left-0
+          bottom-[180px]
+          md:bottom-[150px] md:left-4
+          z-[1000]
+          flex
+          items-center
+          justify-center
+          w-14
+          h-14
+          active:scale-95
+          transition
+        "
       >
         <LocateFixed
           size={22}
-          className="
-            text-sky-500
-          "
-        />
-      </button>
-
-      {/* SAVED ADDRESSES */}
-      <div
-        className="
-        absolute
-
-        inset-x-0
-        bottom-[165px]
-
-        z-[1000]
-
-        flex
-        gap-3
-
-        overflow-x-auto
-
-        px-4
-
-        no-scrollbar
-      "
-      >
-        {savedAddresses.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() =>
-                handleSelectSaved(item)
-              }
-              className="
-              shrink-0
-
-              flex
-              items-center
-              gap-2
-
-              h-12
-
-              px-5
-
-              rounded-2xl
-
-              bg-white/95
-              dark:bg-zinc-900/95
-
-              backdrop-blur-xl
-
-              border
-              border-white/30
-              dark:border-zinc-700
-
-              shadow-xl
-
-              active:scale-95
-
-              transition
-            "
-            >
-              <Icon
-                size={18}
-                className="text-sky-500"
-              />
-
-              <span
-                className="
-                text-sm
-                font-bold
-              "
-              >
-                {item.title}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* BOTTOM SHEET */}
-      <div
-        className="
-        absolute
-
-        bottom-0
-        inset-x-0
-
-        z-[1000]
-
-        rounded-t-[34px]
-
-        bg-white/95
-        dark:bg-zinc-950/95
-
-        backdrop-blur-2xl
-
-        border-t
-        border-white/20
-        dark:border-zinc-800
-
-        shadow-[0_-20px_60px_rgba(0,0,0,.18)]
-
-        px-5
-        pt-4
-        pb-[calc(env(safe-area-inset-bottom)+18px)]
-      "
-      >
-        {/* HANDLE */}
-        <div
-          className="
-          w-14
-          h-1.5
-
-          rounded-full
-
-          bg-gray-300
-          dark:bg-zinc-700
-
-          mx-auto
-          mb-5
-        "
-        />
-
-        {/* TITLE */}
-        <div
-          className="
-          flex
-          items-center
-          justify-between
-
-          mb-3
-        "
-        >
-          <div className="flex items-center gap-2">
-            <MapPin
-              size={18}
-              className="text-sky-500"
-            />
-
-            <span
-              className="
-              text-sm
-              font-bold
-            "
-            >
-              آدرس انتخاب شده
-            </span>
-          </div>
-
-          <button
-            className="
-            flex
-            items-center
-            gap-1
-
-            text-xs
-            text-sky-500
-
-            font-bold
-          "
-          >
-            ویرایش
-            <ChevronRight size={14} />
-          </button>
-        </div>
-
-        {/* ADDRESS */}
-        <div
-          className="
-          rounded-2xl
-
-          bg-gray-100/80
-          dark:bg-zinc-900
-
-          p-4
-
-          min-h-[88px]
-
-          mb-4
-        "
-        >
-          {loadingAddress ? (
-            <div className="space-y-2 animate-pulse">
-              <div
-                className="
-                h-3
-                rounded-full
-                bg-gray-300
-                dark:bg-zinc-700
-              "
-              />
-
-              <div
-                className="
-                h-3
-                w-[80%]
-
-                rounded-full
-
-                bg-gray-300
-                dark:bg-zinc-700
-              "
-              />
-            </div>
-          ) : (
-            <p
-              className="
-              text-sm
-              leading-7
-
-              text-gray-700
-              dark:text-gray-200
-            "
-            >
-              {address ||
-                "درحال دریافت آدرس..."}
-            </p>
-          )}
-        </div>
-{/* SAVED ADDRESSES */}
-<div
-  className="
-    flex
-    gap-3
-
-    overflow-x-auto
-
-    pb-1
-    mb-4
-
-    no-scrollbar
-  "
->
-  {savedAddresses.map((item) => {
-    const Icon = item.icon;
-
-    return (
-      <button
-        key={item.id}
-        onClick={() => handleSelectSaved(item)}
-        className="
-          shrink-0
-
-          flex
-          items-center
-          gap-2
-
-          h-11
-
-          px-4
-
-          rounded-2xl
-
-          bg-gray-100
-          dark:bg-zinc-900
-
-          border
-          border-gray-200
-          dark:border-zinc-700
-
-          active:scale-95
-
-          transition
-        "
-      >
-        <Icon
-          size={16}
           className="text-sky-500"
         />
+      </button>
 
-        <span
+      {/* ⚠️ بخش آدرس‌های ذخیره شده خارج از باکس سفید حذف شد */}
+
+      <div
+        className="
+          absolute
+          bottom-[45px]
+          md:bottom-0
+          inset-x-0
+          z-[1000]
+        "
+      >
+        <div
           className="
-            text-xs
-            font-bold
-            whitespace-nowrap
+            rounded-t-[32px]
+            bg-white/95
+            dark:bg-zinc-950/95
+            backdrop-blur-2xl
+            shadow-2xl
+            p-4
           "
         >
-          {item.title}
-        </span>
-      </button>
-    );
-  })}
-</div>
-        {/* CONFIRM */}
-        <button
-          onClick={() => setOpen(true)}
-          className="
-          w-full
-          h-14
+          {/* SEARCH - به داخل باکس سفید منتقل شد */}
+          <div className="pointer-events-auto mb-4">
+            <SearchLocation
+              onSelect={(loc) => {
+                setCoords({
+                  lat: loc.lat,
+                  lng: loc.lng,
+                });
+                setAddress(loc.address);
+                // اگر می‌خواهید پس از جستجو هم مودال مستقیماً باز شود، خط زیر را فعال کنید:
+                // setOpen(true);
+              }}
+            />
+          </div>
 
-          rounded-2xl
+          {/* SAVED ADDRESSES - فقط داخل باکس سفید */}
+          <div
+            className="
+              flex
+              gap-3
+              overflow-x-auto
+              pb-2
+              no-scrollbar
+            "
+          >
+            {savedAddresses.map((item) => {
+              const Icon = item.icon;
 
-          bg-sky-500
-          hover:bg-sky-600
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleSelectSaved(item)}
+                  className="
+                    shrink-0
+                    flex
+                    items-center
+                    gap-2
+                    h-11
+                    px-4
+                    rounded-2xl
+                    bg-gray-100
+                    dark:bg-zinc-900
+                    border
+                    border-gray-200
+                    dark:border-zinc-700
+                  "
+                >
+                  <Icon size={16} className="text-sky-500" />
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {item.title}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-          active:scale-[0.98]
-
-          text-white
-          text-base
-          font-bold
-
-          shadow-xl
-          shadow-sky-500/30
-
-          transition
-        "
-        >
-          تایید مبدا
-        </button>
+          {/* دکمه تایید مبدا حذف شد - انتخاب فقط از طریق کلیک روی مارکر یا آدرس ذخیره شده */}
+        </div>
       </div>
 
       {/* MODAL */}

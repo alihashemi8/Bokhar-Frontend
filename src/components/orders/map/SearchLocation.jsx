@@ -66,18 +66,35 @@ export default function SearchLocation({ onSelect }) {
       {/* Results dropdown */}
       {results.length > 0 && (
         <ul
-          dir="rtl"
-          className="
-            absolute w-full
-            bg-white/80 dark:bg-white/70
-            border border-sky-300 dark:border-purple-800
-            rounded-2xl mt-2
-            shadow-xl shadow-sky-200/60
-            z-50
-            max-h-36 overflow-y-auto
-            animate-fadeIn
-          "
-        >
+  dir="rtl"
+  className="
+    absolute
+    bottom-full
+    mb-2
+    w-full
+
+    bg-white/95
+    dark:bg-white/90
+
+    border
+    border-sky-300
+    dark:border-purple-800
+
+    rounded-2xl
+
+    shadow-xl
+    shadow-sky-200/60
+
+    z-50
+
+    max-h-64
+    overflow-y-auto
+scroll-smooth
+
+    overscroll-contain
+    animate-fadeIn
+  "
+>
           {results.map((r) => (
             <li
               key={r.place_id}

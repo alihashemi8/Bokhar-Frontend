@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { MapPin } from "lucide-react";
 
 // ---------------- DARK MODE ----------------
 
@@ -108,6 +109,8 @@ const MapEvents = memo(function MapEvents({
 export default function MapView({
   position,
   onPositionChange,
+    onMarkerClick,
+
 }) {
   const isDark = useDarkMode();
 
@@ -201,85 +204,56 @@ export default function MapView({
       "
       />
 
-      {/* FIXED MARKER */}
-      <div
-        className="
-        absolute
-        left-1/2
-        top-1/2
 
-        z-[999]
+{/* FIXED MARKER */}
+<div
+  onClick={onMarkerClick}
+  className="
+    absolute
+    left-1/2
+    top-1/2
+    z-[999]
 
-        -translate-x-1/2
-        -translate-y-full
+    -translate-x-1/2
+    -translate-y-full
 
-        pointer-events-none
+    cursor-pointer
+  "
+>
+  <div
+    className="
+      absolute
+      left-1/2
+      top-[52px]
 
-        transition-transform
-        duration-150
-      "
-      >
-        <div
-          className="
-          relative
+      -translate-x-1/2
 
-          flex
-          items-center
-          justify-center
-        "
-        >
-          {/* outer pulse */}
-          <div
-            className="
-            absolute
+      w-8
+      h-3
 
-            h-14
-            w-14
+      rounded-full
 
-            animate-ping
+      bg-black/20
 
-            rounded-full
+      blur-md
+    "
+  />
 
-            bg-sky-400/20
-          "
-          />
-
-          {/* marker */}
-          <div
-            className="
-            relative
-
-            flex
-            items-center
-            justify-center
-
-            h-14
-            w-14
-
-            rounded-full
-
-            border-4
-            border-white
-
-            bg-sky-500
-
-            shadow-2xl
-            shadow-sky-500/40
-          "
-          >
-            <div
-              className="
-              h-3
-              w-3
-
-              rounded-full
-
-              bg-white
-            "
-            />
-          </div>
-        </div>
-      </div>
+  <MapPin
+  onClick={(e) => {
+    e.stopPropagation();
+    onMarkerClick?.();
+  }}
+  size={44}
+  strokeWidth={1.2}
+  className="
+    text-sky-500
+    cursor-pointer
+    drop-shadow-[0_10px_20px_rgba(14,165,233,.4)]
+  "
+  fill="white"
+/>
+</div>
 
       {/* GRADIENT OVERLAY */}
       <div
