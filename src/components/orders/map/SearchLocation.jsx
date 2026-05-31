@@ -19,19 +19,15 @@ useEffect(() => {
       setLoading(true);
 
       const res = await axios.get(
-        "https://nominatim.openstreetmap.org/search",
-        {
-          params: {
-            q: query,
-            format: "json",
-            addressdetails: 1,
-            limit: 6,
-            countrycodes: "ir",
-          },
-        }
-      );
+  `${import.meta.env.VITE_API_URL}/order/neshan/search/`,
+  {
+    params: {
+      term: query,
+    },
+  }
+);
 
-      setResults(res.data || []);
+setResults(res.data.items || []);
     } catch (err) {
       console.error("Search Error:", err);
       setResults([]);
@@ -111,51 +107,21 @@ useEffect(() => {
             overscroll-contain
           "
         >
-{results.map((item) => (
+{results.map((item, index) => (
   <li
-    key={item.place_id}
+    key={index}
     onClick={() => {
       onSelect({
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
-        address: item.display_name,
+        lat: item.location.y,
+        lng: item.location.x,
+        address: item.address,
       });
 
-      setQuery(item.display_name);
+      setQuery(item.address);
       setResults([]);
     }}
-    className="
-      flex items-start gap-3
-      px-4 py-3
-      hover:bg-sky-100
-      dark:hover:bg-purple-800/60
-      cursor-pointer
-      transition
-    "
   >
-    <MapPin
-      className="
-        text-sky-500
-        shrink-0
-        mt-0.5
-      "
-      size={20}
-    />
-
-    <span
-      className="
-        text-gray-700
-        text-sm
-        leading-5
-        overflow-hidden
-        text-ellipsis
-        whitespace-nowrap
-        block
-        max-w-full
-      "
-    >
-      {item.display_name}
-    </span>
+    {item.title}
   </li>
 ))}
         </ul>

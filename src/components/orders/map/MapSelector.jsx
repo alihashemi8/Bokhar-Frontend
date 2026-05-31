@@ -14,7 +14,6 @@ import MapView from "./MapView";
 import SearchLocation from "./SearchLocation";
 import AddressModal from "./AddressModal";
 
-const NESHAN_API_KEY = import.meta.env.VITE_NESHAN_API_KEY;
 
 export default function MapSelector({
   initialPosition,
@@ -93,16 +92,15 @@ useEffect(() => {
     try {
       setLoadingAddress(true);
 
-      const res = await fetch(
-        `https://api.neshan.org/v5/reverse?lat=${coords.lat}&lng=${coords.lng}`,
-        {
-          headers: {
-            "Api-Key": NESHAN_API_KEY,
-          },
-          signal: controller.signal,
-        }
-      );
-
+const res = await fetch(
+  `${import.meta.env.VITE_API_URL}/order/neshan/reverse/?lat=${coords.lat}&lng=${coords.lng}`,
+  {
+    signal: controller.signal,
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("access")}`,
+    },
+  }
+);
       if (!res.ok) {
         throw new Error("Reverse geocode failed");
       }

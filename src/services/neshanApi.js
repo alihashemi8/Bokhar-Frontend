@@ -8,9 +8,11 @@ export async function searchLocation(term) {
   if (!term?.trim()) return [];
 
   const response = await fetch(
-    `https://api.neshan.org/v4/geocoding?term=${encodeURIComponent(term)}&lat=35.699756&lng=51.338076`,
+    `${import.meta.env.VITE_API_URL}/orders/neshan/search/?term=${encodeURIComponent(term)}`,
     {
-      headers,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access")}`,
+      },
     }
   );
 
@@ -25,9 +27,11 @@ export async function searchLocation(term) {
 
 export async function reverseGeocode(lat, lng) {
   const response = await fetch(
-    `https://api.neshan.org/v5/reverse?lat=${lat}&lng=${lng}`,
+    `${import.meta.env.VITE_API_URL}/orders/neshan/reverse/?lat=${lat}&lng=${lng}`,
     {
-      headers,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access")}`,
+      },
     }
   );
 

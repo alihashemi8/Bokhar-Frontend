@@ -114,8 +114,7 @@ export default function MapView({
 
 }) {
   const isDark = useDarkMode();
- const apiKey = import.meta.env.VITE_NESHAN_API_KEY;
- console.log("Neshan Key:", apiKey);
+
   // ---------------- RENDER ----------------
 
   return (
