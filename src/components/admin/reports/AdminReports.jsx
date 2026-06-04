@@ -317,6 +317,7 @@ useEffect(() => {
               data={dataForChart.map((i) =>
                 viewType === "week"
                   ? { week: i.week, revenue: i.value }
+                  
                   : { day: i.day, revenue: i.value },
               )}
               xKey={viewType === "week" ? "week" : "day"}
