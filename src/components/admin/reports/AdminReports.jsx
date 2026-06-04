@@ -4,11 +4,12 @@ import KPICard from "./KPICard";
 import TopServices from "./TopServices";
 import Sidebar from "../Sidebar";
 import { FiBarChart } from "react-icons/fi";
+import axios from "axios";
 
 function SegmentedToggle({ options, value, onChange }) {
   const idx = options.findIndex((o) => o.value === value);
   const segmentWidth = 100 / options.length;
-
+  const [loading, setLoading] = useState(false);
   const wrapperRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [dragX, setDragX] = useState(null);
@@ -30,16 +31,18 @@ function SegmentedToggle({ options, value, onChange }) {
     }
     // محاسبه معکوس برای RTL: سمت راست صفحه = گزینه اول
     const rawSegment = Math.floor(dragX / segmentWidth);
-    const segment = (options.length - 1) - rawSegment;
+    const segment = options.length - 1 - rawSegment;
     onChange(options[segment].value);
     setDragging(false);
     setDragX(null);
   };
 
+
   // محاسبه left معکوس برای RTL
-  const left = dragX != null 
-    ? dragX - segmentWidth / 2 
-    : (options.length - 1 - idx) * segmentWidth;
+  const left =
+    dragX != null
+      ? dragX - segmentWidth / 2
+      : (options.length - 1 - idx) * segmentWidth;
 
   return (
     <div
@@ -95,6 +98,20 @@ export default function AdminReports() {
     "بهمن",
     "اسفند",
   ];
+  const monthMap = {
+  فروردین: 1,
+  اردیبهشت: 2,
+  خرداد: 3,
+  تیر: 4,
+  مرداد: 5,
+  شهریور: 6,
+  مهر: 7,
+  آبان: 8,
+  آذر: 9,
+  دی: 10,
+  بهمن: 11,
+  اسفند: 12,
+};
 
   const todayMonthIndex = new Date().getMonth();
   const [activeMonth, setActiveMonth] = useState(
@@ -108,50 +125,7 @@ export default function AdminReports() {
   const [activeMenu, setActiveMenu] = useState("reports");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeWeek, setActiveWeek] = useState(0);
-
-  const monthlyData = React.useMemo(() => {
-    return persianMonths.reduce((acc, month) => {
-      const days = Array.from({ length: 30 }).map((_, idx) => ({
-        day: `روز ${idx + 1}`,
-        revenue: Math.floor(Math.random() * 500000) + 50000,
-        count: Math.floor(Math.random() * 10) + 1,
-      }));
-
-      const weeks = Array.from({ length: 5 }).map((_, wIdx) => {
-        const weekDays = days.slice(wIdx * 7, wIdx * 7 + 7);
-        return {
-          week: `هفته ${wIdx + 1}`,
-          revenue: weekDays.reduce((s, d) => s + d.revenue, 0),
-          count: weekDays.reduce((s, d) => s + d.count, 0),
-          days: weekDays,
-        };
-      });
-
-      acc[month] = {
-        summary: {
-          total_revenue: days.reduce((s, d) => s + d.revenue, 0),
-          orders_count: days.reduce((s, d) => s + d.count, 0),
-        },
-        series: weeks,
-        topServices: [
-          { id: 1, name: "شستشوی خشک کت و شلوار", count: 18, revenue: 1500000 },
-          { id: 2, name: "شستشوی لباس کودک", count: 14, revenue: 1200000 },
-          { id: 3, name: "رنگ و لکه‌گیری", count: 9, revenue: 800000 },
-        ],
-      };
-      return acc;
-    }, {});
-  }, []);
-
-  useEffect(() => {
-    const data = monthlyData[activeMonth];
-    if (data) {
-      setSummary(data.summary);
-      setSeries(data.series);
-      setTopServices(data.topServices);
-      setActiveWeek(0);
-    }
-  }, [activeMonth, monthlyData]);
+  const [loading, setLoading] = useState(false);
 
   const dataForChart = React.useMemo(() => {
     if (viewType === "week") {
@@ -170,6 +144,80 @@ export default function AdminReports() {
   }, [viewType, valueType, series, activeWeek]);
 
   const fmt = (n) => (n == null ? "-" : n.toLocaleString("fa-IR"));
+
+useEffect(() => {
+  const fetchChart = async () => {
+    try {
+      setLoading(true);
+
+      const year = new Date().getFullYear();
+      const month = monthMap[activeMonth];
+
+      const endpoint =
+        valueType === "revenue"
+          ? `${import.meta.env.VITE_API_URL}/report/weekly/sales/${year}/${month}/`
+          : `${import.meta.env.VITE_API_URL}/report/weekly/orders/${year}/${month}/`;
+
+      const res = await axios.get(endpoint);
+
+      const chartData = (res.data.labels || []).map((label, index) => ({
+        week: label,
+        value: res.data.values?.[index] ?? 0,
+      }));
+
+      setSeries(chartData);
+    } catch (err) {
+      console.error("Chart API Error:", err);
+      setSeries([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchChart();
+}, [activeMonth, valueType]);
+
+useEffect(() => {
+  const fetchTopServices = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/report/analytics/top-services/`
+      );
+
+      setTopServices(
+        (res.data.results || []).map((item) => ({
+          id: item.pricing_tab_id,
+          name: item["pricing_tab__tab_name"],
+          count: item.usage_count,
+        }))
+      );
+    } catch (err) {
+      console.error("Top Services API Error:", err);
+      setTopServices([]);
+    }
+  };
+
+  fetchTopServices();
+}, []);
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/report/total-orders/`,
+        );
+
+        setSummary({
+          total_revenue: res.data.revenue,
+          orders_count: res.data.orders,
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchSummary();
+  }, []);
 
   return (
     <div dir="rtl" className="flex min-h-screen overflow-x-hidden">

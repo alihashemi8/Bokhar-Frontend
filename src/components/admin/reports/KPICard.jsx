@@ -24,7 +24,7 @@ export default function KPICard({ title, value, icon, color, onClick }) {
       </div>
 
       <div className="mt-3 text-2xl font-bold text-slate-800 dark:text-gray-900">
-        {value ?? '—'}
+        {value !== null && value !== undefined ? value : "•"}
       </div>
     </div>
   );
